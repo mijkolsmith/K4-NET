@@ -1,7 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
 using Unity.Networking.Transport;
-using UnityEngine;
 
 public class JoinLobbyExistingMessage : MessageHeader
 {
@@ -14,26 +11,24 @@ public class JoinLobbyExistingMessage : MessageHeader
 	}
 
 	public NetworkMessageType messageType;
-	public int score1;
-	public int score2;
+	public uint score1;
+	public uint score2;
 
 	public override void SerializeObject(ref DataStreamWriter writer)
 	{
-		// very important to call this first
+		// Write message type & object ID
 		base.SerializeObject(ref writer);
 
-		writer.WriteUInt((uint)messageType);
-		writer.WriteUInt((uint)score1);
-		writer.WriteUInt((uint)score2);
+		writer.WriteUInt(score1);
+		writer.WriteUInt(score2);
 	}
 
 	public override void DeserializeObject(ref DataStreamReader reader)
 	{
-		// very important to call this first
+		// Read message type & object ID
 		base.DeserializeObject(ref reader);
 
-		messageType = (NetworkMessageType)reader.ReadUInt();
-		score1 = (int) reader.ReadUInt();
-		score2 = (int) reader.ReadUInt();
+		score1 = reader.ReadUInt();
+		score2 = reader.ReadUInt();
 	}
 }

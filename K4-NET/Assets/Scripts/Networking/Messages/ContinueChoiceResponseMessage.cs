@@ -1,7 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
 using Unity.Networking.Transport;
-using UnityEngine;
 
 public class ContinueChoiceResponseMessage : MessageHeader
 {
@@ -14,23 +11,21 @@ public class ContinueChoiceResponseMessage : MessageHeader
 	}
 
 	public NetworkMessageType messageType;
-	public string message;
+	public bool choice;
 
 	public override void SerializeObject(ref DataStreamWriter writer)
 	{
-		// very important to call this first
+		// Write message type & object ID
 		base.SerializeObject(ref writer);
 
-		writer.WriteUInt((uint)messageType);
-		writer.WriteFixedString128(message);
+		writer.WriteByte(choice ? (byte)1 : (byte)0);
 	}
 
 	public override void DeserializeObject(ref DataStreamReader reader)
 	{
-		// very important to call this first
+		// Read message type & object ID
 		base.DeserializeObject(ref reader);
 
-		messageType = (NetworkMessageType)reader.ReadUInt();
-		message = reader.ReadFixedString128().ToString();
+		choice = reader.ReadByte() == 1 ? true : false;
 	}
 }

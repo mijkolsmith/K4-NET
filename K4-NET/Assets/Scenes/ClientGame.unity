@@ -570,12 +570,12 @@ PrefabInstance:
     - target: {fileID: 330076179112251013, guid: 24eb83607c9cce741b0f3adb78397fcf,
         type: 3}
       propertyPath: m_Name
-      value: Canvas
+      value: LoginCanvas
       objectReference: {fileID: 0}
     - target: {fileID: 330076179112251013, guid: 24eb83607c9cce741b0f3adb78397fcf,
         type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 330076179112251010, guid: 24eb83607c9cce741b0f3adb78397fcf, type: 3}

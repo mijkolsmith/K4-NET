@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.Networking.Transport;
@@ -6,7 +5,6 @@ using Unity.Collections;
 using Unity.Networking.Transport.Utilities;
 using UnityEngine.Networking;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
 using Cysharp.Threading.Tasks;
 public delegate void ServerMessageHandler(ServerBehaviour server, NetworkConnection con, MessageHeader header);
@@ -71,16 +69,16 @@ public class ServerBehaviour : MonoBehaviour
 
     async void Start()
     {
-        var x = await request<List<Id>>("https://studenthome.hku.nl/~michael.smith/K4/server_login.php?id=1&pw=A5FJDKeSdKI49dnR49JFRIVJWJf92JF9R8Gg98GG3");
-        Debug.Log(x[0].id);
+        //var x = await request<List<Id>>("https://studenthome.hku.nl/~michael.smith/K4/server_login.php?id=1&pw=A5FJDKeSdKI49dnR49JFRIVJWJf92JF9R8Gg98GG3");
+        //Debug.Log(x[0].id);
 
-        List<User> json = await request<List<User>>("https://studenthome.hku.nl/~michael.smith/K4/user_register.php?PHPSESSID=" + x[0].id + "&un=test1&pw=test1");
+        //List<User> json = await request<List<User>>("https://studenthome.hku.nl/~michael.smith/K4/user_register.php?PHPSESSID=" + x[0].id + "&un=test1&pw=test1");
         
-        int playerId = Convert.ToInt32(json[0].id);
-        string playerName = json[0].username;
+        //int playerId = Convert.ToInt32(json[0].id);
+        //string playerName = json[0].username;
 
-        Debug.Log(playerId);
-        Debug.Log(playerName);
+        //Debug.Log(playerId);
+        //Debug.Log(playerName);
 
         // Create Driver
         m_Driver = NetworkDriver.Create(new ReliableUtility.Parameters { WindowSize = 32 });
@@ -148,10 +146,10 @@ public class ServerBehaviour : MonoBehaviour
             {
                 if (cmd == NetworkEvent.Type.Data)
                 {
-                    // First UInt is always message type
-                    NetworkMessageType msgType = (NetworkMessageType)stream.ReadUInt();
+                    // First UShort is always message type
+                    NetworkMessageType msgType = (NetworkMessageType)stream.ReadUShort();
 
-                    // Create instance and deserialize
+                    // Create instance and deserialize (Read the UInt)
                     MessageHeader header = (MessageHeader)System.Activator.CreateInstance(NetworkMessageInfo.TypeMap[msgType]);
                     header.DeserializeObject(ref stream);
 
@@ -202,7 +200,7 @@ public class ServerBehaviour : MonoBehaviour
 
                         // Build messages
                         string msg = $"{name} has been Disconnected (connection timed out)";
-                        chat.NewMessage(msg, ChatCanvas.leaveColor);
+                        //chat.NewMessage(msg, ChatCanvas.leaveColor);
 
                         /*ChatMessage quitMsg = new ChatMessage
                         {
@@ -278,9 +276,18 @@ public class ServerBehaviour : MonoBehaviour
 
         await request.SendWebRequest();
 
-        //The null value handling shouldn't be necessary using the COALESCE sql function, still I'm ignoring null values here so I don't get errors
-        var result = JsonConvert.DeserializeObject<T>(request.downloadHandler.text, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
+        Debug.Log(request.downloadHandler.text);
+        T result;
 
+        //The null value handling shouldn't be necessary using the COALESCE sql function, still I'm ignoring null values here so I don't get errors
+        try
+        {
+            result = JsonConvert.DeserializeObject<T>(request.downloadHandler.text, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
+        }
+        catch (Exception)
+		{
+            result = default(T);
+		}
         return result;
     }
 
@@ -373,8 +380,8 @@ public class ServerBehaviour : MonoBehaviour
 			// Player joins existing lobby
 			// Get the scores of the two players against each other
 			var json = await serv.request<List<UserScore>>("https://studenthome.hku.nl/~michael.smith/K4/score_get.php?PHPSESSID=" + serv.PhpConnectionID + "&player1=" + serv.lobbyList[message.name][0] + "&player2=" + serv.idList[con]);
-            int score1 = Convert.ToInt32(json[0].score);
-            int score2 = Convert.ToInt32(json[1].score);
+            uint score1 = Convert.ToUInt32(json[0].score);
+            uint score2 = Convert.ToUInt32(json[1].score);
 
             if (score1 != 0 || score2 != 0)
             {

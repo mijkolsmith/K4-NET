@@ -14,12 +14,16 @@ public abstract class MessageHeader
 
 	public virtual void SerializeObject(ref DataStreamWriter writer)
 	{
+		// Write a UShort which is the message type
 		writer.WriteUShort((ushort)Type);
+
+		// Write a UInt which is the object ID
 		writer.WriteUInt(ID);
 	}
 
 	public virtual void DeserializeObject(ref DataStreamReader reader)
 	{
+		// Read a UInt which is the object ID
 		ID = reader.ReadUInt();
 	}
 }

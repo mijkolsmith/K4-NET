@@ -17,17 +17,13 @@ public class RegisterSuccessMessage : MessageHeader
 
 	public override void SerializeObject(ref DataStreamWriter writer)
 	{
-		// very important to call this first
+		// Write message type & object ID
 		base.SerializeObject(ref writer);
-
-		writer.WriteUInt((uint)messageType);
 	}
 
 	public override void DeserializeObject(ref DataStreamReader reader)
 	{
-		// very important to call this first
+		// Read message type & object ID
 		base.DeserializeObject(ref reader);
-
-		messageType = (NetworkMessageType)reader.ReadUInt();
 	}
 }

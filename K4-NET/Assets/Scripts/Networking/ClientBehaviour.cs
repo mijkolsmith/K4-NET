@@ -1,17 +1,13 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.Networking.Transport;
-using Unity.Collections;
-using Unity.Networking.Transport.Utilities;
 using System;
-
+using Unity.Networking.Transport.Utilities;
 
 public delegate void ClientMessageHandler(ClientBehaviour client, MessageHeader header);
 
 public class ClientBehaviour : MonoBehaviour
 {
-
     static Dictionary<NetworkMessageType, ClientMessageHandler> networkMessageHandlers = new Dictionary<NetworkMessageType, ClientMessageHandler> {
             { NetworkMessageType.HANDSHAKE_RESPONSE, HandleServerHandshakeResponse },
             { NetworkMessageType.REGISTER_SUCCESS, HandleRegisterSuccess },
@@ -40,12 +36,13 @@ public class ClientBehaviour : MonoBehaviour
 
     void Start()
     {
-        m_Driver = NetworkDriver.Create();
+        m_Driver = NetworkDriver.Create(new ReliableUtility.Parameters { WindowSize = 32 });
         m_Pipeline = m_Driver.CreatePipeline(typeof(ReliableSequencedPipelineStage));
         m_Connection = default(NetworkConnection);
 
         var endpoint = NetworkEndPoint.LoopbackIpv4;
-        endpoint.Port = 9000;
+        endpoint.Port = 1511;
+
         m_Connection = m_Driver.Connect(endpoint);
     }
 
@@ -72,15 +69,16 @@ public class ClientBehaviour : MonoBehaviour
             {
                 Debug.Log("We are now connected to the server");
 
-                var header = new HandshakeMessage { };
+                var header = new HandshakeMessage{ };
 
                 SendPackedMessage(header);
             }
             else if (cmd == NetworkEvent.Type.Data)
             {
-                // First UInt is always message type (this is our own first design choice)
-                NetworkMessageType msgType = (NetworkMessageType)stream.ReadUInt();
+                // First UShort is always message type
+                NetworkMessageType msgType = (NetworkMessageType)stream.ReadUShort();
 
+                // Create instance and deserialize (Read the UInt)
                 MessageHeader header = (MessageHeader)System.Activator.CreateInstance(NetworkMessageInfo.TypeMap[msgType]);
                 header.DeserializeObject(ref stream);
 
@@ -92,9 +90,6 @@ public class ClientBehaviour : MonoBehaviour
                 {
                     Debug.LogWarning($"Unsupported message type received: {msgType}", this);
                 }
-
-                m_Connection.Disconnect(m_Driver);
-                m_Connection = default(NetworkConnection);
             }
             else if (cmd == NetworkEvent.Type.Disconnect)
             {
@@ -113,12 +108,12 @@ public class ClientBehaviour : MonoBehaviour
         if (result == 0)
         {
             header.SerializeObject(ref writer);
-            m_Driver.EndSend(writer);
         }
         else
         {
-            Debug.LogError($"Could not wrote message to driver: {result}", this);
+            Debug.LogError($"Could not write message to driver: {result}", this);
         }
+        m_Driver.EndSend(writer);
     }
 
     // TODO: Static handler functions
@@ -151,22 +146,26 @@ public class ClientBehaviour : MonoBehaviour
 
     private static void HandleRegisterSuccess(ClientBehaviour client, MessageHeader header)
 	{
+        Debug.Log("register success");
         RegisterSuccessMessage message = header as RegisterSuccessMessage;
 	}
 
     private static void HandleRegisterFail(ClientBehaviour client, MessageHeader header)
 	{
+        Debug.Log("register fail");
         RegisterFailMessage message = header as RegisterFailMessage;
         // Retry register
     }
 
     private static void HandleLoginSuccess(ClientBehaviour client, MessageHeader header)
 	{
+        Debug.Log("login success");
         LoginSuccessMessage message = header as LoginSuccessMessage;
     }
 
     private static void HandleLoginFail(ClientBehaviour client, MessageHeader header)
 	{
+        Debug.Log("login fail");
         LoginFailMessage message = header as LoginFailMessage;
         // Retry login
     }
