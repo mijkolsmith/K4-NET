@@ -59,7 +59,7 @@ public class ServerBehaviour : MonoBehaviour
     private Dictionary<NetworkConnection, int> idList = new Dictionary<NetworkConnection, int>();
     private Dictionary<int, string> nameList = new Dictionary<int, string>();
     private Dictionary<NetworkConnection, PingPong> pongDict = new Dictionary<NetworkConnection, PingPong>();
-    private Dictionary<string, List<int>> lobbyList = new Dictionary<string, List<int>>();
+    private Dictionary<string, List<NetworkConnection>> lobbyList = new Dictionary<string, List<NetworkConnection>>();
 
     public ChatCanvas chat;
 
@@ -371,7 +371,7 @@ public class ServerBehaviour : MonoBehaviour
 		if (!serv.lobbyList.ContainsKey(message.name))
 		{
 			// Player joins new lobby
-			serv.lobbyList.Add(message.name, new List<int>() { serv.idList[con] });
+			serv.lobbyList.Add(message.name, new List<NetworkConnection>() { con });
 			JoinLobbyNewMessage joinLobbyNewMessage = new JoinLobbyNewMessage { };
 			serv.SendUnicast(con, joinLobbyNewMessage);
 		}
@@ -379,22 +379,36 @@ public class ServerBehaviour : MonoBehaviour
 		{
 			// Player joins existing lobby
 			// Get the scores of the two players against each other
-			var json = await serv.request<List<UserScore>>("https://studenthome.hku.nl/~michael.smith/K4/score_get.php?PHPSESSID=" + serv.PhpConnectionID + "&player1=" + serv.lobbyList[message.name][0] + "&player2=" + serv.idList[con]);
+			var json = await serv.request<List<UserScore>>("https://studenthome.hku.nl/~michael.smith/K4/score_get.php?PHPSESSID=" + serv.PhpConnectionID + "&player1=" + serv.idList[serv.lobbyList[message.name][0]] + "&player2=" + serv.idList[con]);
             uint score1 = Convert.ToUInt32(json[0].score);
             uint score2 = Convert.ToUInt32(json[1].score);
 
             if (score1 != 0 || score2 != 0)
             {
-                // Something went wrong with the query
+                // Create a JoinLobbyExistingMessage for player 2
                 JoinLobbyExistingMessage joinLobbyExistingMessage = new JoinLobbyExistingMessage
                 {
                     score1 = score1,
-                    score2 = score2
+                    score2 = score2,
+                    name = serv.nameList[serv.idList[serv.lobbyList[message.name][0]]]
+                };
+
+                // Create a LobbyUpdateMessage for player 1
+                LobbyUpdateMessage lobbyUpdateMessage = new LobbyUpdateMessage
+                {
+                    score1 = score1,
+                    score2 = score2,
+                    name = serv.nameList[serv.idList[con]]
                 };
                 serv.SendUnicast(con, joinLobbyExistingMessage);
+                serv.SendUnicast(serv.lobbyList[message.name][0], lobbyUpdateMessage);
+
+                // Add player 2 to the players in this lobby
+                serv.lobbyList[message.name].Add(con);
             }
             else //TODO: Make this one piece of code
 			{
+                // Something went wrong with the query
                 JoinLobbyFailMessage joinLobbyFailMessage = new JoinLobbyFailMessage() { };
                 serv.SendUnicast(con, joinLobbyFailMessage);
             }

@@ -1,12 +1,12 @@
 using Unity.Networking.Transport;
 
-public class JoinLobbyExistingMessage : MessageHeader
+public class LobbyUpdateMessage : MessageHeader
 {
 	public override NetworkMessageType Type
 	{
 		get
 		{
-			return NetworkMessageType.JOIN_LOBBY_EXISTING;
+			return NetworkMessageType.JOIN_LOBBY;
 		}
 	}
 

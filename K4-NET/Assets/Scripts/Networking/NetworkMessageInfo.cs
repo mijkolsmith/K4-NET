@@ -14,6 +14,7 @@ public static class NetworkMessageInfo
             { NetworkMessageType.JOIN_LOBBY,                typeof(JoinLobbyMessage) },
             { NetworkMessageType.JOIN_LOBBY_NEW,            typeof(JoinLobbyNewMessage) },
             { NetworkMessageType.JOIN_LOBBY_EXISTING,       typeof(JoinLobbyExistingMessage) },
+            { NetworkMessageType.LOBBY_UPDATE,              typeof(LobbyUpdateMessage) },
             { NetworkMessageType.START_GAME,                typeof(StartGameMessage) },
             { NetworkMessageType.START_GAME_RESPONSE,       typeof(StartGameResponseMessage) },
             { NetworkMessageType.PLACE_OBSTACLE,            typeof(PlaceObstacleMessage) },

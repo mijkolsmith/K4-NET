@@ -28,6 +28,7 @@ public class LoginRegister : MonoBehaviour
 			password = password
 		};
 
+		client.username = username;
 		client.SendPackedMessage(registerMessage);
 	}
 	
@@ -39,6 +40,7 @@ public class LoginRegister : MonoBehaviour
 			password = password
 		};
 
+		client.username = username;
 		client.SendPackedMessage(loginMessage);
 	}
 }

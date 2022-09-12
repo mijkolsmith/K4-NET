@@ -3,6 +3,8 @@ using UnityEngine;
 using Unity.Networking.Transport;
 using System;
 using Unity.Networking.Transport.Utilities;
+using TMPro;
+using UnityEngine.SceneManagement;
 
 public delegate void ClientMessageHandler(ClientBehaviour client, MessageHeader header);
 
@@ -17,6 +19,7 @@ public class ClientBehaviour : MonoBehaviour
             { NetworkMessageType.JOIN_LOBBY_NEW, HandleJoinLobbyNew },
             { NetworkMessageType.JOIN_LOBBY_EXISTING, HandleJoinLobbyExisting },
             { NetworkMessageType.JOIN_LOBBY_FAIL, HandleJoinLobbyFail },
+            { NetworkMessageType.LOBBY_UPDATE, HandleLobbyUpdate },
             { NetworkMessageType.START_GAME_RESPONSE, HandleStartGameResponse },
             { NetworkMessageType.PLACE_OBSTACLE_SUCCESS, HandlePlaceObstacleSuccess },
             { NetworkMessageType.PLACE_OBSTACLE_FAIL, HandlePlaceObstacleFail },
@@ -33,6 +36,14 @@ public class ClientBehaviour : MonoBehaviour
     public NetworkPipeline m_Pipeline;
     public NetworkConnection m_Connection;
     public bool Done;
+
+    public GameObject loginRegisterCanvas;
+    public GameObject errorMessage;
+    public GameObject joinLobbyCanvas;
+    public GameObject lobbyCanvas;
+
+    public string username;
+    public string otherUsername;
 
     void Start()
     {
@@ -69,7 +80,7 @@ public class ClientBehaviour : MonoBehaviour
             {
                 Debug.Log("We are now connected to the server");
 
-                var header = new HandshakeMessage{ };
+                var header = new HandshakeMessage { };
 
                 SendPackedMessage(header);
             }
@@ -118,13 +129,13 @@ public class ClientBehaviour : MonoBehaviour
 
     // TODO: Static handler functions
     //      - Server handshake response (DONE)
-    //      - Register success          (WIP)
-    //      - Register fail             (WIP)
-    //      - Login success             (WIP)
-    //      - Login fail                (WIP)
-    //      - Join lobby new            (WIP)
-    //      - Join lobby existing       (WIP)
-    //      - Join lobby fail           (WIP)
+    //      - Register success          (DONE)
+    //      - Register fail             (DONE)
+    //      - Login success             (DONE)
+    //      - Login fail                (DONE)
+    //      - Join lobby new            (DONE)
+    //      - Join lobby existing       (DONE)
+    //      - Join lobby fail           (DONE)
     //      - Start game response       (WIP)
     //      - Place obstacle success    (WIP)
     //      - Place obstacle fail       (WIP)
@@ -138,56 +149,89 @@ public class ClientBehaviour : MonoBehaviour
 
     private static void HandleServerHandshakeResponse(ClientBehaviour client, MessageHeader header)
     {
-        HandshakeResponseMessage message = header as HandshakeResponseMessage;
         Debug.Log("Successfully Handshaked");
-
-        //TODO: Show the register/login screen
+        client.loginRegisterCanvas.SetActive(true);
+        client.errorMessage.GetComponent<TextMeshProUGUI>().text = "Please Register or Login";
     }
 
     private static void HandleRegisterSuccess(ClientBehaviour client, MessageHeader header)
 	{
         Debug.Log("register success");
         RegisterSuccessMessage message = header as RegisterSuccessMessage;
+        client.errorMessage.GetComponent<TextMeshProUGUI>().text = "Register Success, please Login";
 	}
 
     private static void HandleRegisterFail(ClientBehaviour client, MessageHeader header)
 	{
         Debug.Log("register fail");
         RegisterFailMessage message = header as RegisterFailMessage;
-        // Retry register
+        client.errorMessage.GetComponent<TextMeshProUGUI>().text = "Register fail, please try again";
     }
 
     private static void HandleLoginSuccess(ClientBehaviour client, MessageHeader header)
 	{
         Debug.Log("login success");
         LoginSuccessMessage message = header as LoginSuccessMessage;
+
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
     }
 
     private static void HandleLoginFail(ClientBehaviour client, MessageHeader header)
 	{
         Debug.Log("login fail");
         LoginFailMessage message = header as LoginFailMessage;
-        // Retry login
+
+        client.errorMessage.GetComponent<TextMeshProUGUI>().text = "Login fail, please try again";
     }
 
     private static void HandleJoinLobbyNew(ClientBehaviour client, MessageHeader header)
 	{
-        JoinLobbyNewMessage message = header as JoinLobbyNewMessage;
+        string lobbyName = client.joinLobbyCanvas.GetComponent<Lobby>().name;
+        client.joinLobbyCanvas.SetActive(false);
+        client.lobbyCanvas.SetActive(true);
+        CurrentLobby currentLobby = client.lobbyCanvas.GetComponent<CurrentLobby>();
+        currentLobby.lobbyNameObject.GetComponent<TextMeshProUGUI>().text = lobbyName;
+        currentLobby.player1Name.GetComponent<TextMeshProUGUI>().text = client.username;
+        currentLobby.startLobbyObject.SetActive(true);
     }
 
     private static void HandleJoinLobbyExisting(ClientBehaviour client, MessageHeader header)
 	{
         JoinLobbyExistingMessage message = header as JoinLobbyExistingMessage;
         int score1 = Convert.ToInt32(message.score1);
-        int score2 = Convert.ToInt32(message.score1);
+        int score2 = Convert.ToInt32(message.score2);
+        string name = Convert.ToString(message.name);
+
+        string lobbyName = client.joinLobbyCanvas.GetComponent<Lobby>().name;
+        client.joinLobbyCanvas.SetActive(false);
+        client.lobbyCanvas.SetActive(true);
+        CurrentLobby currentLobby = client.lobbyCanvas.GetComponent<CurrentLobby>();
+        currentLobby.lobbyNameObject.GetComponent<TextMeshProUGUI>().text = lobbyName;
+        currentLobby.player1Name.GetComponent<TextMeshProUGUI>().text = name;
+        currentLobby.player2Name.GetComponent<TextMeshProUGUI>().text = client.username;
+        currentLobby.player1Score.GetComponent<TextMeshProUGUI>().text = score1.ToString();
+        currentLobby.player2Score.GetComponent<TextMeshProUGUI>().text = score2.ToString();
     }
     
     private static void HandleJoinLobbyFail(ClientBehaviour client, MessageHeader header)
 	{
-        JoinLobbyFailMessage message = header as JoinLobbyFailMessage;
-        // Retry joining lobby
+        client.errorMessage.GetComponent<TextMeshProUGUI>().text = "Lobby full, please try again";
     }
-    
+
+    private static void HandleLobbyUpdate(ClientBehaviour client, MessageHeader header)
+    {
+        LobbyUpdateMessage message = header as LobbyUpdateMessage;
+        int score1 = Convert.ToInt32(message.score1);
+        int score2 = Convert.ToInt32(message.score2);
+        string name = Convert.ToString(message.name);
+
+        CurrentLobby currentLobby = client.lobbyCanvas.GetComponent<CurrentLobby>();
+        currentLobby.player2Name.GetComponent<TextMeshProUGUI>().text = name;
+        currentLobby.player1Score.GetComponent<TextMeshProUGUI>().text = score1.ToString();
+        currentLobby.player2Score.GetComponent<TextMeshProUGUI>().text = score2.ToString();
+    }
+
+
     private static void HandleStartGameResponse(ClientBehaviour client, MessageHeader header)
 	{
         StartGameResponseMessage message = header as StartGameResponseMessage;
