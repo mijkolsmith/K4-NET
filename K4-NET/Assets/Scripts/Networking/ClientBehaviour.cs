@@ -11,6 +11,7 @@ public delegate void ClientMessageHandler(ClientBehaviour client, MessageHeader 
 public class ClientBehaviour : MonoBehaviour
 {
     static Dictionary<NetworkMessageType, ClientMessageHandler> networkMessageHandlers = new Dictionary<NetworkMessageType, ClientMessageHandler> {
+            { NetworkMessageType.PING, HandlePing },
             { NetworkMessageType.HANDSHAKE_RESPONSE, HandleServerHandshakeResponse },
             { NetworkMessageType.REGISTER_SUCCESS, HandleRegisterSuccess },
             { NetworkMessageType.REGISTER_FAIL, HandleRegisterFail },
@@ -37,16 +38,15 @@ public class ClientBehaviour : MonoBehaviour
     public NetworkConnection m_Connection;
     public bool Done;
 
-    public GameObject loginRegisterCanvas;
-    public GameObject errorMessage;
-    public GameObject joinLobbyCanvas;
-    public GameObject lobbyCanvas;
+    public ObjectReferences objectReferences;
 
     public string username;
     public string otherUsername;
+    uint player;
 
     void Start()
     {
+        DontDestroyOnLoad(this);
         m_Driver = NetworkDriver.Create(new ReliableUtility.Parameters { WindowSize = 32 });
         m_Pipeline = m_Driver.CreatePipeline(typeof(ReliableSequencedPipelineStage));
         m_Connection = default(NetworkConnection);
@@ -69,7 +69,10 @@ public class ClientBehaviour : MonoBehaviour
         if (!m_Connection.IsCreated)
         {
             if (!Done)
+            {
                 Debug.Log("Something went wrong during connect");
+                objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Something went wrong during connect";
+            }
             return;
         }
         DataStreamReader stream;
@@ -128,6 +131,7 @@ public class ClientBehaviour : MonoBehaviour
     }
 
     // TODO: Static handler functions
+    //      - Pong                      (DONE)
     //      - Server handshake response (DONE)
     //      - Register success          (DONE)
     //      - Register fail             (DONE)
@@ -136,6 +140,7 @@ public class ClientBehaviour : MonoBehaviour
     //      - Join lobby new            (DONE)
     //      - Join lobby existing       (DONE)
     //      - Join lobby fail           (DONE)
+    //      - Handle lobby update       (DONE)
     //      - Start game response       (WIP)
     //      - Place obstacle success    (WIP)
     //      - Place obstacle fail       (WIP)
@@ -147,31 +152,35 @@ public class ClientBehaviour : MonoBehaviour
     //      - End game                  (WIP)
     //      - Continue choice response  (WIP)
 
+    private static void HandlePing(ClientBehaviour client, MessageHeader header)
+    {
+        PongMessage pongMessage = new PongMessage { };
+
+        client.SendPackedMessage(pongMessage);
+    }
+
     private static void HandleServerHandshakeResponse(ClientBehaviour client, MessageHeader header)
     {
         Debug.Log("Successfully Handshaked");
-        client.loginRegisterCanvas.SetActive(true);
-        client.errorMessage.GetComponent<TextMeshProUGUI>().text = "Please Register or Login";
+        client.objectReferences.loginRegister.SetActive(true);
+        client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Please Register or Login";
     }
 
     private static void HandleRegisterSuccess(ClientBehaviour client, MessageHeader header)
 	{
         Debug.Log("register success");
-        RegisterSuccessMessage message = header as RegisterSuccessMessage;
-        client.errorMessage.GetComponent<TextMeshProUGUI>().text = "Register Success, please Login";
+        client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Register Success, please Login";
 	}
 
     private static void HandleRegisterFail(ClientBehaviour client, MessageHeader header)
 	{
         Debug.Log("register fail");
-        RegisterFailMessage message = header as RegisterFailMessage;
-        client.errorMessage.GetComponent<TextMeshProUGUI>().text = "Register fail, please try again";
+        client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Register fail, please try again";
     }
 
     private static void HandleLoginSuccess(ClientBehaviour client, MessageHeader header)
 	{
         Debug.Log("login success");
-        LoginSuccessMessage message = header as LoginSuccessMessage;
 
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
     }
@@ -179,18 +188,23 @@ public class ClientBehaviour : MonoBehaviour
     private static void HandleLoginFail(ClientBehaviour client, MessageHeader header)
 	{
         Debug.Log("login fail");
-        LoginFailMessage message = header as LoginFailMessage;
 
-        client.errorMessage.GetComponent<TextMeshProUGUI>().text = "Login fail, please try again";
+        client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Login fail, please try again";
     }
 
     private static void HandleJoinLobbyNew(ClientBehaviour client, MessageHeader header)
 	{
-        string lobbyName = client.joinLobbyCanvas.GetComponent<Lobby>().name;
-        client.joinLobbyCanvas.SetActive(false);
-        client.lobbyCanvas.SetActive(true);
-        CurrentLobby currentLobby = client.lobbyCanvas.GetComponent<CurrentLobby>();
+        client.player = 0;
+
+        if (client.objectReferences == null) client.objectReferences = FindObjectOfType<ObjectReferences>();
+
+        string lobbyName = client.objectReferences.lobbyName;
+
+        client.objectReferences.joinLobby.SetActive(false);
+        client.objectReferences.currentLobby.SetActive(true);
+        CurrentLobby currentLobby = client.objectReferences.currentLobby.GetComponent<CurrentLobby>();
         currentLobby.lobbyNameObject.GetComponent<TextMeshProUGUI>().text = lobbyName;
+        currentLobby.client = client;
         currentLobby.player1Name.GetComponent<TextMeshProUGUI>().text = client.username;
         currentLobby.startLobbyObject.SetActive(true);
     }
@@ -202,10 +216,14 @@ public class ClientBehaviour : MonoBehaviour
         int score2 = Convert.ToInt32(message.score2);
         string name = Convert.ToString(message.name);
 
-        string lobbyName = client.joinLobbyCanvas.GetComponent<Lobby>().name;
-        client.joinLobbyCanvas.SetActive(false);
-        client.lobbyCanvas.SetActive(true);
-        CurrentLobby currentLobby = client.lobbyCanvas.GetComponent<CurrentLobby>();
+        client.player = 1;
+
+        if (client.objectReferences == null) client.objectReferences = FindObjectOfType<ObjectReferences>();
+
+        string lobbyName = client.objectReferences.joinLobby.GetComponent<Lobby>().name;
+        client.objectReferences.joinLobby.SetActive(false);
+        client.objectReferences.currentLobby.SetActive(true);
+        CurrentLobby currentLobby = client.objectReferences.currentLobby.GetComponent<CurrentLobby>();
         currentLobby.lobbyNameObject.GetComponent<TextMeshProUGUI>().text = lobbyName;
         currentLobby.player1Name.GetComponent<TextMeshProUGUI>().text = name;
         currentLobby.player2Name.GetComponent<TextMeshProUGUI>().text = client.username;
@@ -215,7 +233,9 @@ public class ClientBehaviour : MonoBehaviour
     
     private static void HandleJoinLobbyFail(ClientBehaviour client, MessageHeader header)
 	{
-        client.errorMessage.GetComponent<TextMeshProUGUI>().text = "Lobby full, please try again";
+        if (client.objectReferences == null) client.objectReferences = FindObjectOfType<ObjectReferences>();
+
+        client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Lobby full, please try again";
     }
 
     private static void HandleLobbyUpdate(ClientBehaviour client, MessageHeader header)
@@ -225,7 +245,7 @@ public class ClientBehaviour : MonoBehaviour
         int score2 = Convert.ToInt32(message.score2);
         string name = Convert.ToString(message.name);
 
-        CurrentLobby currentLobby = client.lobbyCanvas.GetComponent<CurrentLobby>();
+        CurrentLobby currentLobby = client.objectReferences.currentLobby.GetComponent<CurrentLobby>();
         currentLobby.player2Name.GetComponent<TextMeshProUGUI>().text = name;
         currentLobby.player1Score.GetComponent<TextMeshProUGUI>().text = score1.ToString();
         currentLobby.player2Score.GetComponent<TextMeshProUGUI>().text = score2.ToString();
@@ -235,6 +255,15 @@ public class ClientBehaviour : MonoBehaviour
     private static void HandleStartGameResponse(ClientBehaviour client, MessageHeader header)
 	{
         StartGameResponseMessage message = header as StartGameResponseMessage;
+        
+        if (Convert.ToInt32(message.startPlayer) == client.player)
+		{
+            Debug.Log(Convert.ToInt32(message.startPlayer));
+		}
+        uint obstacleId = Convert.ToUInt32(message.obstacleId);
+
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+        client.objectReferences = FindObjectOfType<ObjectReferences>();
     }
     
     private static void HandlePlaceObstacleSuccess(ClientBehaviour client, MessageHeader header)

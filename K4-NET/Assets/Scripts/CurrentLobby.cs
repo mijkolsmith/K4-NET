@@ -7,7 +7,8 @@ using UnityEngine.UI;
 public class CurrentLobby : MonoBehaviour
 {
 	[SerializeField] private string lobbyName;
-	[SerializeField] private ClientBehaviour client;
+	public ClientBehaviour client;
+	[SerializeField] private ObjectReferences objectReferences;
 	public GameObject lobbyNameObject;
 	public GameObject player1Name;
 	public GameObject player2Name;
@@ -15,9 +16,14 @@ public class CurrentLobby : MonoBehaviour
 	public GameObject player2Score;
 	public GameObject startLobbyObject;
 
+	private void Start()
+	{
+		client = FindObjectOfType<ClientBehaviour>();
+	}
+
 	private void Update()
 	{
-		lobbyNameObject.GetComponent<TextMeshProUGUI>().text = lobbyName;
+		lobbyNameObject.GetComponent<TextMeshProUGUI>().text = objectReferences.lobbyName;
 	}
 
 	public void StartLobby()

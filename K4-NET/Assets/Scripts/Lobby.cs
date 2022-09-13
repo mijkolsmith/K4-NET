@@ -8,6 +8,13 @@ public class Lobby : MonoBehaviour
 {
 	[SerializeField] private string lobbyName;
 	[SerializeField] private ClientBehaviour client;
+	[SerializeField] private ObjectReferences objectReferences;
+	
+	private void Start()
+	{
+		client = FindObjectOfType<ClientBehaviour>();
+	}
+
 
 	public void SetLobbyName(string lobbyName)
 	{
@@ -16,6 +23,9 @@ public class Lobby : MonoBehaviour
 
 	public void JoinLobby()
 	{
+		objectReferences.lobbyName = lobbyName;
+		Debug.Log(objectReferences.lobbyName);
+
 		JoinLobbyMessage joinLobbyMessage = new JoinLobbyMessage()
 		{
 			name = lobbyName,

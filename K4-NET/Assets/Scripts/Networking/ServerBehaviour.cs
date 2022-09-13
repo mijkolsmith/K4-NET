@@ -41,6 +41,7 @@ public class UserScore
 public class ServerBehaviour : MonoBehaviour
 {
     static Dictionary<NetworkMessageType, ServerMessageHandler> networkMessageHandlers = new Dictionary<NetworkMessageType, ServerMessageHandler> {
+            { NetworkMessageType.PONG, HandlePong },
             { NetworkMessageType.HANDSHAKE, HandleHandshake },
             { NetworkMessageType.CHAT_MESSAGE, HandleChatMessage },
             { NetworkMessageType.REGISTER, HandleRegister },
@@ -188,34 +189,11 @@ public class ServerBehaviour : MonoBehaviour
                             idList.Remove(m_Connections[i]);
                         }
 
-                        /*uint destroyId = playerInstances[m_Connections[i]].networkId;
-                        networkManager.DestroyWithId(destroyId);
-                        playerInstances.Remove(m_Connections[i]);*/
-
                         string name = pongDict[m_Connections[i]].name;
                         pongDict.Remove(m_Connections[i]);
 
                         // Disconnect this player
                         m_Connections[i].Disconnect(m_Driver);
-
-                        // Build messages
-                        string msg = $"{name} has been Disconnected (connection timed out)";
-                        //chat.NewMessage(msg, ChatCanvas.leaveColor);
-
-                        /*ChatMessage quitMsg = new ChatMessage
-                        {
-                            message = msg,
-                            messageType = NetworkMessageType.QUIT
-                        };
-
-                        DestroyMessage destroyMsg = new DestroyMessage
-                        {
-                            networkId = destroyId
-                        };
-
-                        // Broadcast
-                        SendBroadcast(quitMsg);
-                        SendBroadcast(destroyMsg, m_Connections[i]);*/
 
                         // Clean up
                         m_Connections[i] = default;
@@ -292,8 +270,8 @@ public class ServerBehaviour : MonoBehaviour
     }
 
     // TODO: Static handler functions
+    //      - Ping                          (DONE)
     //      - Handshake                     (DONE)
-    //      - Chat message                  (WIP)
     //      - Register                      (DONE)
     //      - Login                         (DONE)
     //      - Join lobby                    (DONE)
@@ -302,15 +280,19 @@ public class ServerBehaviour : MonoBehaviour
     //      - Player move                   (WIP)
     //      - Continue Choice               (WIP)
 
+    static void HandlePong(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
+    {
+        serv.pongDict[con].status = 3;
+    }
+
     static async void HandleHandshake(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
     {
         // Connect to database
         var json = await serv.request<List<Id>>("https://studenthome.hku.nl/~michael.smith/K4/server_login.php?id=1&pw=A5FJDKeSdKI49dnR49JFRIVJWJf92JF9R8Gg98GG3");
         serv.PhpConnectionID = json[0].id;
 
-        HandshakeResponseMessage responseMsg = new HandshakeResponseMessage { };
-
-        serv.SendUnicast(con, responseMsg);
+        HandshakeResponseMessage handshakeResponseMessage = new HandshakeResponseMessage { };
+        serv.SendUnicast(con, handshakeResponseMessage);
     }
 
     static async void HandleRegister(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
@@ -324,9 +306,6 @@ public class ServerBehaviour : MonoBehaviour
         // Add to id list & name list
         if (playerId != 0 && playerName != null)
         {
-            serv.idList.Add(con, playerId);
-            serv.nameList.Add(playerId, playerName);
-
             RegisterSuccessMessage registerSuccessMessage = new RegisterSuccessMessage { };
             serv.SendUnicast(con, registerSuccessMessage);
         }
@@ -366,52 +345,55 @@ public class ServerBehaviour : MonoBehaviour
     static async void HandleJoinLobby(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
 	{
         JoinLobbyMessage message = header as JoinLobbyMessage;
+        string lobbyName = Convert.ToString(message.name);
 
-		// Check if lobby exists
-		if (!serv.lobbyList.ContainsKey(message.name))
+        // Check if lobby exists
+        if (!serv.lobbyList.ContainsKey(lobbyName))
 		{
 			// Player joins new lobby
-			serv.lobbyList.Add(message.name, new List<NetworkConnection>() { con });
+			serv.lobbyList.Add(lobbyName, new List<NetworkConnection>() { con });
 			JoinLobbyNewMessage joinLobbyNewMessage = new JoinLobbyNewMessage { };
 			serv.SendUnicast(con, joinLobbyNewMessage);
 		}
-		else if (serv.lobbyList[message.name].Count == 1)
+		else if (serv.lobbyList[lobbyName].Count == 1)
 		{
-			// Player joins existing lobby
-			// Get the scores of the two players against each other
+            // Player joins existing lobby
+            Debug.Log(serv.PhpConnectionID);
+            Debug.Log(serv.idList[serv.lobbyList[lobbyName][0]]);
+            Debug.Log(serv.idList[con]);
+
+			// Get the scores of the two players against each other, kinda complicated but it's easier than changing the query
 			var json = await serv.request<List<UserScore>>("https://studenthome.hku.nl/~michael.smith/K4/score_get.php?PHPSESSID=" + serv.PhpConnectionID + "&player1=" + serv.idList[serv.lobbyList[message.name][0]] + "&player2=" + serv.idList[con]);
-            uint score1 = Convert.ToUInt32(json[0].score);
-            uint score2 = Convert.ToUInt32(json[1].score);
-
-            if (score1 != 0 || score2 != 0)
-            {
-                // Create a JoinLobbyExistingMessage for player 2
-                JoinLobbyExistingMessage joinLobbyExistingMessage = new JoinLobbyExistingMessage
-                {
-                    score1 = score1,
-                    score2 = score2,
-                    name = serv.nameList[serv.idList[serv.lobbyList[message.name][0]]]
-                };
-
-                // Create a LobbyUpdateMessage for player 1
-                LobbyUpdateMessage lobbyUpdateMessage = new LobbyUpdateMessage
-                {
-                    score1 = score1,
-                    score2 = score2,
-                    name = serv.nameList[serv.idList[con]]
-                };
-                serv.SendUnicast(con, joinLobbyExistingMessage);
-                serv.SendUnicast(serv.lobbyList[message.name][0], lobbyUpdateMessage);
-
-                // Add player 2 to the players in this lobby
-                serv.lobbyList[message.name].Add(con);
-            }
-            else //TODO: Make this one piece of code
+            uint score1 = 0;
+            uint score2 = 0;
+            if (json.Count > 0) score1 = Convert.ToUInt32(json[0].score);
+            if (json.Count == 2) score2 = Convert.ToUInt32(json[1].score);
+            else if (serv.nameList[serv.idList[serv.lobbyList[lobbyName][0]]] != json[0].username)
 			{
-                // Something went wrong with the query
-                JoinLobbyFailMessage joinLobbyFailMessage = new JoinLobbyFailMessage() { };
-                serv.SendUnicast(con, joinLobbyFailMessage);
-            }
+                score2 = score1;
+                score1 = 0;
+			}
+
+            // Create a JoinLobbyExistingMessage for player 2
+            JoinLobbyExistingMessage joinLobbyExistingMessage = new JoinLobbyExistingMessage
+            {
+                score1 = score1,
+                score2 = score2,
+                name = serv.nameList[serv.idList[serv.lobbyList[lobbyName][0]]]
+            };
+
+            // Create a LobbyUpdateMessage for player 1
+            LobbyUpdateMessage lobbyUpdateMessage = new LobbyUpdateMessage
+            {
+                score1 = score1,
+                score2 = score2,
+                name = serv.nameList[serv.idList[con]]
+            };
+            serv.SendUnicast(con, joinLobbyExistingMessage);
+            serv.SendUnicast(serv.lobbyList[lobbyName][0], lobbyUpdateMessage);
+
+            // Add player 2 to the players in this lobby
+            serv.lobbyList[lobbyName].Add(con);
 		}
         else
 		{
@@ -423,7 +405,15 @@ public class ServerBehaviour : MonoBehaviour
     static void HandleStartGame(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
 	{
         StartGameMessage message = header as StartGameMessage;
-	}
+        StartGameResponseMessage startGameResponseMessage = new StartGameResponseMessage()
+        {
+            startPlayer = Convert.ToByte(UnityEngine.Random.Range(0, 2)),
+            obstacleId = Convert.ToUInt32(UnityEngine.Random.Range(0, 4))
+        };
+
+        serv.SendUnicast(serv.lobbyList[message.name][0], startGameResponseMessage);
+        serv.SendUnicast(serv.lobbyList[message.name][1], startGameResponseMessage);
+    }
     
     static void HandlePlaceObstacle(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
 	{

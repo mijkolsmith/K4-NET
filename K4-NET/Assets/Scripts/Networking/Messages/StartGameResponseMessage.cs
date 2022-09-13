@@ -11,16 +11,25 @@ public class StartGameResponseMessage : MessageHeader
 	}
 
 	public NetworkMessageType messageType;
+	public byte startPlayer;
+	public uint obstacleId;
+
 
 	public override void SerializeObject(ref DataStreamWriter writer)
 	{
 		// Write message type & object ID
 		base.SerializeObject(ref writer);
+
+		writer.WriteByte(startPlayer);
+		writer.WriteUInt(obstacleId);
 	}
 
 	public override void DeserializeObject(ref DataStreamReader reader)
 	{
 		// Read message type & object ID
 		base.DeserializeObject(ref reader);
+
+		startPlayer = reader.ReadByte();
+		obstacleId = reader.ReadUInt();
 	}
 }
