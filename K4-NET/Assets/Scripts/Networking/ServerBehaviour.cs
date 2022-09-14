@@ -387,7 +387,6 @@ public class ServerBehaviour : MonoBehaviour
             {
                 score1 = score1,
                 score2 = score2,
-                name = serv.nameList[serv.idList[con]]
             };
             serv.SendUnicast(con, joinLobbyExistingMessage);
             serv.SendUnicast(serv.lobbyList[lobbyName][0], lobbyUpdateMessage);
@@ -405,14 +404,16 @@ public class ServerBehaviour : MonoBehaviour
     static void HandleStartGame(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
 	{
         StartGameMessage message = header as StartGameMessage;
+        string lobbyName = Convert.ToString(message.name);
+
         StartGameResponseMessage startGameResponseMessage = new StartGameResponseMessage()
         {
             startPlayer = Convert.ToByte(UnityEngine.Random.Range(0, 2)),
             obstacleId = Convert.ToUInt32(UnityEngine.Random.Range(0, 4))
         };
 
-        serv.SendUnicast(serv.lobbyList[message.name][0], startGameResponseMessage);
-        serv.SendUnicast(serv.lobbyList[message.name][1], startGameResponseMessage);
+        serv.SendUnicast(serv.lobbyList[lobbyName][0], startGameResponseMessage);
+        serv.SendUnicast(serv.lobbyList[lobbyName][1], startGameResponseMessage);
     }
     
     static void HandlePlaceObstacle(ServerBehaviour serv, NetworkConnection con, MessageHeader header)

@@ -243,10 +243,11 @@ public class ClientBehaviour : MonoBehaviour
         LobbyUpdateMessage message = header as LobbyUpdateMessage;
         int score1 = Convert.ToInt32(message.score1);
         int score2 = Convert.ToInt32(message.score2);
-        string name = Convert.ToString(message.name);
+
+        if (client.objectReferences == null) client.objectReferences = FindObjectOfType<ObjectReferences>();
 
         CurrentLobby currentLobby = client.objectReferences.currentLobby.GetComponent<CurrentLobby>();
-        currentLobby.player2Name.GetComponent<TextMeshProUGUI>().text = name;
+        currentLobby.player2Name.GetComponent<TextMeshProUGUI>().text = client.username;
         currentLobby.player1Score.GetComponent<TextMeshProUGUI>().text = score1.ToString();
         currentLobby.player2Score.GetComponent<TextMeshProUGUI>().text = score2.ToString();
     }

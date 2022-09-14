@@ -13,7 +13,6 @@ public class StartGameMessage : MessageHeader
 	public NetworkMessageType messageType;
 	public string name;
 
-
 	public override void SerializeObject(ref DataStreamWriter writer)
 	{
 		// Write message type & object ID
