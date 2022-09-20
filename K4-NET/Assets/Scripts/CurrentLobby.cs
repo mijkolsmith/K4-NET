@@ -6,7 +6,6 @@ using UnityEngine.UI;
 
 public class CurrentLobby : MonoBehaviour
 {
-	[SerializeField] private string lobbyName;
 	public ClientBehaviour client;
 	[SerializeField] private ObjectReferences objectReferences;
 	public GameObject lobbyNameObject;

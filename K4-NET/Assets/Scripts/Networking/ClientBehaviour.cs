@@ -234,7 +234,10 @@ public class ClientBehaviour : MonoBehaviour
 	{
         if (client.objectReferences == null) client.objectReferences = FindObjectOfType<ObjectReferences>();
 
-        client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Lobby full, please try again";
+        client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Lobby full/player left lobby, please try again";
+        
+        client.objectReferences.currentLobby.SetActive(false); 
+        client.objectReferences.joinLobby.SetActive(true);
     }
 
     private static void HandleLobbyUpdate(ClientBehaviour client, MessageHeader header)

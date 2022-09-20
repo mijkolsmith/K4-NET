@@ -407,14 +407,23 @@ public class ServerBehaviour : MonoBehaviour
         StartGameMessage message = header as StartGameMessage;
         string lobbyName = Convert.ToString(message.name);
 
-        StartGameResponseMessage startGameResponseMessage = new StartGameResponseMessage()
+        if (serv.lobbyList[lobbyName].Count == 2)
         {
-            startPlayer = Convert.ToByte(UnityEngine.Random.Range(0, 2)),
-            obstacleId = Convert.ToUInt32(UnityEngine.Random.Range(0, 4))
-        };
+            StartGameResponseMessage startGameResponseMessage = new StartGameResponseMessage()
+            {
+                startPlayer = Convert.ToByte(UnityEngine.Random.Range(0, 2)),
+                obstacleId = Convert.ToUInt32(UnityEngine.Random.Range(0, 4))
+            };
 
-        serv.SendUnicast(serv.lobbyList[lobbyName][0], startGameResponseMessage);
-        serv.SendUnicast(serv.lobbyList[lobbyName][1], startGameResponseMessage);
+            serv.SendUnicast(serv.lobbyList[lobbyName][0], startGameResponseMessage);
+            serv.SendUnicast(serv.lobbyList[lobbyName][1], startGameResponseMessage);
+        }
+        else
+		{
+            JoinLobbyFailMessage joinLobbyFailMessage = new JoinLobbyFailMessage() { };
+            serv.SendUnicast(serv.lobbyList[lobbyName][0], joinLobbyFailMessage);
+            serv.SendUnicast(serv.lobbyList[lobbyName][1], joinLobbyFailMessage);
+        }
     }
     
     static void HandlePlaceObstacle(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
