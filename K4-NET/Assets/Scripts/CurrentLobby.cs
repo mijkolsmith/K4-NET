@@ -30,7 +30,7 @@ public class CurrentLobby : MonoBehaviour
 	{
 		StartGameMessage startGameMessage = new StartGameMessage()
 		{
-			name = lobbyName
+			name = objectReferences.lobbyName
 		};
 
 		client.SendPackedMessage(startGameMessage);

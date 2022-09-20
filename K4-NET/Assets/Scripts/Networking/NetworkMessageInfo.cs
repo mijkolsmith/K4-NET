@@ -13,6 +13,7 @@ public static class NetworkMessageInfo
             { NetworkMessageType.LOGIN_FAIL,                typeof(LoginFailMessage) },
             { NetworkMessageType.JOIN_LOBBY,                typeof(JoinLobbyMessage) },
             { NetworkMessageType.JOIN_LOBBY_NEW,            typeof(JoinLobbyNewMessage) },
+            { NetworkMessageType.JOIN_LOBBY_FAIL,           typeof(JoinLobbyFailMessage) },
             { NetworkMessageType.JOIN_LOBBY_EXISTING,       typeof(JoinLobbyExistingMessage) },
             { NetworkMessageType.LOBBY_UPDATE,              typeof(LobbyUpdateMessage) },
             { NetworkMessageType.START_GAME,                typeof(StartGameMessage) },

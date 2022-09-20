@@ -24,7 +24,6 @@ public class Lobby : MonoBehaviour
 	public void JoinLobby()
 	{
 		objectReferences.lobbyName = lobbyName;
-		Debug.Log(objectReferences.lobbyName);
 
 		JoinLobbyMessage joinLobbyMessage = new JoinLobbyMessage()
 		{

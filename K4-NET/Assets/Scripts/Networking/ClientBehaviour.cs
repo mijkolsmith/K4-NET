@@ -206,7 +206,6 @@ public class ClientBehaviour : MonoBehaviour
         currentLobby.lobbyNameObject.GetComponent<TextMeshProUGUI>().text = lobbyName;
         currentLobby.client = client;
         currentLobby.player1Name.GetComponent<TextMeshProUGUI>().text = client.username;
-        currentLobby.startLobbyObject.SetActive(true);
     }
 
     private static void HandleJoinLobbyExisting(ClientBehaviour client, MessageHeader header)
@@ -243,15 +242,16 @@ public class ClientBehaviour : MonoBehaviour
         LobbyUpdateMessage message = header as LobbyUpdateMessage;
         int score1 = Convert.ToInt32(message.score1);
         int score2 = Convert.ToInt32(message.score2);
+        string username = Convert.ToString(message.name);
 
         if (client.objectReferences == null) client.objectReferences = FindObjectOfType<ObjectReferences>();
 
         CurrentLobby currentLobby = client.objectReferences.currentLobby.GetComponent<CurrentLobby>();
-        currentLobby.player2Name.GetComponent<TextMeshProUGUI>().text = client.username;
+        currentLobby.player2Name.GetComponent<TextMeshProUGUI>().text = username;
         currentLobby.player1Score.GetComponent<TextMeshProUGUI>().text = score1.ToString();
         currentLobby.player2Score.GetComponent<TextMeshProUGUI>().text = score2.ToString();
+        currentLobby.startLobbyObject.SetActive(true);
     }
-
 
     private static void HandleStartGameResponse(ClientBehaviour client, MessageHeader header)
 	{

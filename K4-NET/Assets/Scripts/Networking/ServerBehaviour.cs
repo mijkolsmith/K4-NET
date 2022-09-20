@@ -230,6 +230,7 @@ public class ServerBehaviour : MonoBehaviour
             m_Driver.EndSend(writer);
         }
     }
+
     public void SendBroadcast(MessageHeader header, NetworkConnection toExclude = default, bool realiable = true)
     {
         for (int i = 0; i < m_Connections.Length; i++)
@@ -358,9 +359,6 @@ public class ServerBehaviour : MonoBehaviour
 		else if (serv.lobbyList[lobbyName].Count == 1)
 		{
             // Player joins existing lobby
-            Debug.Log(serv.PhpConnectionID);
-            Debug.Log(serv.idList[serv.lobbyList[lobbyName][0]]);
-            Debug.Log(serv.idList[con]);
 
 			// Get the scores of the two players against each other, kinda complicated but it's easier than changing the query
 			var json = await serv.request<List<UserScore>>("https://studenthome.hku.nl/~michael.smith/K4/score_get.php?PHPSESSID=" + serv.PhpConnectionID + "&player1=" + serv.idList[serv.lobbyList[message.name][0]] + "&player2=" + serv.idList[con]);
@@ -373,6 +371,7 @@ public class ServerBehaviour : MonoBehaviour
                 score2 = score1;
                 score1 = 0;
 			}
+            string username = json[1].username;
 
             // Create a JoinLobbyExistingMessage for player 2
             JoinLobbyExistingMessage joinLobbyExistingMessage = new JoinLobbyExistingMessage
@@ -387,7 +386,9 @@ public class ServerBehaviour : MonoBehaviour
             {
                 score1 = score1,
                 score2 = score2,
+                name = username
             };
+
             serv.SendUnicast(con, joinLobbyExistingMessage);
             serv.SendUnicast(serv.lobbyList[lobbyName][0], lobbyUpdateMessage);
 
