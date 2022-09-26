@@ -15,6 +15,7 @@ public class GameGrid : MonoBehaviour
     {
         gameGrid = new GameObject[width, height];
         CreateGrid();
+        transform.Rotate(-90, 0, 0);
     }
 
     // Creates a grid

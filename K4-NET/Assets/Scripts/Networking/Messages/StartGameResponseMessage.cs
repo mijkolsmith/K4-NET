@@ -11,8 +11,8 @@ public class StartGameResponseMessage : MessageHeader
 	}
 
 	public NetworkMessageType messageType;
-	public byte startPlayer;
-	public uint obstacleId;
+	public uint startPlayer;
+	public uint itemId;
 
 
 	public override void SerializeObject(ref DataStreamWriter writer)
@@ -20,8 +20,8 @@ public class StartGameResponseMessage : MessageHeader
 		// Write message type & object ID
 		base.SerializeObject(ref writer);
 
-		writer.WriteByte(startPlayer);
-		writer.WriteUInt(obstacleId);
+		writer.WriteUInt(startPlayer);
+		writer.WriteUInt(itemId);
 	}
 
 	public override void DeserializeObject(ref DataStreamReader reader)
@@ -29,7 +29,7 @@ public class StartGameResponseMessage : MessageHeader
 		// Read message type & object ID
 		base.DeserializeObject(ref reader);
 
-		startPlayer = reader.ReadByte();
-		obstacleId = reader.ReadUInt();
+		startPlayer = reader.ReadUInt();
+		itemId = reader.ReadUInt();
 	}
 }

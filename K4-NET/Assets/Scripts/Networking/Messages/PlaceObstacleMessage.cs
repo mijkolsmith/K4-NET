@@ -11,6 +11,8 @@ public class PlaceObstacleMessage : MessageHeader
 	}
 
 	public NetworkMessageType messageType;
+	public int x;
+	public int y;
 
 	public override void SerializeObject(ref DataStreamWriter writer)
 	{

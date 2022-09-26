@@ -259,15 +259,21 @@ public class ClientBehaviour : MonoBehaviour
     private static void HandleStartGameResponse(ClientBehaviour client, MessageHeader header)
 	{
         StartGameResponseMessage message = header as StartGameResponseMessage;
-        
+        uint itemId = 0;
+
         if (Convert.ToInt32(message.startPlayer) == client.player)
 		{
             Debug.Log(Convert.ToInt32(message.startPlayer));
-		}
-        uint obstacleId = Convert.ToUInt32(message.obstacleId);
-
+            itemId = Convert.ToUInt32(message.itemId);
+        }
+        
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
         client.objectReferences = FindObjectOfType<ObjectReferences>();
+
+        if (itemId != 0)
+		{
+
+		}
     }
     
     private static void HandlePlaceObstacleSuccess(ClientBehaviour client, MessageHeader header)

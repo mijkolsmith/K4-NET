@@ -412,7 +412,7 @@ public class ServerBehaviour : MonoBehaviour
             StartGameResponseMessage startGameResponseMessage = new StartGameResponseMessage()
             {
                 startPlayer = Convert.ToByte(UnityEngine.Random.Range(0, 2)),
-                obstacleId = Convert.ToUInt32(UnityEngine.Random.Range(0, 4))
+                itemId = Convert.ToUInt32(UnityEngine.Random.Range(1, 5))
             };
 
             serv.SendUnicast(serv.lobbyList[lobbyName][0], startGameResponseMessage);
