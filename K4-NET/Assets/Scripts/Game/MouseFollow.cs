@@ -20,4 +20,9 @@ public class MouseFollow : MonoBehaviour
         Vector2 cursorPos = Camera.main.ScreenToWorldPoint(mousePos);
         transform.position = cursorPos;
     }
+
+    public void SetSprite(Sprite newSprite)
+	{
+        spriteRenderer.sprite = newSprite;
+	}
 }

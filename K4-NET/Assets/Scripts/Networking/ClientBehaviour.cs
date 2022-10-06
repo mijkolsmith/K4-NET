@@ -261,19 +261,28 @@ public class ClientBehaviour : MonoBehaviour
         StartGameResponseMessage message = header as StartGameResponseMessage;
         uint itemId = 0;
 
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+        client.objectReferences = FindObjectOfType<ObjectReferences>();
+
         if (Convert.ToInt32(message.startPlayer) == client.player)
 		{
             Debug.Log(Convert.ToInt32(message.startPlayer));
             itemId = Convert.ToUInt32(message.itemId);
+            
+            //TODO: NULL REFERENCE?
+            if (client.objectReferences == null) client.objectReferences = FindObjectOfType<ObjectReferences>();
+            client.objectReferences.inputManager.activePlayer = true;
         }
-        
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
-        client.objectReferences = FindObjectOfType<ObjectReferences>();
 
         if (itemId != 0)
 		{
-
-		}
+            client.objectReferences.cursor.SetSprite(client.objectReferences.cursorSprites[Convert.ToInt32(itemId)]);
+            var item = (Item)System.Activator.CreateInstance(client.objectReferences.items[Convert.ToInt32(itemId)]);
+            if (item.GetType() == typeof(Item))
+			{
+                client.objectReferences.currentItem = item;
+            }
+        }
     }
     
     private static void HandlePlaceObstacleSuccess(ClientBehaviour client, MessageHeader header)

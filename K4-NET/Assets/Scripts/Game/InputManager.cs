@@ -6,6 +6,8 @@ public class InputManager : MonoBehaviour
 {
     [SerializeField] GameGrid gameGrid;
     [SerializeField] LayerMask gridLayer;
+    [SerializeField] ObjectReferences objectReferences;
+    public bool activePlayer = false;
 
     private void Update()
     {
@@ -13,10 +15,10 @@ public class InputManager : MonoBehaviour
 
         if (gridCell != null)
 		{
-            if (Input.GetMouseButtonDown(0))
+            if (Input.GetMouseButtonDown(0) && activePlayer)
 			{
                 // Execute code depending on the state of the game
-                gridCell.GetComponentInChildren<SpriteRenderer>().material.color = Color.green;
+                Instantiate(objectReferences.currentItem, gridCell.transform.position, Quaternion.identity, null);
 			}
 		}
     }

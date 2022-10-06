@@ -1,4 +1,13 @@
+using System.Collections.Generic;
 using UnityEngine;
+
+public enum Items
+{
+    MINE,
+    MINESWEEPER,
+    WALL,
+    WRECKINGBALL
+}
 
 public class Item : MonoBehaviour
 {

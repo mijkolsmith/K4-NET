@@ -203,9 +203,17 @@ MonoBehaviour:
   errorMessage: {fileID: 0}
   joinLobby: {fileID: 0}
   currentLobby: {fileID: 0}
+  cursor: {fileID: 1299687588}
   lobbyName: 
   items: []
-  sprites: []
+  itemSprites:
+  - {fileID: 21300000, guid: e95c2eaada3238d4d9e6d8300c385aa6, type: 3}
+  - {fileID: 21300000, guid: cb7ccf31d56d9cf4f87bf65eac2d4f8e, type: 3}
+  cursorSprites:
+  - {fileID: 21300000, guid: 3a972f106e47f8548a7fa7025f83f471, type: 3}
+  - {fileID: 21300000, guid: 3ed18c809a4ee664bbc6f33f2576af5e, type: 3}
+  - {fileID: 21300000, guid: 9a272c6d479a5394b892b1f945217c0f, type: 3}
+  - {fileID: 21300000, guid: ec89964745dce474eadc2b1e83bf94d9, type: 3}
 --- !u!4 &466665513
 Transform:
   m_ObjectHideFlags: 0
@@ -459,7 +467,7 @@ GameObject:
   - component: {fileID: 1299687588}
   - component: {fileID: 1299687589}
   m_Layer: 0
-  m_Name: Cursor
+  m_Name: CursorOverlay
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

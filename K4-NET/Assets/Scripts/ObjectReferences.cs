@@ -8,10 +8,21 @@ public class ObjectReferences : MonoBehaviour
     public GameObject errorMessage;
     public GameObject joinLobby;
     public GameObject currentLobby;
+    public MouseFollow cursor;
+    public InputManager inputManager;
     public string lobbyName;
 
-    public List<Item> items = new List<Item>();
-    public List<Image> sprites = new List<Image>();
+    public Item currentItem;
+    public Dictionary<int, System.Type> items = new Dictionary<int, System.Type>()
+    {
+        { 0, null },
+        { 1, typeof(Mine) },
+        { 2, typeof(MineSweeper) },
+        { 3, typeof(Wall) },
+        { 4, typeof(WreckingBall) }
+    };
+    public List<Sprite> itemSprites = new List<Sprite>();
+    public List<Sprite> cursorSprites = new List<Sprite>();
     //0: no item
     //1: mine
     //2: minesweeper
