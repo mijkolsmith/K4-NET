@@ -204,8 +204,9 @@ MonoBehaviour:
   joinLobby: {fileID: 0}
   currentLobby: {fileID: 0}
   cursor: {fileID: 1299687588}
+  inputManager: {fileID: 776926074}
   lobbyName: 
-  items: []
+  currentItem: {fileID: 0}
   itemSprites:
   - {fileID: 21300000, guid: e95c2eaada3238d4d9e6d8300c385aa6, type: 3}
   - {fileID: 21300000, guid: cb7ccf31d56d9cf4f87bf65eac2d4f8e, type: 3}
@@ -356,6 +357,8 @@ MonoBehaviour:
   gridLayer:
     serializedVersion: 2
     m_Bits: 8
+  objectReferences: {fileID: 0}
+  activePlayer: 0
 --- !u!4 &776926075
 Transform:
   m_ObjectHideFlags: 0

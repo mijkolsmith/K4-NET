@@ -13,7 +13,7 @@ public class MouseFollow : MonoBehaviour
 
     void Update()
     {
-        Cursor.visible = (spriteRenderer.sprite == null) ? true : false;
+        Cursor.visible = (spriteRenderer.sprite == null);
         Vector3 mousePos = Input.mousePosition;
         mousePos.z = 25;
 
@@ -22,7 +22,7 @@ public class MouseFollow : MonoBehaviour
     }
 
     public void SetSprite(Sprite newSprite)
-	{
+    {
         spriteRenderer.sprite = newSprite;
-	}
+    }
 }

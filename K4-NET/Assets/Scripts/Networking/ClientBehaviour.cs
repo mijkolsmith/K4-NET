@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.Networking.Transport;
@@ -258,33 +259,43 @@ public class ClientBehaviour : MonoBehaviour
 
     private static void HandleStartGameResponse(ClientBehaviour client, MessageHeader header)
 	{
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+        client.StartCoroutine(HandleStartGameResponseCoroutine(client, header));
+    }
+
+    private static IEnumerator HandleStartGameResponseCoroutine(ClientBehaviour client, MessageHeader header)
+    {
+        while (client.objectReferences == null)
+        {
+            client.objectReferences = FindObjectOfType<ObjectReferences>();
+            yield return null;
+        }
+        Debug.Log("out of loop");
         StartGameResponseMessage message = header as StartGameResponseMessage;
         uint itemId = 0;
 
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
-        client.objectReferences = FindObjectOfType<ObjectReferences>();
+        //client.objectReferences = FindObjectOfType<ObjectReferences>();
 
         if (Convert.ToInt32(message.startPlayer) == client.player)
-		{
+        {
             Debug.Log(Convert.ToInt32(message.startPlayer));
             itemId = Convert.ToUInt32(message.itemId);
-            
-            //TODO: NULL REFERENCE?
+
             if (client.objectReferences == null) client.objectReferences = FindObjectOfType<ObjectReferences>();
             client.objectReferences.inputManager.activePlayer = true;
         }
 
         if (itemId != 0)
-		{
+        {
             client.objectReferences.cursor.SetSprite(client.objectReferences.cursorSprites[Convert.ToInt32(itemId)]);
             var item = (Item)System.Activator.CreateInstance(client.objectReferences.items[Convert.ToInt32(itemId)]);
             if (item.GetType() == typeof(Item))
-			{
+            {
                 client.objectReferences.currentItem = item;
             }
         }
     }
-    
+
     private static void HandlePlaceObstacleSuccess(ClientBehaviour client, MessageHeader header)
 	{
         PlaceObstacleSuccessMessage message = header as PlaceObstacleSuccessMessage;

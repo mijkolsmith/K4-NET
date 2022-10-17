@@ -18,6 +18,8 @@ public class InputManager : MonoBehaviour
             if (Input.GetMouseButtonDown(0) && activePlayer)
 			{
                 // Execute code depending on the state of the game
+
+
                 Instantiate(objectReferences.currentItem, gridCell.transform.position, Quaternion.identity, null);
 			}
 		}
