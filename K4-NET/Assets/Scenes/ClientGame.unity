@@ -206,7 +206,10 @@ MonoBehaviour:
   cursor: {fileID: 1299687588}
   inputManager: {fileID: 776926074}
   lobbyName: 
-  currentItem: {fileID: 0}
+  currentItem: 0
+  itemPrefabs:
+  - {fileID: 4091815407782601781, guid: a04ed99438c50ad4baea3523d860be19, type: 3}
+  - {fileID: 7740351518455991095, guid: acca74883be7c374db649e80251f1221, type: 3}
   itemSprites:
   - {fileID: 21300000, guid: e95c2eaada3238d4d9e6d8300c385aa6, type: 3}
   - {fileID: 21300000, guid: cb7ccf31d56d9cf4f87bf65eac2d4f8e, type: 3}
@@ -357,7 +360,7 @@ MonoBehaviour:
   gridLayer:
     serializedVersion: 2
     m_Bits: 8
-  objectReferences: {fileID: 0}
+  objectReferences: {fileID: 466665512}
   activePlayer: 0
 --- !u!4 &776926075
 Transform:

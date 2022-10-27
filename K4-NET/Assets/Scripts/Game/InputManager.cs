@@ -1,13 +1,20 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class InputManager : MonoBehaviour
 {
-    [SerializeField] GameGrid gameGrid;
-    [SerializeField] LayerMask gridLayer;
-    [SerializeField] ObjectReferences objectReferences;
-    public bool activePlayer = false;
+    [SerializeField] private GameGrid gameGrid;
+    [SerializeField] private LayerMask gridLayer;
+    [SerializeField] private ObjectReferences objectReferences;
+    [SerializeField] public bool activePlayer = false;
+    [SerializeField] private ClientBehaviour client;
+
+    private void Start()
+    {
+        client = FindObjectOfType<ClientBehaviour>();
+    }
 
     private void Update()
     {
@@ -19,9 +26,23 @@ public class InputManager : MonoBehaviour
 			{
                 // Execute code depending on the state of the game
 
+                // Place Item
+                if (objectReferences.currentItem == 1 || objectReferences.currentItem == 3)
+				{
+                    Instantiate(objectReferences.itemPrefabs[objectReferences.currentItem], gridCell.transform.position, Quaternion.identity, null);
+                }
 
-                Instantiate(objectReferences.currentItem, gridCell.transform.position, Quaternion.identity, null);
-			}
+                // Remove Item
+
+
+                PlaceObstacleMessage placeObstacleMessage = new()
+                {
+                    x = (int)gridCell.transform.position.x,
+                    y = (int)gridCell.transform.position.y
+                };
+
+                client.SendPackedMessage(placeObstacleMessage);
+            }
 		}
     }
 

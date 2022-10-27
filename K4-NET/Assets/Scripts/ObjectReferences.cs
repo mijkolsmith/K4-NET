@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 using UnityEngine.UI;
 
 public class ObjectReferences : MonoBehaviour
@@ -12,17 +13,10 @@ public class ObjectReferences : MonoBehaviour
     public InputManager inputManager;
     public string lobbyName;
 
-    public Item currentItem;
-    public Dictionary<int, System.Type> items = new Dictionary<int, System.Type>()
-    {
-        { 0, null },
-        { 1, typeof(Mine) },
-        { 2, typeof(MineSweeper) },
-        { 3, typeof(Wall) },
-        { 4, typeof(WreckingBall) }
-    };
-    public List<Sprite> itemSprites = new List<Sprite>();
-    public List<Sprite> cursorSprites = new List<Sprite>();
+    public int currentItem;
+    public List<GameObject> itemPrefabs = new();
+    public List<Sprite> itemSprites = new();
+    public List<Sprite> cursorSprites = new();
     //0: no item
     //1: mine
     //2: minesweeper

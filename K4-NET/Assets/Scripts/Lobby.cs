@@ -15,7 +15,6 @@ public class Lobby : MonoBehaviour
 		client = FindObjectOfType<ClientBehaviour>();
 	}
 
-
 	public void SetLobbyName(string lobbyName)
 	{
 		this.lobbyName = lobbyName;

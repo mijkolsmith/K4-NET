@@ -11,7 +11,7 @@ public class StartGameResponseMessage : MessageHeader
 	}
 
 	public NetworkMessageType messageType;
-	public uint startPlayer;
+	public uint activePlayer;
 	public uint itemId;
 
 
@@ -20,7 +20,7 @@ public class StartGameResponseMessage : MessageHeader
 		// Write message type & object ID
 		base.SerializeObject(ref writer);
 
-		writer.WriteUInt(startPlayer);
+		writer.WriteUInt(activePlayer);
 		writer.WriteUInt(itemId);
 	}
 
@@ -29,7 +29,7 @@ public class StartGameResponseMessage : MessageHeader
 		// Read message type & object ID
 		base.DeserializeObject(ref reader);
 
-		startPlayer = reader.ReadUInt();
+		activePlayer = reader.ReadUInt();
 		itemId = reader.ReadUInt();
 	}
 }

@@ -43,7 +43,12 @@ public class ClientBehaviour : MonoBehaviour
 
     public string username;
     public string otherUsername;
-    uint player;
+    private uint player;
+    
+    //stupid work around for sceneloading race condition
+    private uint itemId = 0;
+    private float objectReferencesTimer;
+    private float objectReferencesTimeNeeded;
 
     void Start()
     {
@@ -110,6 +115,25 @@ public class ClientBehaviour : MonoBehaviour
             {
                 Debug.Log("Client got disconnected from server");
                 m_Connection = default(NetworkConnection);
+            }
+        }
+
+        //workaround for race condition
+        if (objectReferencesTimer < objectReferencesTimeNeeded)
+		{
+            objectReferencesTimer += Time.deltaTime;
+		}
+        else if (objectReferencesTimeNeeded != 0f)
+		{
+            if (objectReferences == null) objectReferences = FindObjectOfType<ObjectReferences>();
+            objectReferencesTimeNeeded = 0f;
+            objectReferencesTimer = 0f;
+            objectReferences.inputManager.activePlayer = true;
+
+            if (itemId != 0)
+            {
+                objectReferences.cursor.SetSprite(objectReferences.cursorSprites[Convert.ToInt32(itemId)]);
+                objectReferences.currentItem = Convert.ToInt32(itemId);
             }
         }
     }
@@ -229,8 +253,10 @@ public class ClientBehaviour : MonoBehaviour
         currentLobby.player2Name.GetComponent<TextMeshProUGUI>().text = client.username;
         currentLobby.player1Score.GetComponent<TextMeshProUGUI>().text = score1.ToString();
         currentLobby.player2Score.GetComponent<TextMeshProUGUI>().text = score2.ToString();
+
+        client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "";
     }
-    
+
     private static void HandleJoinLobbyFail(ClientBehaviour client, MessageHeader header)
 	{
         if (client.objectReferences == null) client.objectReferences = FindObjectOfType<ObjectReferences>();
@@ -260,39 +286,12 @@ public class ClientBehaviour : MonoBehaviour
     private static void HandleStartGameResponse(ClientBehaviour client, MessageHeader header)
 	{
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
-        client.StartCoroutine(HandleStartGameResponseCoroutine(client, header));
-    }
-
-    private static IEnumerator HandleStartGameResponseCoroutine(ClientBehaviour client, MessageHeader header)
-    {
-        while (client.objectReferences == null)
-        {
-            client.objectReferences = FindObjectOfType<ObjectReferences>();
-            yield return null;
-        }
-        Debug.Log("out of loop");
         StartGameResponseMessage message = header as StartGameResponseMessage;
-        uint itemId = 0;
 
-        //client.objectReferences = FindObjectOfType<ObjectReferences>();
-
-        if (Convert.ToInt32(message.startPlayer) == client.player)
+        if (Convert.ToInt32(message.activePlayer) == client.player)
         {
-            Debug.Log(Convert.ToInt32(message.startPlayer));
-            itemId = Convert.ToUInt32(message.itemId);
-
-            if (client.objectReferences == null) client.objectReferences = FindObjectOfType<ObjectReferences>();
-            client.objectReferences.inputManager.activePlayer = true;
-        }
-
-        if (itemId != 0)
-        {
-            client.objectReferences.cursor.SetSprite(client.objectReferences.cursorSprites[Convert.ToInt32(itemId)]);
-            var item = (Item)System.Activator.CreateInstance(client.objectReferences.items[Convert.ToInt32(itemId)]);
-            if (item.GetType() == typeof(Item))
-            {
-                client.objectReferences.currentItem = item;
-            }
+            client.itemId = Convert.ToUInt32(message.itemId);
+            client.objectReferencesTimeNeeded = .2f;
         }
     }
 
@@ -340,6 +339,5 @@ public class ClientBehaviour : MonoBehaviour
     private static void HandleContinueChoiceResponse(ClientBehaviour client, MessageHeader header)
 	{
         ContinueChoiceResponseMessage message = header as ContinueChoiceResponseMessage;
-
     }
 }

@@ -1,17 +1,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum Items
+public class Item
 {
-    MINE,
-    MINESWEEPER,
-    WALL,
-    WRECKINGBALL
-}
-
-public class Item : MonoBehaviour
-{
-    protected int gridPosition;
+    public int x;
+    public int y;
+    public ItemType itemType;
 
     //0: no item
     //1: mine

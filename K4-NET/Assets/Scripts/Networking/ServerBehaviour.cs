@@ -57,10 +57,12 @@ public class ServerBehaviour : MonoBehaviour
 	public NetworkPipeline m_Pipeline;
 	private NativeList<NetworkConnection> m_Connections;
 
-	private Dictionary<NetworkConnection, int> idList = new Dictionary<NetworkConnection, int>();
-	private Dictionary<int, string> nameList = new Dictionary<int, string>();
-	private Dictionary<NetworkConnection, PingPong> pongDict = new Dictionary<NetworkConnection, PingPong>();
-	private Dictionary<string, List<NetworkConnection>> lobbyList = new Dictionary<string, List<NetworkConnection>>();
+	private Dictionary<NetworkConnection, int> idList = new();
+	private Dictionary<int, string> nameList = new();
+	private Dictionary<NetworkConnection, PingPong> pongDict = new();
+	private Dictionary<string, List<NetworkConnection>> lobbyList = new();
+	private Dictionary<string, uint> lobbyActivePlayer = new();
+	private Dictionary<string, List<Item>> lobbyItems = new();
 
 	public ChatCanvas chat;
 
@@ -362,19 +364,22 @@ public class ServerBehaviour : MonoBehaviour
 		else if (serv.lobbyList[lobbyName].Count == 1)
 		{
 			// Player joins existing lobby
+			serv.lobbyList[lobbyName].Add(con);
 
 			// Get the scores of the two players against each other, kinda complicated but it's easier than changing the query
-			var json = await serv.request<List<UserScore>>("https://studenthome.hku.nl/~michael.smith/K4/score_get.php?PHPSESSID=" + serv.PhpConnectionID + "&player1=" + serv.idList[serv.lobbyList[message.name][0]] + "&player2=" + serv.idList[con]);
+			var json = await serv.request<List<UserScore>>("https://studenthome.hku.nl/~michael.smith/K4/score_get.php?PHPSESSID=" + serv.PhpConnectionID + "&player1=" + serv.idList[serv.lobbyList[lobbyName][0]] + "&player2=" + serv.idList[con]);
 			uint score1 = 0;
 			uint score2 = 0;
-			if (json.Count > 0) score1 = Convert.ToUInt32(json[0].score);
-			if (json.Count == 2) score2 = Convert.ToUInt32(json[1].score);
+			if (json.Count > 0)
+			{
+				score1 = Convert.ToUInt32(json[0].score);
+				if (json.Count == 2) score2 = Convert.ToUInt32(json[1].score);
+			}
 			else if (serv.nameList[serv.idList[serv.lobbyList[lobbyName][0]]] != json[0].username)
 			{
 				score2 = score1;
 				score1 = 0;
 			}
-			string username = json[1].username;
 
 			// Create a JoinLobbyExistingMessage for player 2
 			JoinLobbyExistingMessage joinLobbyExistingMessage = new JoinLobbyExistingMessage
@@ -389,7 +394,7 @@ public class ServerBehaviour : MonoBehaviour
 			{
 				score1 = score1,
 				score2 = score2,
-				name = username
+				name = serv.nameList[serv.idList[serv.lobbyList[lobbyName][1]]]
 			};
 
 			serv.SendUnicast(con, joinLobbyExistingMessage);
@@ -412,9 +417,12 @@ public class ServerBehaviour : MonoBehaviour
 
 		if (serv.lobbyList[lobbyName].Count == 2)
 		{
+			serv.lobbyActivePlayer[lobbyName] = Convert.ToUInt32(UnityEngine.Random.Range(0, 2));
+			serv.lobbyItems[lobbyName].Add(new Item() { itemType = (ItemType) UnityEngine.Random.Range(1, 5) });
+
 			StartGameResponseMessage startGameResponseMessage = new StartGameResponseMessage()
 			{
-				startPlayer = Convert.ToByte(UnityEngine.Random.Range(0, 2)),
+				activePlayer = serv.lobbyActivePlayer[lobbyName],
 				itemId = Convert.ToUInt32(UnityEngine.Random.Range(1, 5))
 			};
 
@@ -432,6 +440,8 @@ public class ServerBehaviour : MonoBehaviour
 	static void HandlePlaceObstacle(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
 	{
 		PlaceObstacleMessage message = header as PlaceObstacleMessage;
+		Debug.Log(message.x);
+		Debug.Log(message.y);
 	}
 
 	static void HandlePlayerMove(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
