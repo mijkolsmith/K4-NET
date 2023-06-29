@@ -207,17 +207,7 @@ MonoBehaviour:
   inputManager: {fileID: 776926074}
   lobbyName: 
   currentItem: 0
-  itemPrefabs:
-  - {fileID: 4091815407782601781, guid: a04ed99438c50ad4baea3523d860be19, type: 3}
-  - {fileID: 7740351518455991095, guid: acca74883be7c374db649e80251f1221, type: 3}
-  itemSprites:
-  - {fileID: 21300000, guid: e95c2eaada3238d4d9e6d8300c385aa6, type: 3}
-  - {fileID: 21300000, guid: cb7ccf31d56d9cf4f87bf65eac2d4f8e, type: 3}
-  cursorSprites:
-  - {fileID: 21300000, guid: 3a972f106e47f8548a7fa7025f83f471, type: 3}
-  - {fileID: 21300000, guid: 3ed18c809a4ee664bbc6f33f2576af5e, type: 3}
-  - {fileID: 21300000, guid: 9a272c6d479a5394b892b1f945217c0f, type: 3}
-  - {fileID: 21300000, guid: ec89964745dce474eadc2b1e83bf94d9, type: 3}
+  gamePrefabs: {fileID: 11400000, guid: 5b2ebba56c5af4c4798437885d66d8d5, type: 2}
 --- !u!4 &466665513
 Transform:
   m_ObjectHideFlags: 0
@@ -362,6 +352,7 @@ MonoBehaviour:
     m_Bits: 8
   objectReferences: {fileID: 466665512}
   activePlayer: 0
+  client: {fileID: 0}
 --- !u!4 &776926075
 Transform:
   m_ObjectHideFlags: 0

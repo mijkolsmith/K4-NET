@@ -8,7 +8,7 @@ public class Lobby : MonoBehaviour
 {
 	[SerializeField] private string lobbyName;
 	[SerializeField] private ClientBehaviour client;
-	[SerializeField] private ObjectReferences objectReferences;
+	[SerializeField] private SceneObjectReferences objectReferences;
 	
 	private void Start()
 	{

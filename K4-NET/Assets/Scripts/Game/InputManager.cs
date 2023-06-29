@@ -7,7 +7,7 @@ public class InputManager : MonoBehaviour
 {
     [SerializeField] private GameGrid gameGrid;
     [SerializeField] private LayerMask gridLayer;
-    [SerializeField] private ObjectReferences objectReferences;
+    [SerializeField] private SceneObjectReferences objectReferences;
     [SerializeField] public bool activePlayer = false;
     [SerializeField] private ClientBehaviour client;
 
@@ -29,7 +29,7 @@ public class InputManager : MonoBehaviour
                 // Place Item
                 if (objectReferences.currentItem == 1 || objectReferences.currentItem == 3)
 				{
-                    Instantiate(objectReferences.itemPrefabs[objectReferences.currentItem], gridCell.transform.position, Quaternion.identity, null);
+                    Instantiate(objectReferences.gamePrefabs.itemPrefabs[objectReferences.currentItem], gridCell.transform.position, Quaternion.identity, null);
                 }
 
                 // Remove Item

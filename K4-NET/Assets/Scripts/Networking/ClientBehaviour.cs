@@ -39,7 +39,7 @@ public class ClientBehaviour : MonoBehaviour
     public NetworkConnection m_Connection;
     public bool Done;
 
-    public ObjectReferences objectReferences;
+    public SceneObjectReferences objectReferences;
 
     public string username;
     public string otherUsername;
@@ -118,21 +118,21 @@ public class ClientBehaviour : MonoBehaviour
             }
         }
 
-        //workaround for race condition
+        // Workaround for race condition
         if (objectReferencesTimer < objectReferencesTimeNeeded)
 		{
             objectReferencesTimer += Time.deltaTime;
 		}
         else if (objectReferencesTimeNeeded != 0f)
 		{
-            if (objectReferences == null) objectReferences = FindObjectOfType<ObjectReferences>();
+            if (objectReferences == null) objectReferences = FindObjectOfType<SceneObjectReferences>();
             objectReferencesTimeNeeded = 0f;
             objectReferencesTimer = 0f;
             objectReferences.inputManager.activePlayer = true;
 
             if (itemId != 0)
             {
-                objectReferences.cursor.SetSprite(objectReferences.cursorSprites[Convert.ToInt32(itemId)]);
+                objectReferences.cursor.SetSprite(objectReferences.gamePrefabs.cursorSprites[Convert.ToInt32(itemId)]);
                 objectReferences.currentItem = Convert.ToInt32(itemId);
             }
         }
@@ -187,20 +187,25 @@ public class ClientBehaviour : MonoBehaviour
     private static void HandleServerHandshakeResponse(ClientBehaviour client, MessageHeader header)
     {
         Debug.Log("Successfully Handshaked");
-        client.objectReferences.loginRegister.SetActive(true);
-        client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Please Register or Login";
+        if (client.objectReferences.loginRegister != null)
+            client.objectReferences.loginRegister.SetActive(true);
+
+        if (client.objectReferences.errorMessage != null)
+            client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Please Register or Login";
     }
 
     private static void HandleRegisterSuccess(ClientBehaviour client, MessageHeader header)
 	{
         Debug.Log("register success");
-        client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Register Success, please Login";
+        if (client.objectReferences.errorMessage != null)
+            client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Register Success, please Login";
 	}
 
     private static void HandleRegisterFail(ClientBehaviour client, MessageHeader header)
 	{
         Debug.Log("register fail");
-        client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Register fail, please try again";
+        if (client.objectReferences.errorMessage != null)
+            client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Register fail, please try again";
     }
 
     private static void HandleLoginSuccess(ClientBehaviour client, MessageHeader header)
@@ -214,14 +219,15 @@ public class ClientBehaviour : MonoBehaviour
 	{
         Debug.Log("login fail");
 
-        client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Login fail, please try again";
+        if (client.objectReferences.errorMessage != null)
+            client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Login fail, please try again";
     }
 
     private static void HandleJoinLobbyNew(ClientBehaviour client, MessageHeader header)
 	{
         client.player = 0;
 
-        if (client.objectReferences == null) client.objectReferences = FindObjectOfType<ObjectReferences>();
+        if (client.objectReferences == null) client.objectReferences = FindObjectOfType<SceneObjectReferences>();
 
         string lobbyName = client.objectReferences.lobbyName;
 
@@ -242,7 +248,7 @@ public class ClientBehaviour : MonoBehaviour
 
         client.player = 1;
 
-        if (client.objectReferences == null) client.objectReferences = FindObjectOfType<ObjectReferences>();
+        if (client.objectReferences == null) client.objectReferences = FindObjectOfType<SceneObjectReferences>();
 
         string lobbyName = client.objectReferences.joinLobby.GetComponent<Lobby>().name;
         client.objectReferences.joinLobby.SetActive(false);
@@ -259,7 +265,7 @@ public class ClientBehaviour : MonoBehaviour
 
     private static void HandleJoinLobbyFail(ClientBehaviour client, MessageHeader header)
 	{
-        if (client.objectReferences == null) client.objectReferences = FindObjectOfType<ObjectReferences>();
+        if (client.objectReferences == null) client.objectReferences = FindObjectOfType<SceneObjectReferences>();
 
         client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Lobby full/player left lobby, please try again";
         
@@ -274,7 +280,7 @@ public class ClientBehaviour : MonoBehaviour
         int score2 = Convert.ToInt32(message.score2);
         string username = Convert.ToString(message.name);
 
-        if (client.objectReferences == null) client.objectReferences = FindObjectOfType<ObjectReferences>();
+        if (client.objectReferences == null) client.objectReferences = FindObjectOfType<SceneObjectReferences>();
 
         CurrentLobby currentLobby = client.objectReferences.currentLobby.GetComponent<CurrentLobby>();
         currentLobby.player2Name.GetComponent<TextMeshProUGUI>().text = username;

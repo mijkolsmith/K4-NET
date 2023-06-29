@@ -1155,7 +1155,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Done: 0
-  objectReferences: {fileID: 1773903093}
+  objectReferences: {fileID: 0}
   username: 
   otherUsername: 
 --- !u!4 &697220050
@@ -1856,7 +1856,11 @@ MonoBehaviour:
   errorMessage: {fileID: 1635763794}
   joinLobby: {fileID: 0}
   currentLobby: {fileID: 0}
+  cursor: {fileID: 0}
+  inputManager: {fileID: 0}
   lobbyName: 
+  currentItem: 0
+  gamePrefabs: {fileID: 11400000, guid: 5b2ebba56c5af4c4798437885d66d8d5, type: 2}
 --- !u!1 &1807660649
 GameObject:
   m_ObjectHideFlags: 0
