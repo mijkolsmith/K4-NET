@@ -23,6 +23,7 @@ public class ClientBehaviour : MonoBehaviour
             { NetworkMessageType.JOIN_LOBBY_FAIL, HandleJoinLobbyFail },
             { NetworkMessageType.LOBBY_UPDATE, HandleLobbyUpdate },
             { NetworkMessageType.START_GAME_RESPONSE, HandleStartGameResponse },
+            { NetworkMessageType.START_GAME_FAIL, HandleStartGameFail },
             { NetworkMessageType.PLACE_OBSTACLE_SUCCESS, HandlePlaceObstacleSuccess },
             { NetworkMessageType.PLACE_OBSTACLE_FAIL, HandlePlaceObstacleFail },
             { NetworkMessageType.PLACE_NEW_OBSTACLE, HandlePlaceNewObstacle },
@@ -167,6 +168,7 @@ public class ClientBehaviour : MonoBehaviour
     //      - Join lobby fail           (DONE)
     //      - Handle lobby update       (DONE)
     //      - Start game response       (WIP)
+    //      - Start game fail           (WIP)
     //      - Place obstacle success    (WIP)
     //      - Place obstacle fail       (WIP)
     //      - Place new obstacle        (WIP)
@@ -212,8 +214,9 @@ public class ClientBehaviour : MonoBehaviour
 	{
         Debug.Log("login success");
 
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
-    }
+        // Open a new scene without closing the server
+		client.StartCoroutine(LoadSceneWithoutClosingOtherOpenScenes(SceneManager.GetActiveScene().buildIndex + 1));
+	}
 
     private static void HandleLoginFail(ClientBehaviour client, MessageHeader header)
 	{
@@ -237,7 +240,10 @@ public class ClientBehaviour : MonoBehaviour
         currentLobby.lobbyNameObject.GetComponent<TextMeshProUGUI>().text = lobbyName;
         currentLobby.client = client;
         currentLobby.player1Name.GetComponent<TextMeshProUGUI>().text = client.username;
-    }
+
+        // Reset error message
+		client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "";
+	}
 
     private static void HandleJoinLobbyExisting(ClientBehaviour client, MessageHeader header)
 	{
@@ -259,8 +265,9 @@ public class ClientBehaviour : MonoBehaviour
         currentLobby.player2Name.GetComponent<TextMeshProUGUI>().text = client.username;
         currentLobby.player1Score.GetComponent<TextMeshProUGUI>().text = score1.ToString();
         currentLobby.player2Score.GetComponent<TextMeshProUGUI>().text = score2.ToString();
-
-        client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "";
+		
+        // Reset error message
+		client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "";
     }
 
     private static void HandleJoinLobbyFail(ClientBehaviour client, MessageHeader header)
@@ -268,8 +275,10 @@ public class ClientBehaviour : MonoBehaviour
         if (client.objectReferences == null) client.objectReferences = FindObjectOfType<SceneObjectReferences>();
 
         client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Lobby full/player left lobby, please try again";
-        
-        client.objectReferences.currentLobby.SetActive(false); 
+
+        client.ResetLobbyVisuals();
+
+		client.objectReferences.currentLobby.SetActive(false); 
         client.objectReferences.joinLobby.SetActive(true);
     }
 
@@ -291,8 +300,10 @@ public class ClientBehaviour : MonoBehaviour
 
     private static void HandleStartGameResponse(ClientBehaviour client, MessageHeader header)
 	{
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
-        StartGameResponseMessage message = header as StartGameResponseMessage;
+		// Open a new scene without closing the server
+		client.StartCoroutine(LoadSceneWithoutClosingOtherOpenScenes(SceneManager.GetActiveScene().buildIndex + 1));
+
+		StartGameResponseMessage message = header as StartGameResponseMessage;
 
         if (Convert.ToInt32(message.activePlayer) == client.player)
         {
@@ -301,7 +312,18 @@ public class ClientBehaviour : MonoBehaviour
         }
     }
 
-    private static void HandlePlaceObstacleSuccess(ClientBehaviour client, MessageHeader header)
+    private static void HandleStartGameFail(ClientBehaviour client, MessageHeader header)
+	{
+		client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Game failed to start.";
+
+		// Reset lobby
+		client.ResetLobbyVisuals();
+
+		client.objectReferences.currentLobby.SetActive(false);
+		client.objectReferences.joinLobby.SetActive(true);
+	}
+
+	private static void HandlePlaceObstacleSuccess(ClientBehaviour client, MessageHeader header)
 	{
         PlaceObstacleSuccessMessage message = header as PlaceObstacleSuccessMessage;
 	}
@@ -346,4 +368,29 @@ public class ClientBehaviour : MonoBehaviour
 	{
         ContinueChoiceResponseMessage message = header as ContinueChoiceResponseMessage;
     }
+
+	private static IEnumerator LoadSceneWithoutClosingOtherOpenScenes(int sceneBuildIndex)
+	{
+		AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneBuildIndex, LoadSceneMode.Additive);
+
+		// Wait until the asynchronous scene fully loads
+		while (!asyncLoad.isDone)
+		{
+			yield return null;
+		}
+
+		SceneManager.SetActiveScene(SceneManager.GetSceneByBuildIndex(sceneBuildIndex));
+		SceneManager.UnloadSceneAsync(sceneBuildIndex - 1);
+	}
+
+	private void ResetLobbyVisuals()
+	{
+        // Reset the lobby visuals
+		CurrentLobby currentLobby = objectReferences.currentLobby.GetComponent<CurrentLobby>();
+		currentLobby.player1Name.GetComponent<TextMeshProUGUI>().text = "";
+		currentLobby.player1Score.GetComponent<TextMeshProUGUI>().text = "";
+		currentLobby.player2Name.GetComponent<TextMeshProUGUI>().text = "";
+		currentLobby.player2Score.GetComponent<TextMeshProUGUI>().text = "";
+		currentLobby.startLobbyObject.SetActive(false);
+	}
 }

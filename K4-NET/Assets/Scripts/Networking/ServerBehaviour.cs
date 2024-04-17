@@ -363,9 +363,6 @@ public class ServerBehaviour : MonoBehaviour
 		}
 		else if (serv.lobbyList[lobbyName].Count == 1)
 		{
-			// Player joins existing lobby
-			serv.lobbyList[lobbyName].Add(con);
-
 			// Get the scores of the two players against each other, kinda complicated but it's easier than changing the query
 			var json = await serv.request<List<UserScore>>("https://studenthome.hku.nl/~michael.smith/K4/score_get.php?PHPSESSID=" + serv.PhpConnectionID + "&player1=" + serv.idList[serv.lobbyList[lobbyName][0]] + "&player2=" + serv.idList[con]);
 			uint score1 = 0;
@@ -394,7 +391,7 @@ public class ServerBehaviour : MonoBehaviour
 			{
 				score1 = score1,
 				score2 = score2,
-				name = serv.nameList[serv.idList[serv.lobbyList[lobbyName][1]]]
+				name = serv.nameList[serv.idList[con]]
 			};
 
 			serv.SendUnicast(con, joinLobbyExistingMessage);
@@ -415,6 +412,11 @@ public class ServerBehaviour : MonoBehaviour
 		StartGameMessage message = header as StartGameMessage;
 		string lobbyName = Convert.ToString(message.name);
 
+		foreach (var item in serv.lobbyList[lobbyName])
+		{
+			Debug.Log(serv.nameList[serv.idList[item]]);
+		}
+
 		if (serv.lobbyList[lobbyName].Count == 2)
 		{
 			serv.lobbyActivePlayer[lobbyName] = Convert.ToUInt32(UnityEngine.Random.Range(0, 2));
@@ -431,9 +433,9 @@ public class ServerBehaviour : MonoBehaviour
 		}
 		else
 		{
-			JoinLobbyFailMessage joinLobbyFailMessage = new JoinLobbyFailMessage() { };
-			serv.SendUnicast(serv.lobbyList[lobbyName][0], joinLobbyFailMessage);
-			serv.SendUnicast(serv.lobbyList[lobbyName][1], joinLobbyFailMessage);
+			StartGameFailMessage startGameFailMessage = new StartGameFailMessage() { };
+			serv.SendUnicast(serv.lobbyList[lobbyName][0], startGameFailMessage);
+			serv.SendUnicast(serv.lobbyList[lobbyName][1], startGameFailMessage);
 		}
 	}
 

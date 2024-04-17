@@ -18,6 +18,7 @@ public static class NetworkMessageInfo
             { NetworkMessageType.LOBBY_UPDATE,              typeof(LobbyUpdateMessage) },
             { NetworkMessageType.START_GAME,                typeof(StartGameMessage) },
             { NetworkMessageType.START_GAME_RESPONSE,       typeof(StartGameResponseMessage) },
+            { NetworkMessageType.START_GAME_FAIL,           typeof(StartGameFailMessage) },
             { NetworkMessageType.PLACE_OBSTACLE,            typeof(PlaceObstacleMessage) },
             { NetworkMessageType.PLACE_OBSTACLE_SUCCESS,    typeof(PlaceObstacleSuccessMessage) },
             { NetworkMessageType.PLACE_OBSTACLE_FAIL,       typeof(PlaceObstacleFailMessage) },
