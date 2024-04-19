@@ -242,8 +242,9 @@ public class ClientBehaviour : MonoBehaviour
         currentLobby.lobbyNameObject.GetComponent<TextMeshProUGUI>().text = lobbyName;
         currentLobby.client = client;
         currentLobby.player1Name.GetComponent<TextMeshProUGUI>().text = client.username;
+		currentLobby.startLobbyObject.SetActive(true);
 
-        // Reset error message
+		// Reset error message
 		client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "";
 	}
 
@@ -263,10 +264,12 @@ public class ClientBehaviour : MonoBehaviour
         client.objectReferences.currentLobby.SetActive(true);
         CurrentLobby currentLobby = client.objectReferences.currentLobby.GetComponent<CurrentLobby>();
         currentLobby.lobbyNameObject.GetComponent<TextMeshProUGUI>().text = lobbyName;
-        currentLobby.player1Name.GetComponent<TextMeshProUGUI>().text = name;
+		currentLobby.client = client;
+		currentLobby.player1Name.GetComponent<TextMeshProUGUI>().text = name;
         currentLobby.player2Name.GetComponent<TextMeshProUGUI>().text = client.username;
         currentLobby.player1Score.GetComponent<TextMeshProUGUI>().text = score1.ToString();
         currentLobby.player2Score.GetComponent<TextMeshProUGUI>().text = score2.ToString();
+        currentLobby.startLobbyObject.SetActive(false);
 		
         // Reset error message
 		client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "";
@@ -318,8 +321,6 @@ public class ClientBehaviour : MonoBehaviour
     private static void HandleStartGameFail(ClientBehaviour client, MessageHeader header)
 	{
 		client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Game failed to start. Lobby didn't have 2 players.";
-
-		client.LeaveLobby();
 	}
 
 	private static void HandlePlaceObstacleSuccess(ClientBehaviour client, MessageHeader header)

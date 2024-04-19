@@ -7,7 +7,6 @@ using UnityEngine.Networking;
 using Newtonsoft.Json;
 using System;
 using Cysharp.Threading.Tasks;
-using Sirenix.Utilities;
 
 public delegate void ServerMessageHandler(ServerBehaviour server, NetworkConnection con, MessageHeader header);
 
@@ -478,15 +477,15 @@ public class ServerBehaviour : MonoBehaviour
 		{
 			serv.lobbyActivePlayer[lobbyName] = Convert.ToUInt32(UnityEngine.Random.Range(0, 2));
 
-			//temp for test
-			serv.lobbyItems[lobbyName].Add(new Item() { itemType = (ItemType) UnityEngine.Random.Range(1, 5) });
+			//temp for test (game doesn't start if i enable this?)
+			//serv.lobbyItems[lobbyName].Add(new Item() { itemType = (ItemType) UnityEngine.Random.Range(1, 5) });
 
 			StartGameResponseMessage startGameResponseMessage = new StartGameResponseMessage()
 			{
 				activePlayer = serv.lobbyActivePlayer[lobbyName],
 
 				//temp for testing
-				itemId = Convert.ToUInt32(UnityEngine.Random.Range(1, 5))
+				//itemId = Convert.ToUInt32(UnityEngine.Random.Range(1, 5))
 			};
 
 			serv.SendUnicast(serv.lobbyList[lobbyName][0], startGameResponseMessage);
@@ -497,7 +496,6 @@ public class ServerBehaviour : MonoBehaviour
 			StartGameFailMessage startGameFailMessage = new StartGameFailMessage() { };
 			serv.SendUnicast(serv.lobbyList[lobbyName][0], startGameFailMessage);
 			serv.SendUnicast(serv.lobbyList[lobbyName][1], startGameFailMessage);
-			serv.lobbyList.Remove(lobbyName);
 		}
 	}
 
