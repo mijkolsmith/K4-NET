@@ -47,6 +47,7 @@ public class ServerBehaviour : MonoBehaviour
 			{ NetworkMessageType.REGISTER, HandleRegister },
 			{ NetworkMessageType.LOGIN, HandleLogin },
 			{ NetworkMessageType.JOIN_LOBBY, HandleJoinLobby },
+			{ NetworkMessageType.LEAVE_LOBBY, HandleLeaveLobby },
 			{ NetworkMessageType.START_GAME, HandleStartGame },
 			{ NetworkMessageType.PLACE_OBSTACLE, HandlePlaceObstacle },
 			{ NetworkMessageType.PLAYER_MOVE, HandlePlayerMove },
@@ -201,6 +202,7 @@ public class ServerBehaviour : MonoBehaviour
 						m_Connections[i].Disconnect(m_Driver);
 
 						// Clean up
+						RemoveDisconnectedPlayerFromLobby(m_Connections[i]);
 						m_Connections[i] = default;
 					}
 					else
@@ -221,6 +223,36 @@ public class ServerBehaviour : MonoBehaviour
 
 				PingMessage pingMsg = new PingMessage();
 				SendUnicast(m_Connections[i], pingMsg);
+			}
+		}
+	}
+
+	private void RemoveDisconnectedPlayerFromLobby(NetworkConnection disconnectedPlayer)
+	{
+		foreach (string lobbyName in lobbyList.Keys)
+		{
+			foreach (NetworkConnection player in lobbyList[lobbyName])
+			{
+				if (player == disconnectedPlayer)
+				{
+					lobbyList[lobbyName].Remove(player);
+					if (lobbyList[lobbyName].Count == 0)
+					{
+						lobbyList.Remove(lobbyName);
+					}
+					else if (lobbyList[lobbyName].Count == 1)
+					{
+						// Create an empty LobbyUpdateMessage for player 1
+						LobbyUpdateMessage lobbyUpdateMessage = new LobbyUpdateMessage
+						{
+							score1 = 0,
+							score2 = 0,
+							name = ""
+						};
+						SendUnicast(lobbyList[lobbyName][0], lobbyUpdateMessage);
+					}
+					return;
+				}
 			}
 		}
 	}
@@ -281,6 +313,7 @@ public class ServerBehaviour : MonoBehaviour
 	//      - Register                      (DONE)
 	//      - Login                         (DONE)
 	//      - Join lobby                    (DONE)
+	//      - Leave lobby                   (WIP)
 	//      - Start game                    (WIP)
 	//      - Place obstacle                (WIP)
 	//      - Player move                   (WIP)
@@ -356,7 +389,7 @@ public class ServerBehaviour : MonoBehaviour
 		// Check if lobby exists
 		if (!serv.lobbyList.ContainsKey(lobbyName))
 		{
-			// Player joins new lobby
+			// It doesn't, player joins new lobby
 			serv.lobbyList.Add(lobbyName, new List<NetworkConnection>() { con });
 			JoinLobbyNewMessage joinLobbyNewMessage = new JoinLobbyNewMessage { };
 			serv.SendUnicast(con, joinLobbyNewMessage);
@@ -407,24 +440,42 @@ public class ServerBehaviour : MonoBehaviour
 		}
 	}
 
+	static void HandleLeaveLobby(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
+	{
+		LeaveLobbyMessage message = header as LeaveLobbyMessage;
+		string lobbyName = Convert.ToString(message.name);
+
+		// Remove the leaving player from the lobby
+		serv.lobbyList[lobbyName].Remove(con);
+
+		// Create an empty LobbyUpdateMessage for player left in lobby
+		LobbyUpdateMessage lobbyUpdateMessage = new LobbyUpdateMessage
+		{
+			score1 = 0,
+			score2 = 0,
+			name = ""
+		};
+
+		serv.SendUnicast(serv.lobbyList[lobbyName][0], lobbyUpdateMessage);
+	}
+
 	static void HandleStartGame(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
 	{
 		StartGameMessage message = header as StartGameMessage;
 		string lobbyName = Convert.ToString(message.name);
 
-		foreach (var item in serv.lobbyList[lobbyName])
-		{
-			Debug.Log(serv.nameList[serv.idList[item]]);
-		}
-
 		if (serv.lobbyList[lobbyName].Count == 2)
 		{
 			serv.lobbyActivePlayer[lobbyName] = Convert.ToUInt32(UnityEngine.Random.Range(0, 2));
+
+			//temp for test
 			serv.lobbyItems[lobbyName].Add(new Item() { itemType = (ItemType) UnityEngine.Random.Range(1, 5) });
 
 			StartGameResponseMessage startGameResponseMessage = new StartGameResponseMessage()
 			{
 				activePlayer = serv.lobbyActivePlayer[lobbyName],
+
+				//temp for testing
 				itemId = Convert.ToUInt32(UnityEngine.Random.Range(1, 5))
 			};
 
@@ -436,6 +487,7 @@ public class ServerBehaviour : MonoBehaviour
 			StartGameFailMessage startGameFailMessage = new StartGameFailMessage() { };
 			serv.SendUnicast(serv.lobbyList[lobbyName][0], startGameFailMessage);
 			serv.SendUnicast(serv.lobbyList[lobbyName][1], startGameFailMessage);
+			serv.lobbyList.Remove(lobbyName);
 		}
 	}
 

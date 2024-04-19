@@ -12,6 +12,7 @@ public enum NetworkMessageType
     JOIN_LOBBY_NEW,
     JOIN_LOBBY_EXISTING,
     JOIN_LOBBY_FAIL,
+    LEAVE_LOBBY,
     LOBBY_UPDATE,
     START_GAME,
     START_GAME_RESPONSE,

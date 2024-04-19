@@ -14,6 +14,7 @@ public class CurrentLobby : MonoBehaviour
 	public GameObject player1Score;
 	public GameObject player2Score;
 	public GameObject startLobbyObject;
+	public GameObject leaveLobbyObject;
 
 	private void Start()
 	{
@@ -33,5 +34,17 @@ public class CurrentLobby : MonoBehaviour
 		};
 
 		client.SendPackedMessage(startGameMessage);
+	}
+
+	public void LeaveLobby()
+	{
+		LeaveLobbyMessage leaveLobbyMessage = new LeaveLobbyMessage()
+		{
+			name = objectReferences.lobbyName
+		};
+
+		client.SendPackedMessage(leaveLobbyMessage);
+
+		client.LeaveLobby();
 	}
 }

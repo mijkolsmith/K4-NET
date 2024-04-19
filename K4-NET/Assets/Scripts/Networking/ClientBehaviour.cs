@@ -6,6 +6,7 @@ using System;
 using Unity.Networking.Transport.Utilities;
 using TMPro;
 using UnityEngine.SceneManagement;
+using UnityEditor.PackageManager;
 
 public delegate void ClientMessageHandler(ClientBehaviour client, MessageHeader header);
 
@@ -168,7 +169,7 @@ public class ClientBehaviour : MonoBehaviour
     //      - Join lobby fail           (DONE)
     //      - Handle lobby update       (DONE)
     //      - Start game response       (WIP)
-    //      - Start game fail           (WIP)
+    //      - Start game fail           (DONE)
     //      - Place obstacle success    (WIP)
     //      - Place obstacle fail       (WIP)
     //      - Place new obstacle        (WIP)
@@ -178,6 +179,8 @@ public class ClientBehaviour : MonoBehaviour
     //      - End round                 (WIP)
     //      - End game                  (WIP)
     //      - Continue choice response  (WIP)
+
+    //      - Handle disconnect lobby update  (WIP)
 
     private static void HandlePing(ClientBehaviour client, MessageHeader header)
     {
@@ -274,12 +277,9 @@ public class ClientBehaviour : MonoBehaviour
 	{
         if (client.objectReferences == null) client.objectReferences = FindObjectOfType<SceneObjectReferences>();
 
-        client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Lobby full/player left lobby, please try again";
+        client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Lobby is already full";
 
-        client.ResetLobbyVisuals();
-
-		client.objectReferences.currentLobby.SetActive(false); 
-        client.objectReferences.joinLobby.SetActive(true);
+        client.LeaveLobby();
     }
 
     private static void HandleLobbyUpdate(ClientBehaviour client, MessageHeader header)
@@ -295,7 +295,10 @@ public class ClientBehaviour : MonoBehaviour
         currentLobby.player2Name.GetComponent<TextMeshProUGUI>().text = username;
         currentLobby.player1Score.GetComponent<TextMeshProUGUI>().text = score1.ToString();
         currentLobby.player2Score.GetComponent<TextMeshProUGUI>().text = score2.ToString();
-        currentLobby.startLobbyObject.SetActive(true);
+
+        // An update is either someone joining or leaving
+        if (username == "") currentLobby.startLobbyObject.SetActive(false);
+        else currentLobby.startLobbyObject.SetActive(true);
     }
 
     private static void HandleStartGameResponse(ClientBehaviour client, MessageHeader header)
@@ -314,13 +317,9 @@ public class ClientBehaviour : MonoBehaviour
 
     private static void HandleStartGameFail(ClientBehaviour client, MessageHeader header)
 	{
-		client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Game failed to start.";
+		client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Game failed to start. Lobby didn't have 2 players.";
 
-		// Reset lobby
-		client.ResetLobbyVisuals();
-
-		client.objectReferences.currentLobby.SetActive(false);
-		client.objectReferences.joinLobby.SetActive(true);
+		client.LeaveLobby();
 	}
 
 	private static void HandlePlaceObstacleSuccess(ClientBehaviour client, MessageHeader header)
@@ -383,7 +382,7 @@ public class ClientBehaviour : MonoBehaviour
 		SceneManager.UnloadSceneAsync(sceneBuildIndex - 1);
 	}
 
-	private void ResetLobbyVisuals()
+	public void LeaveLobby()
 	{
         // Reset the lobby visuals
 		CurrentLobby currentLobby = objectReferences.currentLobby.GetComponent<CurrentLobby>();
@@ -392,5 +391,8 @@ public class ClientBehaviour : MonoBehaviour
 		currentLobby.player2Name.GetComponent<TextMeshProUGUI>().text = "";
 		currentLobby.player2Score.GetComponent<TextMeshProUGUI>().text = "";
 		currentLobby.startLobbyObject.SetActive(false);
+
+        objectReferences.currentLobby.SetActive(false);
+		objectReferences.joinLobby.SetActive(true);
 	}
 }
