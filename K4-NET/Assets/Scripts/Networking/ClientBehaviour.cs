@@ -6,7 +6,6 @@ using System;
 using Unity.Networking.Transport.Utilities;
 using TMPro;
 using UnityEngine.SceneManagement;
-using UnityEditor.PackageManager;
 
 public delegate void ClientMessageHandler(ClientBehaviour client, MessageHeader header);
 
@@ -79,7 +78,7 @@ public class ClientBehaviour : MonoBehaviour
             if (!Done)
             {
                 Debug.Log("Something went wrong during connect");
-                objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Something went wrong during connect";
+                objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Lost connection to server. Reconnecting...";
             }
             return;
         }
@@ -292,6 +291,7 @@ public class ClientBehaviour : MonoBehaviour
         if (client.objectReferences == null) client.objectReferences = FindObjectOfType<SceneObjectReferences>();
 
         CurrentLobby currentLobby = client.objectReferences.currentLobby.GetComponent<CurrentLobby>();
+        currentLobby.player1Name.GetComponent<TextMeshProUGUI>().text = client.username;
         currentLobby.player2Name.GetComponent<TextMeshProUGUI>().text = username;
         currentLobby.player1Score.GetComponent<TextMeshProUGUI>().text = score1.ToString();
         currentLobby.player2Score.GetComponent<TextMeshProUGUI>().text = score2.ToString();

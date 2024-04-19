@@ -28,7 +28,7 @@ public class CurrentLobby : MonoBehaviour
 
 	public void StartLobby()
 	{
-		StartGameMessage startGameMessage = new StartGameMessage()
+		StartGameMessage startGameMessage = new()
 		{
 			name = objectReferences.lobbyName
 		};
@@ -38,7 +38,7 @@ public class CurrentLobby : MonoBehaviour
 
 	public void LeaveLobby()
 	{
-		LeaveLobbyMessage leaveLobbyMessage = new LeaveLobbyMessage()
+		LeaveLobbyMessage leaveLobbyMessage = new()
 		{
 			name = objectReferences.lobbyName
 		};
