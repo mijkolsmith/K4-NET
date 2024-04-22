@@ -7,6 +7,7 @@ using UnityEngine.Networking;
 using Newtonsoft.Json;
 using System;
 using Cysharp.Threading.Tasks;
+using Sirenix.Utilities;
 
 public delegate void ServerMessageHandler(ServerBehaviour server, NetworkConnection con, MessageHeader header);
 
@@ -63,8 +64,10 @@ public class ServerBehaviour : MonoBehaviour
 	private Dictionary<int, string> nameList = new();
 	private Dictionary<NetworkConnection, PingPong> pongDict = new();
 	private Dictionary<string, List<NetworkConnection>> lobbyList = new();
-	private Dictionary<string, uint> lobbyActivePlayer = new();
-	private Dictionary<string, List<Item>> lobbyItems = new();
+	private Dictionary<string, NetworkConnection> lobbyActivePlayer = new();
+	private Dictionary<string, List<ItemType>> lobbyItems = new();
+	private ItemType[,] grid = new ItemType[8, 5];
+	private ItemType currentItem = ItemType.NONE;
 
 	public ChatCanvas chat;
 
@@ -300,7 +303,7 @@ public class ServerBehaviour : MonoBehaviour
 	//      - Login                         (DONE)
 	//      - Join lobby                    (DONE)
 	//      - Leave lobby                   (DONE)
-	//      - Start game                    (WIP)
+	//      - Start game                    (DONE)
 	//      - Place obstacle                (WIP)
 	//      - Player move                   (WIP)
 	//      - Continue Choice               (WIP)
@@ -475,35 +478,101 @@ public class ServerBehaviour : MonoBehaviour
 
 		if (serv.lobbyList[lobbyName].Count == 2)
 		{
-			serv.lobbyActivePlayer[lobbyName] = Convert.ToUInt32(UnityEngine.Random.Range(0, 2));
+			int activePlayer = UnityEngine.Random.Range(0, 2);
+			serv.lobbyActivePlayer[lobbyName] = serv.lobbyList[lobbyName][activePlayer];
 
-			//temp for test (game doesn't start if i enable this?)
-			//serv.lobbyItems[lobbyName].Add(new Item() { itemType = (ItemType) UnityEngine.Random.Range(1, 5) });
-
-			StartGameResponseMessage startGameResponseMessage = new StartGameResponseMessage()
+			serv.lobbyItems.Add(lobbyName, new List<ItemType>()
 			{
-				activePlayer = serv.lobbyActivePlayer[lobbyName],
+				ItemType.MINE,
+				ItemType.MINE,
+				ItemType.MINE,
+				ItemType.MINE
+			});
 
-				//temp for testing
-				//itemId = Convert.ToUInt32(UnityEngine.Random.Range(1, 5))
+			serv.currentItem = serv.GetRandomItem(lobbyName);
+
+			StartGameResponseMessage startGameResponseMessage = new()
+			{
+				activePlayer = (uint)activePlayer,
+
+				//Give the active player a random placeable item
+				itemId = (uint)serv.currentItem
 			};
 
+			// We're sending the information to both players so we can
+			// inform the other player what item the active player is placing
 			serv.SendUnicast(serv.lobbyList[lobbyName][0], startGameResponseMessage);
 			serv.SendUnicast(serv.lobbyList[lobbyName][1], startGameResponseMessage);
 		}
 		else
 		{
-			StartGameFailMessage startGameFailMessage = new StartGameFailMessage() { };
+			StartGameFailMessage startGameFailMessage = new() { };
 			serv.SendUnicast(serv.lobbyList[lobbyName][0], startGameFailMessage);
 			serv.SendUnicast(serv.lobbyList[lobbyName][1], startGameFailMessage);
 		}
 	}
 
+	private ItemType GetRandomItem(string lobbyName)
+	{
+		if (lobbyItems.Count == 0)
+		{
+			lobbyItems[lobbyName].AddRange(new List<ItemType>()
+			{
+				ItemType.MINE,
+				ItemType.MINE,
+				ItemType.WALL,
+				ItemType.WALL,
+				ItemType.WALL,
+				ItemType.WALL,
+				ItemType.MINESWEEPER,
+				ItemType.MINESWEEPER,
+				ItemType.WRECKINGBALL,
+				ItemType.WRECKINGBALL
+			});
+		}
+
+		ItemType item = lobbyItems[lobbyName][UnityEngine.Random.Range(0, lobbyItems[lobbyName].Count)];
+		lobbyItems[lobbyName].Remove(item);
+		return item;
+	}
+
 	static void HandlePlaceObstacle(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
 	{
 		PlaceObstacleMessage message = header as PlaceObstacleMessage;
-		Debug.Log(message.x);
-		Debug.Log(message.y);
+		string lobbyName = Convert.ToString(message.name);
+		int x = Convert.ToInt32(message.x);
+		int y = Convert.ToInt32(message.y);
+
+		// This won't work for removing items tho
+		if (serv.lobbyActivePlayer[lobbyName] != con ||
+			(serv.grid[x, y] != ItemType.NONE && 
+				(serv.currentItem == ItemType.MINE || serv.currentItem == ItemType.WALL)) ||
+			(serv.grid[x, y] == ItemType.NONE &&
+				(serv.currentItem == ItemType.MINESWEEPER || serv.currentItem == ItemType.WRECKINGBALL)))
+		{
+			PlaceObstacleFailMessage placeObstacleFailMessage = new();
+			serv.SendUnicast(con, placeObstacleFailMessage);
+			return;
+		}
+
+		serv.grid[x, y] = serv.currentItem;
+
+		int otherPlayerId = (serv.lobbyList[lobbyName][0] == con) ? 1 : 0;
+		serv.lobbyActivePlayer[lobbyName] = serv.lobbyList[lobbyName][otherPlayerId];
+
+		PlaceObstacleSuccessMessage placeObstacleSuccessMessage = new();
+		serv.SendUnicast(con, placeObstacleSuccessMessage);
+
+		ItemType item = serv.GetRandomItem(lobbyName);
+
+		PlaceNewObstacleMessage placeNewObstacleMessage = new()
+		{
+			activePlayer = (uint)otherPlayerId,
+
+			//Give the active player a random placeable item
+			itemId = (uint)item
+		};
+		serv.SendUnicast(serv.lobbyList[lobbyName][otherPlayerId], placeNewObstacleMessage);
 	}
 
 	static void HandlePlayerMove(ServerBehaviour serv, NetworkConnection con, MessageHeader header)

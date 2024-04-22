@@ -11,12 +11,6 @@ public class SceneObjectReferences : MonoBehaviour
     public InputManager inputManager;
     public string lobbyName;
 
-    public int currentItem;
+    public ItemType currentItem = ItemType.NONE;
     public GamePrefabsScriptableObject gamePrefabs;
-    //0: no item
-    //1: mine
-    //2: minesweeper
-    //3: wall
-    //4: wrecking ball
-    //5: ?
 }

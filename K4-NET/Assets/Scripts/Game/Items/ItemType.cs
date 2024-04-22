@@ -1,7 +1,8 @@
 public enum ItemType
 {
+	NONE,
 	MINE,
-	MINESWEEPER,
 	WALL,
+	MINESWEEPER,
 	WRECKINGBALL
 }

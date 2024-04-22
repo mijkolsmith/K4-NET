@@ -46,8 +46,10 @@ public class ClientBehaviour : MonoBehaviour
     public string otherUsername;
     private uint player;
     
-    //stupid work around for sceneloading race condition
-    private uint itemId = 0;
+    //Workaround for sceneloading race condition
+    private string lobbyName;
+    private string turnMessage;
+    private ItemType currentItem = ItemType.NONE;
     private float objectReferencesTimer;
     private float objectReferencesTimeNeeded;
 
@@ -71,6 +73,7 @@ public class ClientBehaviour : MonoBehaviour
 
     void Update()
     {
+        // Connection Update
         m_Driver.ScheduleUpdate().Complete();
 
         if (!m_Connection.IsCreated)
@@ -119,23 +122,26 @@ public class ClientBehaviour : MonoBehaviour
             }
         }
 
+        // Game Update
+
         // Workaround for race condition
         if (objectReferencesTimer < objectReferencesTimeNeeded)
 		{
             objectReferencesTimer += Time.deltaTime;
+			if (objectReferences == null) objectReferences = FindObjectOfType<SceneObjectReferences>();
 		}
-        else if (objectReferencesTimeNeeded != 0f)
+        else if (objectReferencesTimeNeeded != 0f && currentItem != ItemType.NONE)
 		{
-            if (objectReferences == null) objectReferences = FindObjectOfType<SceneObjectReferences>();
+            // Reset timer
             objectReferencesTimeNeeded = 0f;
             objectReferencesTimer = 0f;
-            objectReferences.inputManager.activePlayer = true;
 
-            if (itemId != 0)
-            {
-                objectReferences.cursor.SetSprite(objectReferences.gamePrefabs.cursorSprites[Convert.ToInt32(itemId)]);
-                objectReferences.currentItem = Convert.ToInt32(itemId);
-            }
+			// Start turn
+			objectReferences.lobbyName = lobbyName;
+			objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = turnMessage;
+			objectReferences.inputManager.activePlayer = true;
+            objectReferences.cursor.SetSprite(objectReferences.gamePrefabs.itemVisuals[currentItem].cursorSprite);
+            objectReferences.currentItem = currentItem;
         }
     }
 
@@ -167,10 +173,10 @@ public class ClientBehaviour : MonoBehaviour
     //      - Join lobby existing       (DONE)
     //      - Join lobby fail           (DONE)
     //      - Handle lobby update       (DONE)
-    //      - Start game response       (WIP)
+    //      - Start game response       (DONE)
     //      - Start game fail           (DONE)
     //      - Place obstacle success    (WIP)
-    //      - Place obstacle fail       (WIP)
+    //      - Place obstacle fail       (DONE)
     //      - Place new obstacle        (WIP)
     //      - Start round               (WIP)
     //      - Player move success       (WIP)
@@ -195,14 +201,14 @@ public class ClientBehaviour : MonoBehaviour
             client.objectReferences.loginRegister.SetActive(true);
 
         if (client.objectReferences.errorMessage != null)
-            client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Please Register or Login";
+            client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Please register or login";
     }
 
     private static void HandleRegisterSuccess(ClientBehaviour client, MessageHeader header)
 	{
         Debug.Log("register success");
         if (client.objectReferences.errorMessage != null)
-            client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Register Success, please Login";
+            client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Register success, please login";
 	}
 
     private static void HandleRegisterFail(ClientBehaviour client, MessageHeader header)
@@ -293,50 +299,97 @@ public class ClientBehaviour : MonoBehaviour
 
         if (client.objectReferences == null) client.objectReferences = FindObjectOfType<SceneObjectReferences>();
 
-        CurrentLobby currentLobby = client.objectReferences.currentLobby.GetComponent<CurrentLobby>();
+		client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "";
+
+		CurrentLobby currentLobby = client.objectReferences.currentLobby.GetComponent<CurrentLobby>();
         currentLobby.player1Name.GetComponent<TextMeshProUGUI>().text = client.username;
         currentLobby.player2Name.GetComponent<TextMeshProUGUI>().text = username;
         currentLobby.player1Score.GetComponent<TextMeshProUGUI>().text = score1.ToString();
         currentLobby.player2Score.GetComponent<TextMeshProUGUI>().text = score2.ToString();
 
-        // An update is either someone joining or leaving
-        if (username == "") currentLobby.startLobbyObject.SetActive(false);
+        // An update can be either someone joining or leaving
+        if (username == "")
+        {
+            currentLobby.startLobbyObject.SetActive(false);
+            client.player = 0;
+        }
         else currentLobby.startLobbyObject.SetActive(true);
     }
 
     private static void HandleStartGameResponse(ClientBehaviour client, MessageHeader header)
 	{
+		StartGameResponseMessage message = header as StartGameResponseMessage;
+        uint activePlayer = Convert.ToUInt32(message.activePlayer);
+        ItemType itemType = (ItemType)Convert.ToUInt32(message.itemId);
+
+		client.objectReferencesTimeNeeded = .2f;
+
+        client.lobbyName = client.objectReferences.lobbyName;
+
 		// Open a new scene without closing the server
 		client.StartCoroutine(LoadSceneWithoutClosingOtherOpenScenes(SceneManager.GetActiveScene().buildIndex + 1));
 
-		StartGameResponseMessage message = header as StartGameResponseMessage;
-
-        if (Convert.ToInt32(message.activePlayer) == client.player)
+		if (activePlayer == client.player)
         {
-            client.itemId = Convert.ToUInt32(message.itemId);
-            client.objectReferencesTimeNeeded = .2f;
-        }
-    }
+			client.turnMessage = "Your turn!";
+            client.currentItem = itemType;
+		}
+        else
+		{
+			client.turnMessage = "Waiting for other player...";
+			client.currentItem = 0;
+		}
+	}
 
     private static void HandleStartGameFail(ClientBehaviour client, MessageHeader header)
 	{
-		client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Game failed to start. Lobby didn't have 2 players.";
+		client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "ERROR: Game failed to start. Lobby didn't have 2 players.";
 	}
 
 	private static void HandlePlaceObstacleSuccess(ClientBehaviour client, MessageHeader header)
 	{
-        PlaceObstacleSuccessMessage message = header as PlaceObstacleSuccessMessage;
+        client.objectReferences.inputManager.activePlayer = false;
+        client.objectReferences.inputManager.PlaceItemAtSelectedGridCell();
+		client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Object placed! Waiting for other player...";
 	}
     
     private static void HandlePlaceObstacleFail(ClientBehaviour client, MessageHeader header)
 	{
-        PlaceObstacleFailMessage message = header as PlaceObstacleFailMessage;
-    }
+        if (client.currentItem == ItemType.NONE)
+        {
+            client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "It's not your turn!";
+		}
+        if (client.currentItem == ItemType.MINE || client.currentItem == ItemType.WALL)
+        {
+			client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "There's already something here... Try somewhere else!";
+		}
+        else if (client.currentItem == ItemType.MINESWEEPER || client.currentItem == ItemType.WRECKINGBALL)
+        {
+            client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "There's nothing here to remove... Try somewhere else!";
+        }
+	}
     
     private static void HandlePlaceNewObstacle(ClientBehaviour client, MessageHeader header)
 	{
         PlaceNewObstacleMessage message = header as PlaceNewObstacleMessage;
-    }
+		uint activePlayer = Convert.ToUInt32(message.activePlayer);
+		ItemType itemType = (ItemType)Convert.ToUInt32(message.itemId);
+
+		client.objectReferences.inputManager.activePlayer = true;
+		client.objectReferences.cursor.SetSprite(client.objectReferences.gamePrefabs.itemVisuals[itemType].cursorSprite);
+		client.objectReferences.currentItem = itemType;
+
+		if (activePlayer == client.player)
+		{
+			client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Your turn!";
+			client.currentItem = itemType;
+		}
+		else
+		{
+			client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "ERROR: Server sent you an item but it's not your turn.";
+			client.currentItem = 0;
+		}
+	}
     
     private static void HandleStartRound(ClientBehaviour client, MessageHeader header)
 	{
@@ -385,7 +438,11 @@ public class ClientBehaviour : MonoBehaviour
 
 	public void LeaveLobby()
 	{
-        // Reset the lobby visuals
+		if (objectReferences == null) objectReferences = FindObjectOfType<SceneObjectReferences>();
+
+		// Reset the lobby visuals
+		objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "";
+
 		CurrentLobby currentLobby = objectReferences.currentLobby.GetComponent<CurrentLobby>();
 		currentLobby.player1Name.GetComponent<TextMeshProUGUI>().text = "";
 		currentLobby.player1Score.GetComponent<TextMeshProUGUI>().text = "";

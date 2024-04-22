@@ -12,14 +12,166 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c906b79e05d4eff4882359b130379a8c, type: 3}
   m_Name: Game Prefabs
   m_EditorClassIdentifier: 
-  itemPrefabs:
-  - {fileID: 4091815407782601781, guid: a04ed99438c50ad4baea3523d860be19, type: 3}
-  - {fileID: 7740351518455991095, guid: acca74883be7c374db649e80251f1221, type: 3}
-  itemSprites:
-  - {fileID: 21300000, guid: e95c2eaada3238d4d9e6d8300c385aa6, type: 3}
-  - {fileID: 21300000, guid: cb7ccf31d56d9cf4f87bf65eac2d4f8e, type: 3}
-  cursorSprites:
-  - {fileID: 21300000, guid: 3a972f106e47f8548a7fa7025f83f471, type: 3}
-  - {fileID: 21300000, guid: 3ed18c809a4ee664bbc6f33f2576af5e, type: 3}
-  - {fileID: 21300000, guid: 9a272c6d479a5394b892b1f945217c0f, type: 3}
-  - {fileID: 21300000, guid: ec89964745dce474eadc2b1e83bf94d9, type: 3}
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects:
+    - {fileID: 4091815407782601781, guid: a04ed99438c50ad4baea3523d860be19, type: 3}
+    - {fileID: 21300000, guid: e95c2eaada3238d4d9e6d8300c385aa6, type: 3}
+    - {fileID: 21300000, guid: 3a972f106e47f8548a7fa7025f83f471, type: 3}
+    - {fileID: 7740351518455991095, guid: acca74883be7c374db649e80251f1221, type: 3}
+    - {fileID: 21300000, guid: cb7ccf31d56d9cf4f87bf65eac2d4f8e, type: 3}
+    - {fileID: 21300000, guid: 9a272c6d479a5394b892b1f945217c0f, type: 3}
+    - {fileID: 21300000, guid: 3ed18c809a4ee664bbc6f33f2576af5e, type: 3}
+    - {fileID: 21300000, guid: ec89964745dce474eadc2b1e83bf94d9, type: 3}
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes:
+    - Name: itemVisuals
+      Entry: 7
+      Data: 0|System.Collections.Generic.Dictionary`2[[ItemType, Assembly-CSharp],[ItemVisual,
+        Assembly-CSharp]], mscorlib
+    - Name: comparer
+      Entry: 7
+      Data: 1|System.Collections.Generic.EnumEqualityComparer`1[[ItemType, Assembly-CSharp]],
+        mscorlib
+    - Name: 
+      Entry: 12
+      Data: 0
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 12
+      Data: 5
+    - Name: 
+      Entry: 7
+      Data: 
+    - Name: $k
+      Entry: 3
+      Data: 0
+    - Name: $v
+      Entry: 7
+      Data: 2|ItemVisual, Assembly-CSharp
+    - Name: itemPrefab
+      Entry: 6
+      Data: 
+    - Name: itemSprite
+      Entry: 6
+      Data: 
+    - Name: cursorSprite
+      Entry: 6
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 
+    - Name: $k
+      Entry: 3
+      Data: 1
+    - Name: $v
+      Entry: 7
+      Data: 3|ItemVisual, Assembly-CSharp
+    - Name: itemPrefab
+      Entry: 10
+      Data: 0
+    - Name: itemSprite
+      Entry: 10
+      Data: 1
+    - Name: cursorSprite
+      Entry: 10
+      Data: 2
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 
+    - Name: $k
+      Entry: 3
+      Data: 2
+    - Name: $v
+      Entry: 7
+      Data: 4|ItemVisual, Assembly-CSharp
+    - Name: itemPrefab
+      Entry: 10
+      Data: 3
+    - Name: itemSprite
+      Entry: 10
+      Data: 4
+    - Name: cursorSprite
+      Entry: 10
+      Data: 5
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 
+    - Name: $k
+      Entry: 3
+      Data: 3
+    - Name: $v
+      Entry: 7
+      Data: 5|ItemVisual, Assembly-CSharp
+    - Name: itemPrefab
+      Entry: 6
+      Data: 
+    - Name: itemSprite
+      Entry: 6
+      Data: 
+    - Name: cursorSprite
+      Entry: 10
+      Data: 6
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 
+    - Name: $k
+      Entry: 3
+      Data: 4
+    - Name: $v
+      Entry: 7
+      Data: 6|ItemVisual, Assembly-CSharp
+    - Name: itemPrefab
+      Entry: 6
+      Data: 
+    - Name: itemSprite
+      Entry: 6
+      Data: 
+    - Name: cursorSprite
+      Entry: 10
+      Data: 7
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 

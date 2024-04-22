@@ -1,19 +1,17 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class GameGrid : MonoBehaviour
 {
-    private int width = 8;
-    private int height = 5;
-    private float gridSpaceSize = 5;
+    public int Width { get; private set; } = 8;
+    public int Height { get; private set; } = 5;
+    public float GridSpaceSize { get; private set; } = 5f;
 
     [SerializeField] private GameObject gridCellPrefab;
     private GameObject[,] gameGrid;
 
     void Start()
     {
-        gameGrid = new GameObject[width, height];
+        gameGrid = new GameObject[Width, Height];
         CreateGrid();
         transform.Rotate(-90, 0, 0);
     }
@@ -23,11 +21,11 @@ public class GameGrid : MonoBehaviour
 	{
         if (gridCellPrefab != null)
 		{
-            for (int x = 0; x < width; x++)
+            for (int x = 0; x < Width; x++)
             {
-                for (int y = 0; y < height; y++)
+                for (int y = 0; y < Height; y++)
                 {
-                    gameGrid[x, y] = Instantiate(gridCellPrefab, new Vector3(x, 0, y) * gridSpaceSize, Quaternion.identity);
+                    gameGrid[x, y] = Instantiate(gridCellPrefab, new Vector3(x, 0, y) * GridSpaceSize, Quaternion.identity);
                     gameGrid[x, y].GetComponent<GridCell>().SetPosition(x, y);
                     gameGrid[x, y].transform.parent = transform;
                     gameGrid[x, y].transform.name = x + ", " + y;
@@ -39,11 +37,11 @@ public class GameGrid : MonoBehaviour
     // Get the gridPosition from the worldPosition
     public Vector2Int GetGridPosFromWorldPos(Vector3 worldPosition)
 	{
-        int x = Mathf.FloorToInt(worldPosition.x / gridSpaceSize);
-        int y = Mathf.FloorToInt(worldPosition.z / gridSpaceSize);
+        int x = Mathf.FloorToInt(worldPosition.x / GridSpaceSize);
+        int y = Mathf.FloorToInt(worldPosition.z / GridSpaceSize);
 
-        x = Mathf.Clamp(x, 0, width);
-        y = Mathf.Clamp(y, 0, height);
+        x = Mathf.Clamp(x, 0, Width);
+        y = Mathf.Clamp(y, 0, Height);
 
         return new Vector2Int(x, y);
 	}
@@ -51,8 +49,8 @@ public class GameGrid : MonoBehaviour
     // Get the worldPosition from the gridPosition
     public Vector3 GetWorldPosFromGridPos(Vector2Int gridPosition)
 	{
-        float x = gridPosition.x * gridSpaceSize;
-        float y = gridPosition.y * gridSpaceSize;
+        float x = gridPosition.x * GridSpaceSize;
+        float y = gridPosition.y * GridSpaceSize;
 
         return new Vector3(x, 0, y);
 	}
