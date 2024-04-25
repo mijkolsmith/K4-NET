@@ -71,8 +71,8 @@ public class ServerBehaviour : MonoBehaviour
 	private Dictionary<string, List<NetworkConnection>> lobbyList = new();
 	private Dictionary<string, NetworkConnection> lobbyActivePlayer = new();
 	private Dictionary<string, List<ItemType>> lobbyItems = new();
-	private ItemType[,] grid = new ItemType[gridsizeX, gridsizeY];
-	private ItemType currentItem = ItemType.NONE;
+	private Dictionary<string, ItemType[,]> lobbyGrid = new();
+	private Dictionary<string, ItemType> lobbyCurrentItem = new();
 
 	public ChatCanvas chat;
 
@@ -460,9 +460,14 @@ public class ServerBehaviour : MonoBehaviour
 
 		if (serv.lobbyList[lobbyName].Count == 2)
 		{
+			// Initialize grid with empty cells
+			serv.lobbyGrid.Add(lobbyName, new ItemType[gridsizeX, gridsizeY]);
+
+			// Initialize starting player
 			int activePlayer = UnityEngine.Random.Range(0, 2);
 			serv.lobbyActivePlayer[lobbyName] = serv.lobbyList[lobbyName][activePlayer];
 
+			// Initialize starting items
 			serv.lobbyItems.Add(lobbyName, new List<ItemType>()
 			{
 				ItemType.MINE,
@@ -471,14 +476,13 @@ public class ServerBehaviour : MonoBehaviour
 				ItemType.MINE
 			});
 
-			serv.currentItem = serv.GetRandomItem(lobbyName);
+			// Give the active player a random placeable item
+			serv.lobbyCurrentItem[lobbyName] = serv.GetRandomItem(lobbyName);
 
 			StartGameResponseMessage startGameResponseMessage = new()
 			{
 				activePlayer = (uint)activePlayer,
-
-				//Give the active player a random placeable item
-				itemId = (uint)serv.currentItem
+				itemId = (uint)serv.lobbyCurrentItem[lobbyName]
 			};
 
 			// We're sending the information to both players so we can
@@ -503,8 +507,8 @@ public class ServerBehaviour : MonoBehaviour
 
 		// Handle failed obstacle placement (not the active player or space already occupied)
 		if (serv.lobbyActivePlayer[lobbyName] != con ||
-			(serv.grid[x, y] != ItemType.NONE &&
-				(serv.currentItem == ItemType.MINE || serv.currentItem == ItemType.WALL)))
+			(serv.lobbyGrid[lobbyName][x,y] != ItemType.NONE &&
+				(serv.lobbyCurrentItem[lobbyName] == ItemType.MINE || serv.lobbyCurrentItem[lobbyName] == ItemType.WALL)))
 		{
 			PlaceObstacleFailMessage placeObstacleFailMessage = new();
 			serv.SendUnicast(con, placeObstacleFailMessage);
@@ -513,25 +517,27 @@ public class ServerBehaviour : MonoBehaviour
 
 		// Handle minesweeper and wrecking ball use
 		bool removal = false;
-		if (serv.grid[x, y] == ItemType.WALL && serv.currentItem == ItemType.WRECKINGBALL ||
-			serv.grid[x, y] == ItemType.MINE && serv.currentItem == ItemType.MINESWEEPER)
+		if (serv.lobbyGrid[lobbyName][x, y] == ItemType.WALL && serv.lobbyCurrentItem[lobbyName] == ItemType.WRECKINGBALL ||
+			serv.lobbyGrid[lobbyName][x, y] == ItemType.MINE && serv.lobbyCurrentItem[lobbyName] == ItemType.MINESWEEPER)
 		{
-			serv.grid[x, y] = ItemType.NONE;
+			serv.lobbyGrid[lobbyName][x, y] = ItemType.NONE;
 			removal = true;
 		}
 
 		// Handle placement of mines and walls
-		if (serv.currentItem == ItemType.MINE || serv.currentItem == ItemType.WALL)
+		if (serv.lobbyCurrentItem[lobbyName] == ItemType.MINE || serv.lobbyCurrentItem[lobbyName] == ItemType.WALL)
 		{
-			serv.grid[x, y] = serv.currentItem;
+			serv.lobbyGrid[lobbyName][x, y] = serv.lobbyCurrentItem[lobbyName];
 		}
 
 		// Check whether enough obstacles have been placed and game should start
-		if (serv.GameShouldStart())
+		if (serv.RoundShouldStart(lobbyName))
 		{
-			Debug.Log("Placed item count exceeded " + itemLimit + ", game will now start!");
+			Debug.Log("Placed item count exceeded " + itemLimit + ", lobby " + lobbyName + " round will now start!");
 			StartRoundMessage startRoundMessage = new();
-			serv.SendBroadcast(startRoundMessage, serv.lobbyActivePlayer[lobbyName]);
+
+			serv.SendUnicast(serv.lobbyList[lobbyName][0], startRoundMessage);
+			serv.SendUnicast(serv.lobbyList[lobbyName][1], startRoundMessage);
 			return;
 		}
 
@@ -632,8 +638,8 @@ public class ServerBehaviour : MonoBehaviour
 		}
 	}
 
-	private bool GameShouldStart()
+	private bool RoundShouldStart(string lobbyName)
 	{
-		return Flatten(grid).Where(x => !x.Equals(ItemType.NONE)).Count() > itemLimit;
+		return Flatten(lobbyGrid[lobbyName]).Where(x => !x.Equals(ItemType.NONE)).Count() > itemLimit;
 	}
 }

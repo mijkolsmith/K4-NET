@@ -365,7 +365,7 @@ public class ClientBehaviour : MonoBehaviour
                     "Mine removed! Waiting for other player...";
                 return;
             }
-			if (client.CurrentItem == ItemType.WRECKINGBALL)
+			else if (client.CurrentItem == ItemType.WRECKINGBALL)
 			{
 				client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text =
 					"Wall removed! Waiting for other player...";
@@ -399,12 +399,14 @@ public class ClientBehaviour : MonoBehaviour
 		}
         if (client.CurrentItem == ItemType.MINE || client.CurrentItem == ItemType.WALL)
         {
-			client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "There's already something here... Try somewhere else!";
+			client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = 
+                "There's already something here... Try somewhere else!";
 			client.objectReferences.inputManager.PlaceItemAtSelectedGridCell(ItemType.FLAG);
 		}
         else if (client.CurrentItem == ItemType.MINESWEEPER || client.CurrentItem == ItemType.WRECKINGBALL)
         {
-            client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "There's nothing here to remove... Try somewhere else!";
+            client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = 
+                "There's nothing here to remove... Try somewhere else!";
         }
 	}
     
