@@ -70,7 +70,8 @@ public class ServerBehaviour : MonoBehaviour
 		ItemType.MINE,
 		ItemType.MINE,
 		ItemType.MINE,
-		ItemType.MINE
+		ItemType.MINE,
+		ItemType.WALL
 	};
 	[SerializeField] private readonly List<ItemType> itemSet = new()
 	{
@@ -532,8 +533,8 @@ public class ServerBehaviour : MonoBehaviour
 
 		// Handle minesweeper and wrecking ball use, bool is used to inform players of successful removal
 		bool removal = false;
-		if (serv.lobbyGrid[lobbyName][x, y] == ItemType.WALL && serv.lobbyCurrentItem[lobbyName] == ItemType.WRECKINGBALL ||
-			serv.lobbyGrid[lobbyName][x, y] == ItemType.MINE && serv.lobbyCurrentItem[lobbyName] == ItemType.MINESWEEPER)
+		if ((serv.lobbyGrid[lobbyName][x, y] == ItemType.WALL && serv.lobbyCurrentItem[lobbyName] == ItemType.WRECKINGBALL) ||
+			(serv.lobbyGrid[lobbyName][x, y] == ItemType.MINE && serv.lobbyCurrentItem[lobbyName] == ItemType.MINESWEEPER))
 		{
 			serv.lobbyGrid[lobbyName][x, y] = ItemType.NONE;
 			removal = true;

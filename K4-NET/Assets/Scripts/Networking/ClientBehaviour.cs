@@ -6,6 +6,7 @@ using System;
 using Unity.Networking.Transport.Utilities;
 using TMPro;
 using UnityEngine.SceneManagement;
+using System.Diagnostics.Eventing.Reader;
 
 public delegate void ClientMessageHandler(ClientBehaviour client, MessageHeader header);
 
@@ -178,7 +179,7 @@ public class ClientBehaviour : MonoBehaviour
 	//      - Start game fail           (DONE)
 	//      - Place obstacle success    (DONE)
 	//      - Place obstacle fail       (DONE)
-	//      - Place new obstacle        (WIP)
+	//      - Place new obstacle        (DONE)
 	//      - Start round               (WIP)
 	//      - Player move success       (WIP)
 	//      - Player move fail          (WIP)
@@ -383,17 +384,27 @@ public class ClientBehaviour : MonoBehaviour
         if (client.CurrentItem == ItemType.NONE)
         {
             client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "It's not your turn!";
+            return;
 		}
+
         if (client.CurrentItem == ItemType.MINE || client.CurrentItem == ItemType.WALL)
         {
 			client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = 
                 "There's already something here... Try somewhere else!";
 			client.objectReferences.inputManager.PlaceItemAtSelectedGridCell(ItemType.FLAG);
+            return;
 		}
-        else if (client.CurrentItem == ItemType.MINESWEEPER || client.CurrentItem == ItemType.WRECKINGBALL)
+
+        // This code should never be reached but is kept as a failsafe
+        if (client.CurrentItem == ItemType.MINESWEEPER)
+        {
+			client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text =
+				"There's no mine here to remove... Try somewhere else!";
+		}
+        else if (client.CurrentItem == ItemType.WRECKINGBALL)
         {
             client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = 
-                "There's nothing here to remove... Try somewhere else!";
+                "There's no wall here to remove... Try somewhere else!";
         }
 	}
     
