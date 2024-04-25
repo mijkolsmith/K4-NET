@@ -6,14 +6,14 @@ using UnityEngine.UI;
 
 public class ChatCanvas : MonoBehaviour
 {
-	public static Color chatColor = new Color(.85f, .85f, .85f);
-	public static Color joinColor = new Color(.25f, .95f, .25f);
-	public static Color leaveColor = new Color(.95f, .25f, .25f);
+	public static Color chatColor = new(.85f, .85f, .85f);
+	public static Color joinColor = new(.25f, .95f, .25f);
+	public static Color leaveColor = new(.95f, .25f, .25f);
 
 	public GameObject textPrefab;
 	public Transform chatPanel;
 
-	public Queue<GameObject> textInstances = new Queue<GameObject>();
+	public Queue<GameObject> textInstances = new();
 
 	public int maxMessages = 32;
 

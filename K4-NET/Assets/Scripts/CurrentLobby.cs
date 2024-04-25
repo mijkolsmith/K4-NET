@@ -23,14 +23,14 @@ public class CurrentLobby : MonoBehaviour
 
 	private void Update()
 	{
-		lobbyNameObject.GetComponent<TextMeshProUGUI>().text = objectReferences.lobbyName;
+		lobbyNameObject.GetComponent<TextMeshProUGUI>().text = client.LobbyName;
 	}
 
 	public void StartLobby()
 	{
 		StartGameMessage startGameMessage = new()
 		{
-			name = objectReferences.lobbyName
+			name = client.LobbyName
 		};
 
 		client.SendPackedMessage(startGameMessage);
@@ -40,7 +40,7 @@ public class CurrentLobby : MonoBehaviour
 	{
 		LeaveLobbyMessage leaveLobbyMessage = new()
 		{
-			name = objectReferences.lobbyName
+			name = client.LobbyName
 		};
 
 		client.SendPackedMessage(leaveLobbyMessage);

@@ -1,12 +1,8 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using TMPro;
-using UnityEngine.UI;
 
 public class Lobby : MonoBehaviour
 {
-	[SerializeField] private string lobbyName;
+	public string LobbyName { get; private set; }
 	[SerializeField] private ClientBehaviour client;
 	[SerializeField] private SceneObjectReferences objectReferences;
 	
@@ -17,16 +13,14 @@ public class Lobby : MonoBehaviour
 
 	public void SetLobbyName(string lobbyName)
 	{
-		this.lobbyName = lobbyName;
+		LobbyName = lobbyName;
 	}
 
 	public void JoinLobby()
 	{
-		objectReferences.lobbyName = lobbyName;
-
-		JoinLobbyMessage joinLobbyMessage = new JoinLobbyMessage()
+		JoinLobbyMessage joinLobbyMessage = new()
 		{
-			name = lobbyName,
+			name = LobbyName,
 		};
 
 		client.SendPackedMessage(joinLobbyMessage);

@@ -22,7 +22,7 @@ public class LoginRegister : MonoBehaviour
 
     public void RegisterUser()
 	{
-		RegisterMessage registerMessage = new RegisterMessage()
+		RegisterMessage registerMessage = new()
 		{
 			username = username,
 			password = password
@@ -34,7 +34,7 @@ public class LoginRegister : MonoBehaviour
 	
 	public void LoginUser()
 	{
-		LoginMessage loginMessage = new LoginMessage()
+		LoginMessage loginMessage = new()
 		{
 			username = username,
 			password = password

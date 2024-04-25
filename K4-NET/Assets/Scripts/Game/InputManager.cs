@@ -1,4 +1,4 @@
-using Cysharp.Threading.Tasks.Triggers;
+using TMPro;
 using UnityEngine;
 
 public class InputManager : MonoBehaviour
@@ -20,26 +20,30 @@ public class InputManager : MonoBehaviour
         GridCell gridCell = GetMouseOverCell();
 
         if (gridCell != null)
-		{
-            if (Input.GetMouseButtonDown(0) && activePlayer)
-			{
-                selectedGridCell = gridCell;
-
-                PlaceObstacleMessage placeObstacleMessage = new()
+        {
+            if (Input.GetMouseButtonDown(0))
+            {
+                if (activePlayer)
                 {
-                    name = objectReferences.lobbyName,
-                    x = (uint)gridCell.GetPosition().x,
-                    y = (uint)gridCell.GetPosition().y
-				};
+					selectedGridCell = gridCell;
 
-                client.SendPackedMessage(placeObstacleMessage);
+					PlaceObstacleMessage placeObstacleMessage = new()
+					{
+						name = client.LobbyName,
+						x = (uint)gridCell.GetPosition().x,
+						y = (uint)gridCell.GetPosition().y
+					};
+
+					client.SendPackedMessage(placeObstacleMessage);
+				}
+				else objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "It's not your turn!";
             }
-		}
+        }
     }
 
 	public void PlaceItemAtSelectedGridCell()
 	{
-		selectedGridCell.objectInThisGridSpace = Instantiate(objectReferences.gamePrefabs.itemVisuals[objectReferences.currentItem].itemPrefab,
+		selectedGridCell.objectInThisGridSpace = Instantiate(objectReferences.gamePrefabs.itemVisuals[client.CurrentItem].itemPrefab,
             new Vector3(
 				selectedGridCell.transform.position.x + gameGrid.GridSpaceSize / 2,
 				selectedGridCell.transform.position.y + gameGrid.GridSpaceSize / 2,

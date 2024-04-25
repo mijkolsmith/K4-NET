@@ -7,7 +7,6 @@ using UnityEngine.Networking;
 using Newtonsoft.Json;
 using System;
 using Cysharp.Threading.Tasks;
-using Sirenix.Utilities;
 
 public delegate void ServerMessageHandler(ServerBehaviour server, NetworkConnection con, MessageHeader header);
 
@@ -42,19 +41,20 @@ public class UserScore
 
 public class ServerBehaviour : MonoBehaviour
 {
-	static Dictionary<NetworkMessageType, ServerMessageHandler> networkMessageHandlers = new Dictionary<NetworkMessageType, ServerMessageHandler> {
-			{ NetworkMessageType.PONG, HandlePong },
-			{ NetworkMessageType.HANDSHAKE, HandleHandshake },
-			{ NetworkMessageType.CHAT_MESSAGE, HandleChatMessage },
-			{ NetworkMessageType.REGISTER, HandleRegister },
-			{ NetworkMessageType.LOGIN, HandleLogin },
-			{ NetworkMessageType.JOIN_LOBBY, HandleJoinLobby },
-			{ NetworkMessageType.LEAVE_LOBBY, HandleLeaveLobby },
-			{ NetworkMessageType.START_GAME, HandleStartGame },
-			{ NetworkMessageType.PLACE_OBSTACLE, HandlePlaceObstacle },
-			{ NetworkMessageType.PLAYER_MOVE, HandlePlayerMove },
-			{ NetworkMessageType.CONTINUE_CHOICE, HandleContinueChoice },
-		};
+	static Dictionary<NetworkMessageType, ServerMessageHandler> networkMessageHandlers = new()
+	{
+		{ NetworkMessageType.PONG, HandlePong },
+		{ NetworkMessageType.HANDSHAKE, HandleHandshake },
+		{ NetworkMessageType.CHAT_MESSAGE, HandleChatMessage },
+		{ NetworkMessageType.REGISTER, HandleRegister },
+		{ NetworkMessageType.LOGIN, HandleLogin },
+		{ NetworkMessageType.JOIN_LOBBY, HandleJoinLobby },
+		{ NetworkMessageType.LEAVE_LOBBY, HandleLeaveLobby },
+		{ NetworkMessageType.START_GAME, HandleStartGame },
+		{ NetworkMessageType.PLACE_OBSTACLE, HandlePlaceObstacle },
+		{ NetworkMessageType.PLAYER_MOVE, HandlePlayerMove },
+		{ NetworkMessageType.CONTINUE_CHOICE, HandleContinueChoice },
+	};
 
 	public NetworkDriver m_Driver;
 	public NetworkPipeline m_Pipeline;
@@ -72,8 +72,6 @@ public class ServerBehaviour : MonoBehaviour
 	public ChatCanvas chat;
 
 	private string PhpConnectionID;
-
-	List<Id> ids = null;
 
 	async void Start()
 	{
@@ -212,20 +210,20 @@ public class ServerBehaviour : MonoBehaviour
 					else
 					{
 						pongDict[m_Connections[i]].status -= 1;
-						PingMessage pingMsg = new PingMessage();
+						PingMessage pingMsg = new();
 						SendUnicast(m_Connections[i], pingMsg);
 					}
 				}
 			}
 			else if (idList.ContainsKey(m_Connections[i]))
 			{ //means they've succesfully handshaked
-				PingPong ping = new PingPong();
+				PingPong ping = new();
 				ping.lastSendTime = Time.time;
 				ping.status = 3;    // 3 retries
 				ping.name = nameList[idList[m_Connections[i]]];
 				pongDict.Add(m_Connections[i], ping);
 
-				PingMessage pingMsg = new PingMessage();
+				PingMessage pingMsg = new();
 				SendUnicast(m_Connections[i], pingMsg);
 			}
 		}
@@ -274,7 +272,7 @@ public class ServerBehaviour : MonoBehaviour
 		}
 	}
 
-	async private UniTask<T> request<T>(string url)
+	async private UniTask<T> Request<T>(string url)
 	{
 		UnityWebRequest request = UnityWebRequest.Get(url);
 		request.SetRequestHeader("Content-Type", "application/json");
@@ -316,10 +314,10 @@ public class ServerBehaviour : MonoBehaviour
 	static async void HandleHandshake(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
 	{
 		// Connect to database
-		var json = await serv.request<List<Id>>("https://studenthome.hku.nl/~michael.smith/K4/server_login.php?id=1&pw=A5FJDKeSdKI49dnR49JFRIVJWJf92JF9R8Gg98GG3");
+		var json = await serv.Request<List<Id>>("https://studenthome.hku.nl/~michael.smith/K4/server_login.php?id=1&pw=A5FJDKeSdKI49dnR49JFRIVJWJf92JF9R8Gg98GG3");
 		serv.PhpConnectionID = json[0].id;
 
-		HandshakeResponseMessage handshakeResponseMessage = new HandshakeResponseMessage { };
+		HandshakeResponseMessage handshakeResponseMessage = new();
 		serv.SendUnicast(con, handshakeResponseMessage);
 	}
 
@@ -327,20 +325,20 @@ public class ServerBehaviour : MonoBehaviour
 	{
 		RegisterMessage message = header as RegisterMessage;
 
-		var json = await serv.request<List<User>>("https://studenthome.hku.nl/~michael.smith/K4/user_register.php?PHPSESSID=" + serv.PhpConnectionID + "&un=" + message.username + "&pw=" + message.password);
+		var json = await serv.Request<List<User>>("https://studenthome.hku.nl/~michael.smith/K4/user_register.php?PHPSESSID=" + serv.PhpConnectionID + "&un=" + message.username + "&pw=" + message.password);
 		int playerId = Convert.ToInt32(json[0].id);
 		string playerName = json[0].username;
 
 		// Add to id list & name list
 		if (playerId != 0 && playerName != null)
 		{
-			RegisterSuccessMessage registerSuccessMessage = new RegisterSuccessMessage { };
+			RegisterSuccessMessage registerSuccessMessage = new();
 			serv.SendUnicast(con, registerSuccessMessage);
 		}
 		else
 		{
 			// Something went wrong with the query
-			RegisterFailMessage registerFailMessage = new RegisterFailMessage { };
+			RegisterFailMessage registerFailMessage = new();
 			serv.SendUnicast(con, registerFailMessage);
 		}
 	}
@@ -349,11 +347,11 @@ public class ServerBehaviour : MonoBehaviour
 	{
 		LoginMessage message = header as LoginMessage;
 
-		var json = await serv.request<List<User>>("https://studenthome.hku.nl/~michael.smith/K4/user_login.php?PHPSESSID=" + serv.PhpConnectionID + "&un=" + message.username + "&pw=" + message.password);
+		var json = await serv.Request<List<User>>("https://studenthome.hku.nl/~michael.smith/K4/user_login.php?PHPSESSID=" + serv.PhpConnectionID + "&un=" + message.username + "&pw=" + message.password);
 		if (json.Count == 0)
 		{
 			// Something went wrong with the query (wrong login)
-			LoginFailMessage loginFailMessage = new LoginFailMessage { };
+			LoginFailMessage loginFailMessage = new();
 			serv.SendUnicast(con, loginFailMessage);
 			return;
 		}
@@ -367,13 +365,13 @@ public class ServerBehaviour : MonoBehaviour
 			serv.idList.Add(con, playerId);
 			serv.nameList.Add(playerId, playerName);
 
-			LoginSuccessMessage loginSuccessMessage = new LoginSuccessMessage { };
+			LoginSuccessMessage loginSuccessMessage = new();
 			serv.SendUnicast(con, loginSuccessMessage);
 		}
 		else
 		{
 			// Something went wrong with the query (wrong login)
-			LoginFailMessage loginFailMessage = new LoginFailMessage { };
+			LoginFailMessage loginFailMessage = new();
 			serv.SendUnicast(con, loginFailMessage);
 		}
 	}
@@ -388,13 +386,13 @@ public class ServerBehaviour : MonoBehaviour
 		{
 			// It doesn't, player joins new lobby
 			serv.lobbyList.Add(lobbyName, new List<NetworkConnection>() { con });
-			JoinLobbyNewMessage joinLobbyNewMessage = new JoinLobbyNewMessage { };
+			JoinLobbyNewMessage joinLobbyNewMessage = new();
 			serv.SendUnicast(con, joinLobbyNewMessage);
 		}
 		else if (serv.lobbyList[lobbyName].Count == 1)
 		{
 			// Get the scores of the two players against each other
-			var json = await serv.request<List<UserScore>>("https://studenthome.hku.nl/~michael.smith/K4/score_get.php?PHPSESSID=" + serv.PhpConnectionID + "&player1=" + serv.idList[serv.lobbyList[lobbyName][0]] + "&player2=" + serv.idList[con]);
+			var json = await serv.Request<List<UserScore>>("https://studenthome.hku.nl/~michael.smith/K4/score_get.php?PHPSESSID=" + serv.PhpConnectionID + "&player1=" + serv.idList[serv.lobbyList[lobbyName][0]] + "&player2=" + serv.idList[con]);
 			uint score1 = 0;
 			uint score2 = 0;
 			if (json.Count > 0)
@@ -412,7 +410,7 @@ public class ServerBehaviour : MonoBehaviour
 			}
 
 			// Create a JoinLobbyExistingMessage for player 2
-			JoinLobbyExistingMessage joinLobbyExistingMessage = new JoinLobbyExistingMessage
+			JoinLobbyExistingMessage joinLobbyExistingMessage = new()
 			{
 				score1 = score1,
 				score2 = score2,
@@ -420,7 +418,7 @@ public class ServerBehaviour : MonoBehaviour
 			};
 
 			// Create a LobbyUpdateMessage for player 1
-			LobbyUpdateMessage lobbyUpdateMessage = new LobbyUpdateMessage
+			LobbyUpdateMessage lobbyUpdateMessage = new()
 			{
 				score1 = score1,
 				score2 = score2,
@@ -435,7 +433,7 @@ public class ServerBehaviour : MonoBehaviour
 		}
 		else
 		{
-			JoinLobbyFailMessage joinLobbyFailMessage = new JoinLobbyFailMessage() { };
+			JoinLobbyFailMessage joinLobbyFailMessage = new();
 			serv.SendUnicast(con, joinLobbyFailMessage);
 		}
 	}
@@ -543,7 +541,6 @@ public class ServerBehaviour : MonoBehaviour
 		int x = Convert.ToInt32(message.x);
 		int y = Convert.ToInt32(message.y);
 
-		// This won't work for removing items tho
 		if (serv.lobbyActivePlayer[lobbyName] != con ||
 			(serv.grid[x, y] != ItemType.NONE && 
 				(serv.currentItem == ItemType.MINE || serv.currentItem == ItemType.WALL)) ||
@@ -557,6 +554,7 @@ public class ServerBehaviour : MonoBehaviour
 
 		serv.grid[x, y] = serv.currentItem;
 
+		// The next player becomes the active player
 		int otherPlayerId = (serv.lobbyList[lobbyName][0] == con) ? 1 : 0;
 		serv.lobbyActivePlayer[lobbyName] = serv.lobbyList[lobbyName][otherPlayerId];
 
@@ -569,10 +567,10 @@ public class ServerBehaviour : MonoBehaviour
 		{
 			activePlayer = (uint)otherPlayerId,
 
-			//Give the active player a random placeable item
+			// Give the active player a random placeable item
 			itemId = (uint)item
 		};
-		serv.SendUnicast(serv.lobbyList[lobbyName][otherPlayerId], placeNewObstacleMessage);
+		serv.SendUnicast(serv.lobbyActivePlayer[lobbyName], placeNewObstacleMessage);
 	}
 
 	static void HandlePlayerMove(ServerBehaviour serv, NetworkConnection con, MessageHeader header)

@@ -9,8 +9,5 @@ public class SceneObjectReferences : MonoBehaviour
     public GameObject currentLobby;
     public MouseFollow cursor;
     public InputManager inputManager;
-    public string lobbyName;
-
-    public ItemType currentItem = ItemType.NONE;
     public GamePrefabsScriptableObject gamePrefabs;
 }

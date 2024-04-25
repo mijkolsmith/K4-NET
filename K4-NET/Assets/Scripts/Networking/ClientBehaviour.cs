@@ -11,29 +11,30 @@ public delegate void ClientMessageHandler(ClientBehaviour client, MessageHeader 
 
 public class ClientBehaviour : MonoBehaviour
 {
-    static Dictionary<NetworkMessageType, ClientMessageHandler> networkMessageHandlers = new Dictionary<NetworkMessageType, ClientMessageHandler> {
-            { NetworkMessageType.PING, HandlePing },
-            { NetworkMessageType.HANDSHAKE_RESPONSE, HandleServerHandshakeResponse },
-            { NetworkMessageType.REGISTER_SUCCESS, HandleRegisterSuccess },
-            { NetworkMessageType.REGISTER_FAIL, HandleRegisterFail },
-            { NetworkMessageType.LOGIN_SUCCESS, HandleLoginSuccess },
-            { NetworkMessageType.LOGIN_FAIL, HandleLoginFail },
-            { NetworkMessageType.JOIN_LOBBY_NEW, HandleJoinLobbyNew },
-            { NetworkMessageType.JOIN_LOBBY_EXISTING, HandleJoinLobbyExisting },
-            { NetworkMessageType.JOIN_LOBBY_FAIL, HandleJoinLobbyFail },
-            { NetworkMessageType.LOBBY_UPDATE, HandleLobbyUpdate },
-            { NetworkMessageType.START_GAME_RESPONSE, HandleStartGameResponse },
-            { NetworkMessageType.START_GAME_FAIL, HandleStartGameFail },
-            { NetworkMessageType.PLACE_OBSTACLE_SUCCESS, HandlePlaceObstacleSuccess },
-            { NetworkMessageType.PLACE_OBSTACLE_FAIL, HandlePlaceObstacleFail },
-            { NetworkMessageType.PLACE_NEW_OBSTACLE, HandlePlaceNewObstacle },
-            { NetworkMessageType.START_ROUND, HandleStartRound },
-            { NetworkMessageType.PLAYER_MOVE_SUCCESS, HandlePlayerMoveSuccess },
-            { NetworkMessageType.PLAYER_MOVE_FAIL, HandlePlayerMoveFail },
-            { NetworkMessageType.END_ROUND, HandleEndRound },
-            { NetworkMessageType.END_GAME, HandleEndGame },
-            { NetworkMessageType.CONTINUE_CHOICE_RESPONSE, HandleContinueChoiceResponse },
-        };
+    static Dictionary<NetworkMessageType, ClientMessageHandler> networkMessageHandlers = new() 
+    {
+        { NetworkMessageType.PING, HandlePing },
+        { NetworkMessageType.HANDSHAKE_RESPONSE, HandleServerHandshakeResponse },
+        { NetworkMessageType.REGISTER_SUCCESS, HandleRegisterSuccess },
+        { NetworkMessageType.REGISTER_FAIL, HandleRegisterFail },
+        { NetworkMessageType.LOGIN_SUCCESS, HandleLoginSuccess },
+        { NetworkMessageType.LOGIN_FAIL, HandleLoginFail },
+        { NetworkMessageType.JOIN_LOBBY_NEW, HandleJoinLobbyNew },
+        { NetworkMessageType.JOIN_LOBBY_EXISTING, HandleJoinLobbyExisting },
+        { NetworkMessageType.JOIN_LOBBY_FAIL, HandleJoinLobbyFail },
+        { NetworkMessageType.LOBBY_UPDATE, HandleLobbyUpdate },
+        { NetworkMessageType.START_GAME_RESPONSE, HandleStartGameResponse },
+        { NetworkMessageType.START_GAME_FAIL, HandleStartGameFail },
+        { NetworkMessageType.PLACE_OBSTACLE_SUCCESS, HandlePlaceObstacleSuccess },
+        { NetworkMessageType.PLACE_OBSTACLE_FAIL, HandlePlaceObstacleFail },
+        { NetworkMessageType.PLACE_NEW_OBSTACLE, HandlePlaceNewObstacle },
+        { NetworkMessageType.START_ROUND, HandleStartRound },
+        { NetworkMessageType.PLAYER_MOVE_SUCCESS, HandlePlayerMoveSuccess },
+        { NetworkMessageType.PLAYER_MOVE_FAIL, HandlePlayerMoveFail },
+        { NetworkMessageType.END_ROUND, HandleEndRound },
+        { NetworkMessageType.END_GAME, HandleEndGame },
+        { NetworkMessageType.CONTINUE_CHOICE_RESPONSE, HandleContinueChoiceResponse },
+    };
 
 	public NetworkDriver m_Driver;
     public NetworkPipeline m_Pipeline;
@@ -44,13 +45,14 @@ public class ClientBehaviour : MonoBehaviour
 
     public string username;
     public string otherUsername;
-    private uint player;
-    
-    //Workaround for sceneloading race condition
-    private string lobbyName;
-    private string turnMessage;
-    private ItemType currentItem = ItemType.NONE;
-    private float objectReferencesTimer;
+    public string LobbyName { get; private set; }
+	public ItemType CurrentItem { get; private set; } = ItemType.NONE;
+
+	private uint player;
+
+	//Workaround for sceneloading race condition
+	private string turnMessage;
+	private float objectReferencesTimer;
     private float objectReferencesTimeNeeded;
 
     void Start()
@@ -130,18 +132,16 @@ public class ClientBehaviour : MonoBehaviour
             objectReferencesTimer += Time.deltaTime;
 			if (objectReferences == null) objectReferences = FindObjectOfType<SceneObjectReferences>();
 		}
-        else if (objectReferencesTimeNeeded != 0f && currentItem != ItemType.NONE)
+        else if (objectReferencesTimeNeeded != 0f && CurrentItem != ItemType.NONE)
 		{
             // Reset timer
             objectReferencesTimeNeeded = 0f;
             objectReferencesTimer = 0f;
 
 			// Start turn
-			objectReferences.lobbyName = lobbyName;
 			objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = turnMessage;
 			objectReferences.inputManager.activePlayer = true;
-            objectReferences.cursor.SetSprite(objectReferences.gamePrefabs.itemVisuals[currentItem].cursorSprite);
-            objectReferences.currentItem = currentItem;
+            objectReferences.cursor.SetSprite(objectReferences.gamePrefabs.itemVisuals[CurrentItem].cursorSprite);
         }
     }
 
@@ -189,7 +189,7 @@ public class ClientBehaviour : MonoBehaviour
 
     private static void HandlePing(ClientBehaviour client, MessageHeader header)
     {
-        PongMessage pongMessage = new PongMessage { };
+        PongMessage pongMessage = new();
 
         client.SendPackedMessage(pongMessage);
     }
@@ -240,12 +240,12 @@ public class ClientBehaviour : MonoBehaviour
 
         if (client.objectReferences == null) client.objectReferences = FindObjectOfType<SceneObjectReferences>();
 
-        string lobbyName = client.objectReferences.lobbyName;
+		client.LobbyName = client.objectReferences.joinLobby.GetComponent<Lobby>().LobbyName;
 
-        client.objectReferences.joinLobby.SetActive(false);
+		client.objectReferences.joinLobby.SetActive(false);
         client.objectReferences.currentLobby.SetActive(true);
         CurrentLobby currentLobby = client.objectReferences.currentLobby.GetComponent<CurrentLobby>();
-        currentLobby.lobbyNameObject.GetComponent<TextMeshProUGUI>().text = lobbyName;
+        currentLobby.lobbyNameObject.GetComponent<TextMeshProUGUI>().text = client.LobbyName;
         currentLobby.client = client;
         currentLobby.player1Name.GetComponent<TextMeshProUGUI>().text = client.username;
 		currentLobby.startLobbyObject.SetActive(true);
@@ -265,11 +265,12 @@ public class ClientBehaviour : MonoBehaviour
 
         if (client.objectReferences == null) client.objectReferences = FindObjectOfType<SceneObjectReferences>();
 
-        string lobbyName = client.objectReferences.joinLobby.GetComponent<Lobby>().name;
+		client.LobbyName = client.objectReferences.joinLobby.GetComponent<Lobby>().LobbyName;
+
         client.objectReferences.joinLobby.SetActive(false);
         client.objectReferences.currentLobby.SetActive(true);
         CurrentLobby currentLobby = client.objectReferences.currentLobby.GetComponent<CurrentLobby>();
-        currentLobby.lobbyNameObject.GetComponent<TextMeshProUGUI>().text = lobbyName;
+        currentLobby.lobbyNameObject.GetComponent<TextMeshProUGUI>().text = client.LobbyName;
 		currentLobby.client = client;
 		currentLobby.player1Name.GetComponent<TextMeshProUGUI>().text = name;
         currentLobby.player2Name.GetComponent<TextMeshProUGUI>().text = client.username;
@@ -307,7 +308,7 @@ public class ClientBehaviour : MonoBehaviour
         currentLobby.player1Score.GetComponent<TextMeshProUGUI>().text = score1.ToString();
         currentLobby.player2Score.GetComponent<TextMeshProUGUI>().text = score2.ToString();
 
-        // An update can be either someone joining or leaving
+        // If the first player leaves, become the first player
         if (username == "")
         {
             currentLobby.startLobbyObject.SetActive(false);
@@ -324,20 +325,18 @@ public class ClientBehaviour : MonoBehaviour
 
 		client.objectReferencesTimeNeeded = .2f;
 
-        client.lobbyName = client.objectReferences.lobbyName;
-
 		// Open a new scene without closing the server
 		client.StartCoroutine(LoadSceneWithoutClosingOtherOpenScenes(SceneManager.GetActiveScene().buildIndex + 1));
 
 		if (activePlayer == client.player)
         {
 			client.turnMessage = "Your turn!";
-            client.currentItem = itemType;
+            client.CurrentItem = itemType;
 		}
         else
 		{
 			client.turnMessage = "Waiting for other player...";
-			client.currentItem = 0;
+			client.CurrentItem = 0;
 		}
 	}
 
@@ -355,15 +354,15 @@ public class ClientBehaviour : MonoBehaviour
     
     private static void HandlePlaceObstacleFail(ClientBehaviour client, MessageHeader header)
 	{
-        if (client.currentItem == ItemType.NONE)
+        if (client.CurrentItem == ItemType.NONE)
         {
             client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "It's not your turn!";
 		}
-        if (client.currentItem == ItemType.MINE || client.currentItem == ItemType.WALL)
+        if (client.CurrentItem == ItemType.MINE || client.CurrentItem == ItemType.WALL)
         {
 			client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "There's already something here... Try somewhere else!";
 		}
-        else if (client.currentItem == ItemType.MINESWEEPER || client.currentItem == ItemType.WRECKINGBALL)
+        else if (client.CurrentItem == ItemType.MINESWEEPER || client.CurrentItem == ItemType.WRECKINGBALL)
         {
             client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "There's nothing here to remove... Try somewhere else!";
         }
@@ -377,18 +376,10 @@ public class ClientBehaviour : MonoBehaviour
 
 		client.objectReferences.inputManager.activePlayer = true;
 		client.objectReferences.cursor.SetSprite(client.objectReferences.gamePrefabs.itemVisuals[itemType].cursorSprite);
-		client.objectReferences.currentItem = itemType;
+		client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Your turn!";
+		client.CurrentItem = itemType;
 
-		if (activePlayer == client.player)
-		{
-			client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Your turn!";
-			client.currentItem = itemType;
-		}
-		else
-		{
-			client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "ERROR: Server sent you an item but it's not your turn.";
-			client.currentItem = 0;
-		}
+		Debug.Log(activePlayer == client.player);
 	}
     
     private static void HandleStartRound(ClientBehaviour client, MessageHeader header)
