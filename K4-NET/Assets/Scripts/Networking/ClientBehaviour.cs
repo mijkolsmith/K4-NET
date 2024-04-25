@@ -350,9 +350,45 @@ public class ClientBehaviour : MonoBehaviour
 
 	private static void HandlePlaceObstacleSuccess(ClientBehaviour client, MessageHeader header)
 	{
-        client.objectReferences.inputManager.activePlayer = false;
-        client.objectReferences.inputManager.PlaceItemAtSelectedGridCell(client.CurrentItem);
-		client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Object placed! Waiting for other player...";
+        PlaceObstacleSuccessMessage message = header as PlaceObstacleSuccessMessage;
+        bool removal = Convert.ToBoolean(message.removal);
+
+		client.objectReferences.inputManager.activePlayer = false;
+
+        // Handle minesweeper and wrecking ball
+		if (removal)
+        {
+			client.objectReferences.inputManager.RemoveItemAtSelectedGridCell();
+			if (client.CurrentItem == ItemType.MINESWEEPER)
+            {
+                client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = 
+                    "Mine removed! Waiting for other player...";
+                return;
+            }
+			if (client.CurrentItem == ItemType.WRECKINGBALL)
+			{
+				client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text =
+					"Wall removed! Waiting for other player...";
+                return;
+			}
+		}
+        else if (client.CurrentItem == ItemType.MINESWEEPER)
+        {
+			client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = 
+                "You used a minesweeper but there was no mine here! Waiting for other player...";
+            return;
+		}
+        else if (client.CurrentItem == ItemType.WRECKINGBALL)
+        {
+			client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text =
+				"You used a wrecking ball but there was no wall here! Waiting for other player...";
+            return;
+		}
+
+        // Handle placement of mines and walls
+		client.objectReferences.inputManager.PlaceItemAtSelectedGridCell(client.CurrentItem);
+		client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = 
+                "Object placed! Waiting for other player...";
 	}
     
     private static void HandlePlaceObstacleFail(ClientBehaviour client, MessageHeader header)
@@ -382,14 +418,12 @@ public class ClientBehaviour : MonoBehaviour
 		client.objectReferences.cursor.SetSprite(client.objectReferences.gamePrefabs.itemVisuals[itemType].cursorSprite);
 		client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Your turn!";
 		client.CurrentItem = itemType;
-
-		Debug.Log(activePlayer == client.player);
 	}
     
     private static void HandleStartRound(ClientBehaviour client, MessageHeader header)
 	{
         StartRoundMessage message = header as StartRoundMessage;
-
+        Debug.Log("round starting");
     }
     
     private static void HandlePlayerMoveSuccess(ClientBehaviour client, MessageHeader header)

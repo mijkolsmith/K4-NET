@@ -11,16 +11,14 @@ public class PlaceObstacleSuccessMessage : MessageHeader
 	}
 
 	public NetworkMessageType messageType;
-	public uint x;
-	public uint y;
+	public uint removal;
 
 	public override void SerializeObject(ref DataStreamWriter writer)
 	{
 		// Write message type & object ID
 		base.SerializeObject(ref writer);
 
-		writer.WriteUInt(x);
-		writer.WriteUInt(y);
+		writer.WriteUInt(removal);
 }
 
 	public override void DeserializeObject(ref DataStreamReader reader)
@@ -28,7 +26,6 @@ public class PlaceObstacleSuccessMessage : MessageHeader
 		// Read message type & object ID
 		base.DeserializeObject(ref reader);
 
-		x = reader.ReadUInt();
-		y = reader.ReadUInt();
+		removal = reader.ReadUInt();
 	}
 }

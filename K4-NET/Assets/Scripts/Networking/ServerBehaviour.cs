@@ -7,6 +7,7 @@ using UnityEngine.Networking;
 using Newtonsoft.Json;
 using System;
 using Cysharp.Threading.Tasks;
+using System.Linq;
 
 public delegate void ServerMessageHandler(ServerBehaviour server, NetworkConnection con, MessageHeader header);
 
@@ -60,13 +61,17 @@ public class ServerBehaviour : MonoBehaviour
 	public NetworkPipeline m_Pipeline;
 	private NativeList<NetworkConnection> m_Connections;
 
+	private const int gridsizeX = 8;
+	private const int gridsizeY = 5;
+	private const int itemLimit = 5;
+
 	private Dictionary<NetworkConnection, int> idList = new();
 	private Dictionary<int, string> nameList = new();
 	private Dictionary<NetworkConnection, PingPong> pongDict = new();
 	private Dictionary<string, List<NetworkConnection>> lobbyList = new();
 	private Dictionary<string, NetworkConnection> lobbyActivePlayer = new();
 	private Dictionary<string, List<ItemType>> lobbyItems = new();
-	private ItemType[,] grid = new ItemType[8, 5];
+	private ItemType[,] grid = new ItemType[gridsizeX, gridsizeY];
 	private ItemType currentItem = ItemType.NONE;
 
 	public ChatCanvas chat;
@@ -496,37 +501,62 @@ public class ServerBehaviour : MonoBehaviour
 		int x = Convert.ToInt32(message.x);
 		int y = Convert.ToInt32(message.y);
 
+		// Handle failed obstacle placement (not the active player or space already occupied)
 		if (serv.lobbyActivePlayer[lobbyName] != con ||
-			(serv.grid[x, y] != ItemType.NONE && 
-				(serv.currentItem == ItemType.MINE || serv.currentItem == ItemType.WALL)) ||
-			(serv.grid[x, y] == ItemType.NONE &&
-				(serv.currentItem == ItemType.MINESWEEPER || serv.currentItem == ItemType.WRECKINGBALL)))
+			(serv.grid[x, y] != ItemType.NONE &&
+				(serv.currentItem == ItemType.MINE || serv.currentItem == ItemType.WALL)))
 		{
 			PlaceObstacleFailMessage placeObstacleFailMessage = new();
 			serv.SendUnicast(con, placeObstacleFailMessage);
 			return;
 		}
 
-		serv.grid[x, y] = serv.currentItem;
+		// Handle minesweeper and wrecking ball use
+		bool removal = false;
+		if (serv.grid[x, y] == ItemType.WALL && serv.currentItem == ItemType.WRECKINGBALL ||
+			serv.grid[x, y] == ItemType.MINE && serv.currentItem == ItemType.MINESWEEPER)
+		{
+			serv.grid[x, y] = ItemType.NONE;
+			removal = true;
+		}
+
+		// Handle placement of mines and walls
+		if (serv.currentItem == ItemType.MINE || serv.currentItem == ItemType.WALL)
+		{
+			serv.grid[x, y] = serv.currentItem;
+		}
+
+		// Check whether enough obstacles have been placed and game should start
+		if (serv.GameShouldStart())
+		{
+			Debug.Log("Placed item count exceeded " + itemLimit + ", game will now start!");
+			StartRoundMessage startRoundMessage = new();
+			serv.SendBroadcast(startRoundMessage, serv.lobbyActivePlayer[lobbyName]);
+			return;
+		}
 
 		// The next player becomes the active player
 		int otherPlayerId = (serv.lobbyList[lobbyName][0] == con) ? 1 : 0;
 		serv.lobbyActivePlayer[lobbyName] = serv.lobbyList[lobbyName][otherPlayerId];
 
-		PlaceObstacleSuccessMessage placeObstacleSuccessMessage = new();
+		PlaceObstacleSuccessMessage placeObstacleSuccessMessage = new()
+		{
+			removal = (uint)(removal ? 1 : 0)
+		};
 		serv.SendUnicast(con, placeObstacleSuccessMessage);
 
+		// Get a new item to give to the active player
 		ItemType item = serv.GetRandomItem(lobbyName);
-		Debug.Log(item.ToString());
+
 		PlaceNewObstacleMessage placeNewObstacleMessage = new()
 		{
 			activePlayer = (uint)otherPlayerId,
 
-			// Give the active player a random placeable item
 			itemId = (uint)item
 		};
 		serv.SendUnicast(serv.lobbyActivePlayer[lobbyName], placeNewObstacleMessage);
 	}
+
 
 	static void HandlePlayerMove(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
 	{
@@ -568,7 +598,7 @@ public class ServerBehaviour : MonoBehaviour
 
 	private ItemType GetRandomItem(string lobbyName)
 	{
-		if (lobbyItems.Count == 0)
+		if (lobbyItems[lobbyName].Count == 0)
 		{
 			lobbyItems[lobbyName].AddRange(new List<ItemType>()
 			{
@@ -585,8 +615,25 @@ public class ServerBehaviour : MonoBehaviour
 			});
 		}
 
+		// Get an available placeable item
 		ItemType item = lobbyItems[lobbyName][UnityEngine.Random.Range(0, lobbyItems[lobbyName].Count)];
 		lobbyItems[lobbyName].Remove(item);
 		return item;
+	}
+
+	public IEnumerable<T> Flatten<T>(T[,] map)
+	{
+		for (int row = 0; row < map.GetLength(0); row++)
+		{
+			for (int col = 0; col < map.GetLength(1); col++)
+			{
+				yield return map[row, col];
+			}
+		}
+	}
+
+	private bool GameShouldStart()
+	{
+		return Flatten(grid).Where(x => !x.Equals(ItemType.NONE)).Count() > itemLimit;
 	}
 }
