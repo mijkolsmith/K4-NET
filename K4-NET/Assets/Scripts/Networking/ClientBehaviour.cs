@@ -166,32 +166,31 @@ public class ClientBehaviour : MonoBehaviour
         m_Driver.EndSend(writer);
     }
 
-    // TODO: Static handler functions
-    //      - Pong                      (DONE)
-    //      - Server handshake response (DONE)
-    //      - Register success          (DONE)
-    //      - Register fail             (DONE)
-    //      - Login success             (DONE)
-    //      - Login fail                (DONE)
-    //      - Join lobby new            (DONE)
-    //      - Join lobby existing       (DONE)
-    //      - Join lobby fail           (DONE)
-    //      - Handle lobby update       (DONE)
-    //      - Start game response       (DONE)
-    //      - Start game fail           (DONE)
-    //      - Place obstacle success    (WIP)
-    //      - Place obstacle fail       (DONE)
-    //      - Place new obstacle        (WIP)
-    //      - Start round               (WIP)
-    //      - Player move success       (WIP)
-    //      - Player move fail          (WIP)
-    //      - End round                 (WIP)
-    //      - End game                  (WIP)
-    //      - Continue choice response  (WIP)
+    #region Static message handler functions
+	// TODO: Client functions
+	//      - Pong                      (DONE)
+	//      - Server handshake response (DONE)
+	//      - Register success          (DONE)
+	//      - Register fail             (DONE)
+	//      - Login success             (DONE)
+	//      - Login fail                (DONE)
+	//      - Join lobby new            (DONE)
+	//      - Join lobby existing       (DONE)
+	//      - Join lobby fail           (DONE)
+	//      - Handle lobby update       (DONE)
+	//      - Start game response       (DONE)
+	//      - Start game fail           (DONE)
+	//      - Place obstacle success    (DONE)
+	//      - Place obstacle fail       (DONE)
+	//      - Place new obstacle        (WIP)
+	//      - Start round               (WIP)
+	//      - Player move success       (WIP)
+	//      - Player move fail          (WIP)
+	//      - End round                 (WIP)
+	//      - End game                  (WIP)
+	//      - Continue choice response  (WIP)
 
-    //      - Handle disconnect lobby update  (WIP)
-
-    private static void HandlePing(ClientBehaviour client, MessageHeader header)
+	private static void HandlePing(ClientBehaviour client, MessageHeader header)
     {
         PongMessage pongMessage = new();
 
@@ -352,7 +351,7 @@ public class ClientBehaviour : MonoBehaviour
 	private static void HandlePlaceObstacleSuccess(ClientBehaviour client, MessageHeader header)
 	{
         client.objectReferences.inputManager.activePlayer = false;
-        client.objectReferences.inputManager.PlaceItemAtSelectedGridCell();
+        client.objectReferences.inputManager.PlaceItemAtSelectedGridCell(client.CurrentItem);
 		client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Object placed! Waiting for other player...";
 	}
     
@@ -365,6 +364,7 @@ public class ClientBehaviour : MonoBehaviour
         if (client.CurrentItem == ItemType.MINE || client.CurrentItem == ItemType.WALL)
         {
 			client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "There's already something here... Try somewhere else!";
+			client.objectReferences.inputManager.PlaceItemAtSelectedGridCell(ItemType.FLAG);
 		}
         else if (client.CurrentItem == ItemType.MINESWEEPER || client.CurrentItem == ItemType.WRECKINGBALL)
         {
@@ -416,6 +416,7 @@ public class ClientBehaviour : MonoBehaviour
 	{
         ContinueChoiceResponseMessage message = header as ContinueChoiceResponseMessage;
     }
+    #endregion
 
 	private static IEnumerator LoadSceneWithoutClosingOtherOpenScenes(int sceneBuildIndex)
 	{

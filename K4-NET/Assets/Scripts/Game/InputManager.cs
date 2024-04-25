@@ -41,9 +41,9 @@ public class InputManager : MonoBehaviour
         }
     }
 
-	public void PlaceItemAtSelectedGridCell()
+	public void PlaceItemAtSelectedGridCell(ItemType item)
 	{
-		selectedGridCell.objectInThisGridSpace = Instantiate(objectReferences.gamePrefabs.itemVisuals[client.CurrentItem].itemPrefab,
+		selectedGridCell.objectInThisGridSpace = Instantiate(objectReferences.gamePrefabs.itemVisuals[item].itemPrefab,
             new Vector3(
 				selectedGridCell.transform.position.x + gameGrid.GridSpaceSize / 2,
 				selectedGridCell.transform.position.y + gameGrid.GridSpaceSize / 2,

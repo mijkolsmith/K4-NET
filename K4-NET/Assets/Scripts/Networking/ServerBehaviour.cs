@@ -294,7 +294,8 @@ public class ServerBehaviour : MonoBehaviour
 		return result;
 	}
 
-	// TODO: Static handler functions
+	#region Static message handler functions
+	// TODO: Server functions
 	//      - Ping                          (DONE)
 	//      - Handshake                     (DONE)
 	//      - Register                      (DONE)
@@ -302,9 +303,9 @@ public class ServerBehaviour : MonoBehaviour
 	//      - Join lobby                    (DONE)
 	//      - Leave lobby                   (DONE)
 	//      - Start game                    (DONE)
-	//      - Place obstacle                (WIP)
+	//      - Place obstacle                (DONE)
 	//      - Player move                   (WIP)
-	//      - Continue Choice               (WIP)
+	//      - Continue choice               (WIP)
 
 	static void HandlePong(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
 	{
@@ -447,28 +448,6 @@ public class ServerBehaviour : MonoBehaviour
 		serv.RemovePlayerFromLobby(lobbyName, con);
 	}
 
-	private void RemovePlayerFromLobby(string lobbyName, NetworkConnection player)
-	{
-		lobbyList[lobbyName].Remove(player);
-
-		if (lobbyList[lobbyName].Count == 0)
-		{
-			lobbyList.Remove(lobbyName);
-		}
-		else if (lobbyList[lobbyName].Count == 1)
-		{
-			// Create an empty LobbyUpdateMessage for player left in lobby
-			LobbyUpdateMessage lobbyUpdateMessage = new()
-			{
-				score1 = 0,
-				score2 = 0,
-				name = ""
-			};
-
-			SendUnicast(lobbyList[lobbyName][0], lobbyUpdateMessage);
-		}
-	}
-
 	static void HandleStartGame(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
 	{
 		StartGameMessage message = header as StartGameMessage;
@@ -481,10 +460,10 @@ public class ServerBehaviour : MonoBehaviour
 
 			serv.lobbyItems.Add(lobbyName, new List<ItemType>()
 			{
-				ItemType.WALL,
-				ItemType.WALL,
-				ItemType.WALL,
-				ItemType.WALL
+				ItemType.MINE,
+				ItemType.MINE,
+				ItemType.MINE,
+				ItemType.MINE
 			});
 
 			serv.currentItem = serv.GetRandomItem(lobbyName);
@@ -508,30 +487,6 @@ public class ServerBehaviour : MonoBehaviour
 			serv.SendUnicast(serv.lobbyList[lobbyName][0], startGameFailMessage);
 			serv.SendUnicast(serv.lobbyList[lobbyName][1], startGameFailMessage);
 		}
-	}
-
-	private ItemType GetRandomItem(string lobbyName)
-	{
-		if (lobbyItems.Count == 0)
-		{
-			lobbyItems[lobbyName].AddRange(new List<ItemType>()
-			{
-				ItemType.MINE,
-				ItemType.MINE,
-				ItemType.WALL,
-				ItemType.WALL,
-				ItemType.WALL,
-				ItemType.WALL,
-				ItemType.MINESWEEPER,
-				ItemType.MINESWEEPER,
-				ItemType.WRECKINGBALL,
-				ItemType.WRECKINGBALL
-			});
-		}
-
-		ItemType item = lobbyItems[lobbyName][UnityEngine.Random.Range(0, lobbyItems[lobbyName].Count)];
-		lobbyItems[lobbyName].Remove(item);
-		return item;
 	}
 
 	static void HandlePlaceObstacle(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
@@ -562,7 +517,7 @@ public class ServerBehaviour : MonoBehaviour
 		serv.SendUnicast(con, placeObstacleSuccessMessage);
 
 		ItemType item = serv.GetRandomItem(lobbyName);
-
+		Debug.Log(item.ToString());
 		PlaceNewObstacleMessage placeNewObstacleMessage = new()
 		{
 			activePlayer = (uint)otherPlayerId,
@@ -586,5 +541,52 @@ public class ServerBehaviour : MonoBehaviour
 	static void HandleChatMessage(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
 	{
 		ChatMessage message = header as ChatMessage;
+	}
+	#endregion
+
+	private void RemovePlayerFromLobby(string lobbyName, NetworkConnection player)
+	{
+		lobbyList[lobbyName].Remove(player);
+
+		if (lobbyList[lobbyName].Count == 0)
+		{
+			lobbyList.Remove(lobbyName);
+		}
+		else if (lobbyList[lobbyName].Count == 1)
+		{
+			// Create an empty LobbyUpdateMessage for player left in lobby
+			LobbyUpdateMessage lobbyUpdateMessage = new()
+			{
+				score1 = 0,
+				score2 = 0,
+				name = ""
+			};
+
+			SendUnicast(lobbyList[lobbyName][0], lobbyUpdateMessage);
+		}
+	}
+
+	private ItemType GetRandomItem(string lobbyName)
+	{
+		if (lobbyItems.Count == 0)
+		{
+			lobbyItems[lobbyName].AddRange(new List<ItemType>()
+			{
+				ItemType.MINE,
+				ItemType.MINE,
+				ItemType.WALL,
+				ItemType.WALL,
+				ItemType.WALL,
+				ItemType.WALL,
+				ItemType.MINESWEEPER,
+				ItemType.MINESWEEPER,
+				ItemType.WRECKINGBALL,
+				ItemType.WRECKINGBALL
+			});
+		}
+
+		ItemType item = lobbyItems[lobbyName][UnityEngine.Random.Range(0, lobbyItems[lobbyName].Count)];
+		lobbyItems[lobbyName].Remove(item);
+		return item;
 	}
 }

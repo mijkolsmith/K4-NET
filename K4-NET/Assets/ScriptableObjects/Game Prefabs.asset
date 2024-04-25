@@ -24,6 +24,8 @@ MonoBehaviour:
     - {fileID: 21300000, guid: 9a272c6d479a5394b892b1f945217c0f, type: 3}
     - {fileID: 21300000, guid: 3ed18c809a4ee664bbc6f33f2576af5e, type: 3}
     - {fileID: 21300000, guid: ec89964745dce474eadc2b1e83bf94d9, type: 3}
+    - {fileID: 4091815407782601781, guid: 5fd350c5164832240b345a9ecf4ffb77, type: 3}
+    - {fileID: 21300000, guid: e83a6e9cf03f8a14c930e2e9809fa0dd, type: 3}
     SerializedBytesString: 
     Prefab: {fileID: 0}
     PrefabModificationsReferencedUnityObjects: []
@@ -48,7 +50,7 @@ MonoBehaviour:
       Data: 
     - Name: 
       Entry: 12
-      Data: 5
+      Data: 6
     - Name: 
       Entry: 7
       Data: 
@@ -163,6 +165,30 @@ MonoBehaviour:
     - Name: cursorSprite
       Entry: 10
       Data: 7
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 
+    - Name: $k
+      Entry: 3
+      Data: 5
+    - Name: $v
+      Entry: 7
+      Data: 7|ItemVisual, Assembly-CSharp
+    - Name: itemPrefab
+      Entry: 10
+      Data: 8
+    - Name: itemSprite
+      Entry: 10
+      Data: 9
+    - Name: cursorSprite
+      Entry: 6
+      Data: 
     - Name: 
       Entry: 8
       Data: 

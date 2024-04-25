@@ -4,5 +4,6 @@ public enum ItemType
 	MINE,
 	WALL,
 	MINESWEEPER,
-	WRECKINGBALL
+	WRECKINGBALL,
+	FLAG
 }
