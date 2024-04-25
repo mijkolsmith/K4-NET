@@ -530,6 +530,13 @@ public class ServerBehaviour : MonoBehaviour
 		}
 		else serv.lobbyGrid[lobbyName][x, y] = ItemType.NONE;
 
+		// Obstacle placed successfully
+		PlaceObstacleSuccessMessage placeObstacleSuccessMessage = new()
+		{
+			removal = (uint)(removal ? 1 : 0)
+		};
+		serv.SendUnicast(con, placeObstacleSuccessMessage);
+
 		// Check whether enough obstacles have been placed and game should start
 		if (serv.RoundShouldStart(lobbyName))
 		{
@@ -544,12 +551,6 @@ public class ServerBehaviour : MonoBehaviour
 		// The next player becomes the active player
 		int otherPlayerId = (serv.lobbyList[lobbyName][0] == con) ? 1 : 0;
 		serv.lobbyActivePlayer[lobbyName] = serv.lobbyList[lobbyName][otherPlayerId];
-
-		PlaceObstacleSuccessMessage placeObstacleSuccessMessage = new()
-		{
-			removal = (uint)(removal ? 1 : 0)
-		};
-		serv.SendUnicast(con, placeObstacleSuccessMessage);
 
 		// Give the active player a random placeable item
 		ItemType item = serv.GetRandomItem(lobbyName);
