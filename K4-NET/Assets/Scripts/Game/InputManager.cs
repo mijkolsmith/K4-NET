@@ -6,7 +6,6 @@ public class InputManager : MonoBehaviour
     [SerializeField] private GameGrid gameGrid;
     [SerializeField] private LayerMask gridLayer;
     [SerializeField] private SceneObjectReferences objectReferences;
-    [SerializeField] public bool activePlayer = false;
     [SerializeField] private ClientBehaviour client;
     [SerializeField] private GridCell selectedGridCell;
 
@@ -23,7 +22,7 @@ public class InputManager : MonoBehaviour
         {
             if (Input.GetMouseButtonDown(0))
             {
-                if (activePlayer)
+                if (client.activePlayer)
                 {
 					selectedGridCell = gridCell;
 

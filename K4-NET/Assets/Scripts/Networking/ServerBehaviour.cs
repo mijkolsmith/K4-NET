@@ -478,7 +478,6 @@ public class ServerBehaviour : MonoBehaviour
 
 			// Give the active player a random placeable item
 			serv.lobbyCurrentItem[lobbyName] = serv.GetRandomItem(lobbyName);
-
 			StartGameResponseMessage startGameResponseMessage = new()
 			{
 				activePlayer = (uint)activePlayer,
@@ -515,7 +514,7 @@ public class ServerBehaviour : MonoBehaviour
 			return;
 		}
 
-		// Handle minesweeper and wrecking ball use
+		// Handle minesweeper and wrecking ball use, bool is used to inform players of successful removal
 		bool removal = false;
 		if (serv.lobbyGrid[lobbyName][x, y] == ItemType.WALL && serv.lobbyCurrentItem[lobbyName] == ItemType.WRECKINGBALL ||
 			serv.lobbyGrid[lobbyName][x, y] == ItemType.MINE && serv.lobbyCurrentItem[lobbyName] == ItemType.MINESWEEPER)
@@ -529,6 +528,7 @@ public class ServerBehaviour : MonoBehaviour
 		{
 			serv.lobbyGrid[lobbyName][x, y] = serv.lobbyCurrentItem[lobbyName];
 		}
+		else serv.lobbyGrid[lobbyName][x, y] = ItemType.NONE;
 
 		// Check whether enough obstacles have been placed and game should start
 		if (serv.RoundShouldStart(lobbyName))
@@ -551,16 +551,16 @@ public class ServerBehaviour : MonoBehaviour
 		};
 		serv.SendUnicast(con, placeObstacleSuccessMessage);
 
-		// Get a new item to give to the active player
+		// Give the active player a random placeable item
 		ItemType item = serv.GetRandomItem(lobbyName);
-
 		PlaceNewObstacleMessage placeNewObstacleMessage = new()
 		{
 			activePlayer = (uint)otherPlayerId,
-
 			itemId = (uint)item
 		};
-		serv.SendUnicast(serv.lobbyActivePlayer[lobbyName], placeNewObstacleMessage);
+
+		serv.SendUnicast(serv.lobbyList[lobbyName][0], placeNewObstacleMessage);
+		serv.SendUnicast(serv.lobbyList[lobbyName][1], placeNewObstacleMessage);
 	}
 
 

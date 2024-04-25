@@ -49,9 +49,9 @@ public class ClientBehaviour : MonoBehaviour
 	public ItemType CurrentItem { get; private set; } = ItemType.NONE;
 
 	private uint player;
+    public bool activePlayer { get; private set; } = false;
 
 	//Workaround for sceneloading race condition
-	private string turnMessage;
 	private float objectReferencesTimer;
     private float objectReferencesTimeNeeded;
 
@@ -139,13 +139,9 @@ public class ClientBehaviour : MonoBehaviour
             objectReferencesTimer = 0f;
 
 			// Start turn
-			objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = turnMessage;
-
-            if (CurrentItem != ItemType.NONE)
-            {
-                objectReferences.inputManager.activePlayer = true;
-                objectReferences.cursor.SetSprite(objectReferences.gamePrefabs.itemVisuals[CurrentItem].cursorSprite);
-            }
+			objectReferences.cursor.SetSprite(objectReferences.gamePrefabs.itemVisuals[CurrentItem].cursorSprite);
+            objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = 
+				activePlayer ? "Your turn!" : "Waiting for other player...";
         }
     }
 
@@ -327,20 +323,11 @@ public class ClientBehaviour : MonoBehaviour
         ItemType itemType = (ItemType)Convert.ToUInt32(message.itemId);
 
 		client.objectReferencesTimeNeeded = .2f;
+		client.CurrentItem = itemType;
+        client.activePlayer = activePlayer == client.player;
 
 		// Open a new scene without closing the server
 		client.StartCoroutine(LoadSceneWithoutClosingOtherOpenScenes(SceneManager.GetActiveScene().buildIndex + 1));
-
-		if (activePlayer == client.player)
-        {
-			client.turnMessage = "Your turn!";
-            client.CurrentItem = itemType;
-		}
-        else
-		{
-			client.turnMessage = "Waiting for other player...";
-			client.CurrentItem = ItemType.NONE;
-		}
 	}
 
     private static void HandleStartGameFail(ClientBehaviour client, MessageHeader header)
@@ -353,7 +340,7 @@ public class ClientBehaviour : MonoBehaviour
         PlaceObstacleSuccessMessage message = header as PlaceObstacleSuccessMessage;
         bool removal = Convert.ToBoolean(message.removal);
 
-		client.objectReferences.inputManager.activePlayer = false;
+		client.activePlayer = false;
 
         // Handle minesweeper and wrecking ball
 		if (removal)
@@ -416,10 +403,15 @@ public class ClientBehaviour : MonoBehaviour
 		uint activePlayer = Convert.ToUInt32(message.activePlayer);
 		ItemType itemType = (ItemType)Convert.ToUInt32(message.itemId);
 
-		client.objectReferences.inputManager.activePlayer = true;
+        // Change the cursor so both players know what item is being placed
 		client.objectReferences.cursor.SetSprite(client.objectReferences.gamePrefabs.itemVisuals[itemType].cursorSprite);
-		client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Your turn!";
-		client.CurrentItem = itemType;
+
+		if (activePlayer == client.player)
+        {
+            client.activePlayer = true;
+            client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Your turn!";
+            client.CurrentItem = itemType;
+        }
 	}
     
     private static void HandleStartRound(ClientBehaviour client, MessageHeader header)
