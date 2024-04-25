@@ -481,10 +481,10 @@ public class ServerBehaviour : MonoBehaviour
 
 			serv.lobbyItems.Add(lobbyName, new List<ItemType>()
 			{
-				ItemType.MINE,
-				ItemType.MINE,
-				ItemType.MINE,
-				ItemType.MINE
+				ItemType.WALL,
+				ItemType.WALL,
+				ItemType.WALL,
+				ItemType.WALL
 			});
 
 			serv.currentItem = serv.GetRandomItem(lobbyName);

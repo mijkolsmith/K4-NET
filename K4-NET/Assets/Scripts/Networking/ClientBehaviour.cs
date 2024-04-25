@@ -132,7 +132,7 @@ public class ClientBehaviour : MonoBehaviour
             objectReferencesTimer += Time.deltaTime;
 			if (objectReferences == null) objectReferences = FindObjectOfType<SceneObjectReferences>();
 		}
-        else if (objectReferencesTimeNeeded != 0f && CurrentItem != ItemType.NONE)
+        else if (objectReferencesTimeNeeded != 0f)
 		{
             // Reset timer
             objectReferencesTimeNeeded = 0f;
@@ -140,8 +140,12 @@ public class ClientBehaviour : MonoBehaviour
 
 			// Start turn
 			objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = turnMessage;
-			objectReferences.inputManager.activePlayer = true;
-            objectReferences.cursor.SetSprite(objectReferences.gamePrefabs.itemVisuals[CurrentItem].cursorSprite);
+
+            if (CurrentItem != ItemType.NONE)
+            {
+                objectReferences.inputManager.activePlayer = true;
+                objectReferences.cursor.SetSprite(objectReferences.gamePrefabs.itemVisuals[CurrentItem].cursorSprite);
+            }
         }
     }
 
@@ -336,7 +340,7 @@ public class ClientBehaviour : MonoBehaviour
         else
 		{
 			client.turnMessage = "Waiting for other player...";
-			client.CurrentItem = 0;
+			client.CurrentItem = ItemType.NONE;
 		}
 	}
 
