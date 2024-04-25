@@ -63,7 +63,28 @@ public class ServerBehaviour : MonoBehaviour
 
 	private const int gridsizeX = 8;
 	private const int gridsizeY = 5;
-	private const int itemLimit = 5;
+	private const int itemLimit = 10;
+
+	[SerializeField] private readonly List<ItemType> startingItems = new()
+	{
+		ItemType.MINE,
+		ItemType.MINE,
+		ItemType.MINE,
+		ItemType.MINE
+	};
+	[SerializeField] private readonly List<ItemType> itemSet = new()
+	{
+		ItemType.MINE,
+		ItemType.MINE,
+		ItemType.WALL,
+		ItemType.WALL,
+		ItemType.WALL,
+		ItemType.WALL,
+		ItemType.MINESWEEPER,
+		ItemType.MINESWEEPER,
+		ItemType.WRECKINGBALL,
+		ItemType.WRECKINGBALL
+	};
 
 	private Dictionary<NetworkConnection, int> idList = new();
 	private Dictionary<int, string> nameList = new();
@@ -468,15 +489,9 @@ public class ServerBehaviour : MonoBehaviour
 			serv.lobbyActivePlayer[lobbyName] = serv.lobbyList[lobbyName][activePlayer];
 
 			// Initialize starting items
-			serv.lobbyItems.Add(lobbyName, new List<ItemType>()
-			{
-				ItemType.MINE,
-				ItemType.MINE,
-				ItemType.MINE,
-				ItemType.MINE
-			});
+			serv.lobbyItems.Add(lobbyName, serv.startingItems);
 
-			// Give the active player a random placeable item
+			// Give the active player a random item
 			serv.lobbyCurrentItem[lobbyName] = serv.GetRandomItem(lobbyName);
 			StartGameResponseMessage startGameResponseMessage = new()
 			{
@@ -504,6 +519,7 @@ public class ServerBehaviour : MonoBehaviour
 		int x = Convert.ToInt32(message.x);
 		int y = Convert.ToInt32(message.y);
 
+		Debug.Log("serv: currentitem: " + serv.lobbyCurrentItem[lobbyName] + "   -gridcoords: " + x + " " + y + " " + serv.lobbyGrid[lobbyName][x, y]);
 		// Handle failed obstacle placement (not the active player or space already occupied)
 		if (serv.lobbyActivePlayer[lobbyName] != con ||
 			(serv.lobbyGrid[lobbyName][x,y] != ItemType.NONE &&
@@ -552,12 +568,12 @@ public class ServerBehaviour : MonoBehaviour
 		int otherPlayerId = (serv.lobbyList[lobbyName][0] == con) ? 1 : 0;
 		serv.lobbyActivePlayer[lobbyName] = serv.lobbyList[lobbyName][otherPlayerId];
 
-		// Give the active player a random placeable item
-		ItemType item = serv.GetRandomItem(lobbyName);
+		// Give the active player a random item
+		serv.lobbyCurrentItem[lobbyName] = serv.GetRandomItem(lobbyName);
 		PlaceNewObstacleMessage placeNewObstacleMessage = new()
 		{
 			activePlayer = (uint)otherPlayerId,
-			itemId = (uint)item
+			itemId = (uint)serv.lobbyCurrentItem[lobbyName]
 		};
 
 		serv.SendUnicast(serv.lobbyList[lobbyName][0], placeNewObstacleMessage);
@@ -607,19 +623,8 @@ public class ServerBehaviour : MonoBehaviour
 	{
 		if (lobbyItems[lobbyName].Count == 0)
 		{
-			lobbyItems[lobbyName].AddRange(new List<ItemType>()
-			{
-				ItemType.MINE,
-				ItemType.MINE,
-				ItemType.WALL,
-				ItemType.WALL,
-				ItemType.WALL,
-				ItemType.WALL,
-				ItemType.MINESWEEPER,
-				ItemType.MINESWEEPER,
-				ItemType.WRECKINGBALL,
-				ItemType.WRECKINGBALL
-			});
+			// Get a new set of items
+			lobbyItems[lobbyName].AddRange(itemSet);
 		}
 
 		// Get an available placeable item
@@ -641,6 +646,6 @@ public class ServerBehaviour : MonoBehaviour
 
 	private bool RoundShouldStart(string lobbyName)
 	{
-		return Flatten(lobbyGrid[lobbyName]).Where(x => !x.Equals(ItemType.NONE)).Count() > itemLimit;
+		return Flatten(lobbyGrid[lobbyName]).Where(x => !x.Equals(ItemType.NONE)).Count() >= itemLimit;
 	}
 }
