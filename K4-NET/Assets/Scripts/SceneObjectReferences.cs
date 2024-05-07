@@ -10,4 +10,5 @@ public class SceneObjectReferences : MonoBehaviour
     public MouseFollow cursor;
     public InputManager inputManager;
     public GamePrefabsScriptableObject gamePrefabs;
+    public GameData gameData;
 }

@@ -6,7 +6,6 @@ public enum ItemType
 	MINESWEEPER,
 	WRECKINGBALL,
 	FLAG,
-	P1START,
-	P2START,
+	START,
 	FINISH
 }

@@ -25,12 +25,12 @@ MonoBehaviour:
     - {fileID: 21300000, guid: 3ed18c809a4ee664bbc6f33f2576af5e, type: 3}
     - {fileID: 21300000, guid: ec89964745dce474eadc2b1e83bf94d9, type: 3}
     - {fileID: 4091815407782601781, guid: 5fd350c5164832240b345a9ecf4ffb77, type: 3}
-    - {fileID: 21300000, guid: f2a228a309b190249ad55ca351291000, type: 3}
-    - {fileID: 21300000, guid: 763c5421fae11b64389868a496e85082, type: 3}
-    - {fileID: 21300000, guid: b8a3feb4fdac3c34ea74d5c0c4c6454e, type: 3}
-    - {fileID: 21300000, guid: 82ea876f3a73dc44a83ef3d5ae456148, type: 3}
-    - {fileID: 21300000, guid: 2324bf1406f110b408508f16be68a096, type: 3}
+    - {fileID: 4091815407782601781, guid: d652423538c399c4c817b058d23e5810, type: 3}
+    - {fileID: 21300000, guid: 7212c89a2a47d3049b961c75024e40b9, type: 3}
+    - {fileID: 21300000, guid: eb458bfc41cad1e4f83dfb478b579d16, type: 3}
+    - {fileID: 4091815407782601781, guid: ed917c3d1181f5343b72ff4d954b25f7, type: 3}
     - {fileID: 21300000, guid: 5f41ad060df61c84ab10949273ad19ad, type: 3}
+    - {fileID: 21300000, guid: 98d244548aa57eb49b76e284d4f59784, type: 3}
     SerializedBytesString: 
     Prefab: {fileID: 0}
     PrefabModificationsReferencedUnityObjects: []
@@ -55,7 +55,7 @@ MonoBehaviour:
       Data: 
     - Name: 
       Entry: 12
-      Data: 9
+      Data: 8
     - Name: 
       Entry: 7
       Data: 
@@ -189,8 +189,8 @@ MonoBehaviour:
       Entry: 10
       Data: 8
     - Name: itemSprite
-      Entry: 10
-      Data: 9
+      Entry: 6
+      Data: 
     - Name: cursorSprite
       Entry: 6
       Data: 
@@ -210,8 +210,8 @@ MonoBehaviour:
       Entry: 7
       Data: 8|ItemVisual, Assembly-CSharp
     - Name: itemPrefab
-      Entry: 6
-      Data: 
+      Entry: 10
+      Data: 9
     - Name: itemSprite
       Entry: 10
       Data: 10
@@ -234,38 +234,14 @@ MonoBehaviour:
       Entry: 7
       Data: 9|ItemVisual, Assembly-CSharp
     - Name: itemPrefab
-      Entry: 6
-      Data: 
-    - Name: itemSprite
       Entry: 10
       Data: 12
-    - Name: cursorSprite
-      Entry: 10
-      Data: 13
-    - Name: 
-      Entry: 8
-      Data: 
-    - Name: 
-      Entry: 8
-      Data: 
-    - Name: 
-      Entry: 7
-      Data: 
-    - Name: $k
-      Entry: 3
-      Data: 8
-    - Name: $v
-      Entry: 7
-      Data: 10|ItemVisual, Assembly-CSharp
-    - Name: itemPrefab
-      Entry: 6
-      Data: 
     - Name: itemSprite
       Entry: 10
-      Data: 14
+      Data: 13
     - Name: cursorSprite
-      Entry: 6
-      Data: 
+      Entry: 10
+      Data: 14
     - Name: 
       Entry: 8
       Data: 

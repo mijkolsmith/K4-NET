@@ -22,22 +22,40 @@ public class InputManager : MonoBehaviour
         {
             if (Input.GetMouseButtonDown(0))
             {
-                if (client.activePlayer)
+                if (client.ActivePlayer)
                 {
-                    selectedGridCell = gridCell;
-
-                    PlaceObstacleMessage placeObstacleMessage = new()
+					selectedGridCell = gridCell;
+					if (client.RoundStarted)
                     {
-                        name = client.LobbyName,
-                        x = (uint)gridCell.GetPosition().x,
-                        y = (uint)gridCell.GetPosition().y
-                    };
+                        PlayerMoveMessage playerMoveMessage = new()
+                        {
+							name = client.LobbyName,
+							x = (uint)gridCell.GetPosition().x,
+							y = (uint)gridCell.GetPosition().y
+						};
 
-                    client.SendPackedMessage(placeObstacleMessage);
+                        client.SendPackedMessage(playerMoveMessage);
+                    }
+                    else
+                    {
+                        PlaceObstacleMessage placeObstacleMessage = new()
+                        {
+                            name = client.LobbyName,
+                            x = (uint)gridCell.GetPosition().x,
+                            y = (uint)gridCell.GetPosition().y
+                        };
+
+                        client.SendPackedMessage(placeObstacleMessage);
+                    }
                 }
                 else objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "It's not your turn!";
             }
         }
+    }
+
+    public void MovePlayerToSelectedGridCell()
+    {
+
     }
 
     // Places an item at the selected grid cell if it is empty

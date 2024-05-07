@@ -49,7 +49,8 @@ public class ClientBehaviour : MonoBehaviour
 	public ItemType CurrentItem { get; private set; } = ItemType.NONE;
 
 	private uint player;
-    public bool activePlayer { get; private set; } = false;
+	public bool ActivePlayer { get; private set; } = false;
+    public bool RoundStarted { get; private set; } = false;
 
 	//Workaround for sceneloading race condition
 	private float objectReferencesTimer;
@@ -141,7 +142,7 @@ public class ClientBehaviour : MonoBehaviour
 			// Start turn
 			objectReferences.cursor.SetSprite(objectReferences.gamePrefabs.itemVisuals[CurrentItem].cursorSprite);
             objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = 
-				activePlayer ? "Your turn!" : "Waiting for other player...";
+				ActivePlayer ? "Your turn!" : "Waiting for other player...";
         }
     }
 
@@ -324,7 +325,7 @@ public class ClientBehaviour : MonoBehaviour
 
 		client.objectReferencesTimeNeeded = .2f;
 		client.CurrentItem = itemType;
-        client.activePlayer = activePlayer == client.player;
+        client.ActivePlayer = activePlayer == client.player;
 
 		// Open a new scene without closing the server
 		client.StartCoroutine(LoadSceneWithoutClosingOtherOpenScenes(SceneManager.GetActiveScene().buildIndex + 1));
@@ -345,7 +346,7 @@ public class ClientBehaviour : MonoBehaviour
         // Handle minesweeper and wrecking ball
 		if (removal)
         {
-            Debug.Log("removal: " + removal + "   -activePlayer:" + client.activePlayer);
+            Debug.Log("removal: " + removal + "   -activePlayer:" + client.ActivePlayer);
 
             client.objectReferences.inputManager.SelectGridCell(x, y);
 			client.objectReferences.inputManager.RemoveItemAtSelectedGridCell();
@@ -415,12 +416,12 @@ public class ClientBehaviour : MonoBehaviour
 		uint activePlayer = Convert.ToUInt32(message.activePlayer);
 		ItemType itemType = (ItemType)Convert.ToUInt32(message.itemId);
 
-        client.activePlayer = activePlayer == client.player;
+        client.ActivePlayer = activePlayer == client.player;
 
         // Change the cursor so both players know what item is being placed
 		client.objectReferences.cursor.SetSprite(client.objectReferences.gamePrefabs.itemVisuals[itemType].cursorSprite);
 
-		if (client.activePlayer)
+		if (client.ActivePlayer)
         {
             client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Your turn!";
             client.CurrentItem = itemType;
@@ -430,12 +431,33 @@ public class ClientBehaviour : MonoBehaviour
     private static void HandleStartRound(ClientBehaviour client, MessageHeader header)
 	{
         StartRoundMessage message = header as StartRoundMessage;
-        Debug.Log("round starting");
+        uint activePlayer = Convert.ToUInt32(message.activePlayer);
+        int x = Convert.ToInt32(message.x);
+        int y = Convert.ToInt32(message.y);
+
+		client.ActivePlayer = activePlayer == client.player;
+
+		Debug.Log("round starting");
+
+		// Reset the cursor
+		client.objectReferences.cursor.SetSprite(null);
+
+        // Initialize game data
+		client.objectReferences.gameData.StartRound();
+
+		// Place players at start
+		client.objectReferences.inputManager.SelectGridCell(x, y);
+		client.objectReferences.inputManager.MovePlayerToSelectedGridCell();
     }
     
     private static void HandlePlayerMoveSuccess(ClientBehaviour client, MessageHeader header)
 	{
         PlayerMoveSuccessMessage message = header as PlayerMoveSuccessMessage;
+        int x = Convert.ToInt32(message.x);
+        int y = Convert.ToInt32(message.y);
+
+        client.objectReferences.inputManager.SelectGridCell(x, y);
+        client.objectReferences.inputManager.MovePlayerToSelectedGridCell();
     }
     
     private static void HandlePlayerMoveFail(ClientBehaviour client, MessageHeader header)

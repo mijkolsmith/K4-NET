@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 using System;
 using Cysharp.Threading.Tasks;
 using System.Linq;
-using UnityEditor;
+using Newtonsoft.Json.Linq;
 
 public delegate void ServerMessageHandler(ServerBehaviour server, NetworkConnection con, MessageHeader header);
 
@@ -66,6 +66,8 @@ public class ServerBehaviour : MonoBehaviour
 	private const int gridsizeY = 5;
 	private const int itemLimit = 20;
 
+	private int[,] dir = { { 0, 1 }, { 0, -1 }, { 1, 0 }, { -1, 0 } };
+
 	[SerializeField] private readonly List<ItemType> startingItems = new()
 	{
 		ItemType.MINE,
@@ -95,7 +97,9 @@ public class ServerBehaviour : MonoBehaviour
 	private Dictionary<string, List<NetworkConnection>> lobbyList = new();
 	private Dictionary<string, NetworkConnection> lobbyActivePlayer = new();
 	private Dictionary<string, List<ItemType>> lobbyItems = new();
+	private Dictionary<string, List<int>> lobbyHealth = new();
 	private Dictionary<string, ItemType[,]> lobbyGrid = new();
+	private Dictionary<string, PlayerFlag[,]> lobbyPlayerLocations = new();
 	private Dictionary<string, ItemType> lobbyCurrentItem = new();
 
 	public ChatCanvas chat;
@@ -226,7 +230,6 @@ public class ServerBehaviour : MonoBehaviour
 							idList.Remove(m_Connections[i]);
 						}
 
-						string name = pongDict[m_Connections[i]].name;
 						pongDict.Remove(m_Connections[i]);
 
 						// Disconnect this player
@@ -246,10 +249,12 @@ public class ServerBehaviour : MonoBehaviour
 			}
 			else if (idList.ContainsKey(m_Connections[i]))
 			{ //means they've succesfully handshaked
-				PingPong ping = new();
-				ping.lastSendTime = Time.time;
-				ping.status = 3;    // 3 retries
-				ping.name = nameList[idList[m_Connections[i]]];
+				PingPong ping = new()
+				{
+					lastSendTime = Time.time,
+					status = 3,    // 3 retries
+					name = nameList[idList[m_Connections[i]]]
+				};
 				pongDict.Add(m_Connections[i], ping);
 
 				PingMessage pingMsg = new();
@@ -518,11 +523,14 @@ public class ServerBehaviour : MonoBehaviour
 		int y = Convert.ToInt32(message.y);
 
 		Debug.Log("serv: currentitem: " + serv.lobbyCurrentItem[lobbyName] + "   -gridcoords: " + x + " " + y + "   -itemthere: " + serv.lobbyGrid[lobbyName][x, y]);
-		
+
 		// Handle failed obstacle placement (not the active player, space already occupied, using wrong removal)
 		if (serv.lobbyActivePlayer[lobbyName] != con ||
-			(serv.lobbyGrid[lobbyName][x,y] != ItemType.NONE &&
-				(serv.lobbyCurrentItem[lobbyName] == ItemType.MINE || serv.lobbyCurrentItem[lobbyName] == ItemType.WALL)) ||
+			(serv.lobbyGrid[lobbyName][x, y] != ItemType.NONE &&
+				(serv.lobbyCurrentItem[lobbyName] == ItemType.MINE ||
+				serv.lobbyCurrentItem[lobbyName] == ItemType.WALL ||
+				serv.lobbyCurrentItem[lobbyName] == ItemType.START ||
+				serv.lobbyCurrentItem[lobbyName] == ItemType.FINISH)) ||
 			(serv.lobbyGrid[lobbyName][x, y] == ItemType.WALL && serv.lobbyCurrentItem[lobbyName] == ItemType.MINESWEEPER) ||
 			(serv.lobbyGrid[lobbyName][x, y] == ItemType.MINE && serv.lobbyCurrentItem[lobbyName] == ItemType.WRECKINGBALL))
 		{
@@ -538,12 +546,11 @@ public class ServerBehaviour : MonoBehaviour
 		{
 			serv.lobbyGrid[lobbyName][x, y] = ItemType.NONE;
 			removal = true;
-
-			Debug.Log(removal);
 		}
 
-		// Handle placement of mines and walls
-		if (serv.lobbyCurrentItem[lobbyName] == ItemType.MINE || serv.lobbyCurrentItem[lobbyName] == ItemType.WALL)
+		// Handle placement of mines, walls, start and finish
+		if (serv.lobbyCurrentItem[lobbyName] == ItemType.MINE || serv.lobbyCurrentItem[lobbyName] == ItemType.WALL ||
+			serv.lobbyCurrentItem[lobbyName] == ItemType.START || serv.lobbyCurrentItem[lobbyName] == ItemType.FINISH)
 		{
 			serv.lobbyGrid[lobbyName][x, y] = serv.lobbyCurrentItem[lobbyName];
 		}
@@ -567,19 +574,41 @@ public class ServerBehaviour : MonoBehaviour
 		// Check whether enough obstacles have been placed and game should start
 		if (serv.RoundShouldStart(lobbyName))
 		{
-			// They will choose where the next player starts and finishes
+			if (serv.StartFinishGotPlaced(lobbyName))
+			{
+				Debug.Log("Start & finish have been placed, lobby " + lobbyName + " round will now start!");
+
+				// Initialize player locations
+				serv.lobbyPlayerLocations.Add(lobbyName, new PlayerFlag[gridsizeX, gridsizeY]);
+				serv.lobbyPlayerLocations[lobbyName][x, y] = PlayerFlag.PLAYER1 | PlayerFlag.PLAYER2;
+
+				// Initialize player health
+				serv.lobbyHealth.Add(lobbyName, new List<int>() { GameData.defaultPlayerHealth, GameData.defaultPlayerHealth });
+
+				// Communicate the location of the start to both players so they start at the right spot
+				StartRoundMessage startRoundMessage = new()
+				{
+					x = (uint)x,
+					y = (uint)y
+				};
+
+				serv.SendUnicast(serv.lobbyList[lobbyName][0], startRoundMessage);
+				serv.SendUnicast(serv.lobbyList[lobbyName][1], startRoundMessage);
+				return;
+			}
+
+			// One player chooses the finish, the other player then chooses the start
 			// A pathfinding algorithm should check if the path is possible
-
-			Debug.Log("Placed item count exceeded " + itemLimit + ", lobby " + lobbyName + " round will now start!");
-			StartRoundMessage startRoundMessage = new();
-
-			serv.SendUnicast(serv.lobbyList[lobbyName][0], startRoundMessage);
-			serv.SendUnicast(serv.lobbyList[lobbyName][1], startRoundMessage);
-			return;
+			if (serv.lobbyCurrentItem[lobbyName] == ItemType.FINISH)
+				serv.lobbyCurrentItem[lobbyName] = ItemType.START;
+			else serv.lobbyCurrentItem[lobbyName] = ItemType.FINISH;
+		}
+		else
+		{
+			// Give the active player a random item
+			serv.lobbyCurrentItem[lobbyName] = serv.GetRandomItem(lobbyName);
 		}
 
-		// Give the active player a random item
-		serv.lobbyCurrentItem[lobbyName] = serv.GetRandomItem(lobbyName);
 		PlaceNewObstacleMessage placeNewObstacleMessage = new()
 		{
 			activePlayer = (uint)otherPlayerId,
@@ -593,6 +622,63 @@ public class ServerBehaviour : MonoBehaviour
 	static void HandlePlayerMove(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
 	{
 		PlayerMoveMessage message = header as PlayerMoveMessage;
+		string lobbyName = Convert.ToString(message.name);
+		int x = Convert.ToInt32(message.x);
+		int y = Convert.ToInt32(message.y);
+
+		PlayerFlag player = (serv.lobbyList[lobbyName][0] == con) ? PlayerFlag.PLAYER1 : PlayerFlag.PLAYER2;
+		Vector2 playerLocation = serv.GetPlayerLocation(lobbyName, player);
+
+		if (playerLocation.x == -1) return; // Player not found in grid (lobby will close)
+
+		// Check if move is legal (is the active player, space not already occupied by wall, move is distance 1)
+		if (serv.lobbyActivePlayer[lobbyName] != con || 
+			serv.lobbyGrid[lobbyName][x,y] == ItemType.WALL ||
+			Vector2.Distance(new Vector2(x,y), playerLocation) == 1)
+		{
+			PlayerMoveFailMessage playerMoveFailMessage = new();
+			serv.SendUnicast(con, playerMoveFailMessage);
+			return;
+		}
+
+		// Bitwise remove player from old location in lobbyPlayerLocations
+		serv.lobbyPlayerLocations[lobbyName][(int)playerLocation.x, (int)playerLocation.y] &= ~player;
+
+		// Bitwise add player to new location in lobbyPlayerLocations
+		serv.lobbyPlayerLocations[lobbyName][x, y] |= player;
+
+		int otherPlayerId = (serv.lobbyList[lobbyName][0] == con) ? 1 : 0;
+
+		// Check if player hit mine
+		if (serv.lobbyGrid[lobbyName][x, y] == ItemType.MINE)
+		{
+			// Decrease player health
+			serv.lobbyHealth[lobbyName][(int)player] -= 1;
+
+			// Check if player is dead
+			if (serv.lobbyHealth[lobbyName][(int)player] == 0)
+			{
+				// Player is dead, game is over
+				EndGameMessage endGameMessage = new()
+				{
+					// OTHER player wins
+					winnerId = (uint)otherPlayerId
+				};
+
+				serv.SendUnicast(serv.lobbyList[lobbyName][0], endGameMessage);
+				serv.SendUnicast(serv.lobbyList[lobbyName][1], endGameMessage);
+				return;
+			}
+		}
+
+		PlayerMoveSuccessMessage playerMoveSuccessMessage = new()
+		{
+			activePlayer = (uint)otherPlayerId,
+			x = (uint)x,
+			y = (uint)y
+		};
+		serv.SendUnicast(serv.lobbyList[lobbyName][0], playerMoveSuccessMessage);
+		serv.SendUnicast(serv.lobbyList[lobbyName][1], playerMoveSuccessMessage);
 	}
 
 	static void HandleContinueChoice(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
@@ -652,9 +738,49 @@ public class ServerBehaviour : MonoBehaviour
 			}
 		}
 	}
+	private bool StartFinishGotPlaced(string lobbyName)
+	{
+		var lobbyItems = Flatten(lobbyGrid[lobbyName]);
+		return lobbyItems.Contains(ItemType.START) && lobbyItems.Contains(ItemType.FINISH);
+	}
 
 	private bool RoundShouldStart(string lobbyName)
 	{
 		return Flatten(lobbyGrid[lobbyName]).Where(x => !x.Equals(ItemType.NONE)).Count() >= itemLimit;
+	}
+
+	private Vector2 GetPlayerLocation(string lobbyName, PlayerFlag player)
+	{
+		int w = lobbyPlayerLocations[lobbyName].GetLength(0);
+		int h = lobbyPlayerLocations[lobbyName].GetLength(1);
+
+		for (int x = 0; x < w; ++x)
+		{
+			for (int y = 0; y < h; ++y)
+			{
+				// Bitwise AND to check if the player is at this location
+				if ((lobbyPlayerLocations[lobbyName][x, y] & PlayerFlag.PLAYER1) == PlayerFlag.PLAYER1)
+					return new Vector2(x, y);
+			}
+		}
+
+		Debug.Log("Player " + player + " was not found in grid of lobby " + lobbyName + ". Lobby will now close.");
+		DisconnectLobby(lobbyName);
+		return new Vector2(-1, -1);
+	}
+
+	private void DisconnectLobby(string lobbyName)
+	{
+		foreach (NetworkConnection playerConnection in lobbyList[lobbyName])
+		{
+			if (idList.ContainsKey(playerConnection))
+			{
+				nameList.Remove(idList[playerConnection]);
+				idList.Remove(playerConnection);
+			}
+
+			pongDict.Remove(playerConnection);
+			playerConnection.Disconnect(m_Driver);
+		}
 	}
 }

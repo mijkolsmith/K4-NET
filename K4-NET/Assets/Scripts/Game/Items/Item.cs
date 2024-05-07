@@ -1,8 +1,8 @@
-public class Item
+using UnityEngine;
+
+public abstract class Item : MonoBehaviour
 {
-    public int x;
-    public int y;
-    public ItemType itemType;
+    public abstract ItemType ItemType { get; }
 
 	//0: no item
 	//1: mine
