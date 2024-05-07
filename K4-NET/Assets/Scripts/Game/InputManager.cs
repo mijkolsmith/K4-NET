@@ -55,7 +55,10 @@ public class InputManager : MonoBehaviour
 
     public void MovePlayerToSelectedGridCell()
     {
+        if (client.ActivePlayer)
+        {
 
+        }
     }
 
     // Places an item at the selected grid cell if it is empty
