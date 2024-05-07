@@ -6,7 +6,6 @@ using System;
 using Unity.Networking.Transport.Utilities;
 using TMPro;
 using UnityEngine.SceneManagement;
-using System.Diagnostics.Eventing.Reader;
 
 public delegate void ClientMessageHandler(ClientBehaviour client, MessageHeader header);
 
@@ -339,13 +338,14 @@ public class ClientBehaviour : MonoBehaviour
 	private static void HandlePlaceObstacleSuccess(ClientBehaviour client, MessageHeader header)
 	{
         PlaceObstacleSuccessMessage message = header as PlaceObstacleSuccessMessage;
+        int x = Convert.ToInt32(message.x);
+        int y = Convert.ToInt32(message.y);
         bool removal = Convert.ToBoolean(message.removal);
-
-		client.activePlayer = false;
 
         // Handle minesweeper and wrecking ball
 		if (removal)
         {
+            client.objectReferences.inputManager.SelectGridCell(x, y);
 			client.objectReferences.inputManager.RemoveItemAtSelectedGridCell();
 			if (client.CurrentItem == ItemType.MINESWEEPER)
             {
@@ -414,12 +414,13 @@ public class ClientBehaviour : MonoBehaviour
 		uint activePlayer = Convert.ToUInt32(message.activePlayer);
 		ItemType itemType = (ItemType)Convert.ToUInt32(message.itemId);
 
+        client.activePlayer = activePlayer == client.player;
+
         // Change the cursor so both players know what item is being placed
 		client.objectReferences.cursor.SetSprite(client.objectReferences.gamePrefabs.itemVisuals[itemType].cursorSprite);
 
-		if (activePlayer == client.player)
+		if (client.activePlayer)
         {
-            client.activePlayer = true;
             client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Your turn!";
             client.CurrentItem = itemType;
         }

@@ -40,8 +40,11 @@ public class InputManager : MonoBehaviour
         }
     }
 
+    // Places an item at the selected grid cell if it is empty
 	public void PlaceItemAtSelectedGridCell(ItemType item)
 	{
+        if (selectedGridCell.objectInThisGridSpace != null) return;
+
 		selectedGridCell.objectInThisGridSpace = Instantiate(objectReferences.gamePrefabs.itemVisuals[item].itemPrefab,
             new Vector3(
 				selectedGridCell.transform.position.x + gameGrid.GridSpaceSize / 2,
@@ -51,6 +54,13 @@ public class InputManager : MonoBehaviour
 			null);
 	}
     
+    // Selects the grid cell at the given position
+    public void SelectGridCell(int x, int y)
+    {
+		selectedGridCell = gameGrid.GetGridCellAtPosition(x,y);
+	}
+
+    // Removes the item at the selected grid cell
     public void RemoveItemAtSelectedGridCell()
 	{
         Destroy(selectedGridCell.objectInThisGridSpace);

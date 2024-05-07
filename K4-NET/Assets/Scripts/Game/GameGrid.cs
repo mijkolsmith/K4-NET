@@ -54,4 +54,10 @@ public class GameGrid : MonoBehaviour
 
         return new Vector3(x, 0, y);
 	}
+
+    // Get the grid cell at the given position
+    public GridCell GetGridCellAtPosition(int x, int y)
+    {
+        return gameGrid[x, y].GetComponent<GridCell>();
+    }
 }
