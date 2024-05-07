@@ -5,5 +5,8 @@ public enum ItemType
 	WALL,
 	MINESWEEPER,
 	WRECKINGBALL,
-	FLAG
+	FLAG,
+	P1START,
+	P2START,
+	FINISH
 }

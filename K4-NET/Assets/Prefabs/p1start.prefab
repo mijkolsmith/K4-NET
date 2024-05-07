@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 2976595538071352472}
   - component: {fileID: 8546612026693796657}
   m_Layer: 0
-  m_Name: flag
+  m_Name: p1start
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -73,12 +73,12 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: e83a6e9cf03f8a14c930e2e9809fa0dd, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 763c5421fae11b64389868a496e85082, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 0.3, y: 0.32}
+  m_Size: {x: 1.28, y: 1.28}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
