@@ -6,6 +6,7 @@ public class GridCell : MonoBehaviour
     private int posY = 0;
 
     public GameObject objectInThisGridSpace = null;
+    public ItemType itemType = ItemType.NONE;
 
     private bool set = false;
     public bool occupied = false;

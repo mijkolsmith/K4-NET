@@ -8,6 +8,7 @@ using Newtonsoft.Json;
 using System;
 using Cysharp.Threading.Tasks;
 using System.Linq;
+using UnityEditor;
 
 public delegate void ServerMessageHandler(ServerBehaviour server, NetworkConnection con, MessageHeader header);
 
@@ -71,7 +72,8 @@ public class ServerBehaviour : MonoBehaviour
 		ItemType.MINE,
 		ItemType.MINE,
 		ItemType.MINE,
-		ItemType.WALL
+		ItemType.MINE,
+		ItemType.MINE,
 	};
 	[SerializeField] private readonly List<ItemType> itemSet = new()
 	{
@@ -352,7 +354,6 @@ public class ServerBehaviour : MonoBehaviour
 	static async void HandleRegister(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
 	{
 		RegisterMessage message = header as RegisterMessage;
-
 		var json = await serv.Request<List<User>>("https://studenthome.hku.nl/~michael.smith/K4/user_register.php?PHPSESSID=" + serv.PhpConnectionID + "&un=" + message.username + "&pw=" + message.password);
 		int playerId = Convert.ToInt32(json[0].id);
 		string playerName = json[0].username;
@@ -374,7 +375,6 @@ public class ServerBehaviour : MonoBehaviour
 	static async void HandleLogin(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
 	{
 		LoginMessage message = header as LoginMessage;
-
 		var json = await serv.Request<List<User>>("https://studenthome.hku.nl/~michael.smith/K4/user_login.php?PHPSESSID=" + serv.PhpConnectionID + "&un=" + message.username + "&pw=" + message.password);
 		if (json.Count == 0)
 		{
@@ -519,10 +519,12 @@ public class ServerBehaviour : MonoBehaviour
 
 		Debug.Log("serv: currentitem: " + serv.lobbyCurrentItem[lobbyName] + "   -gridcoords: " + x + " " + y + "   -itemthere: " + serv.lobbyGrid[lobbyName][x, y]);
 		
-		// Handle failed obstacle placement (not the active player or space already occupied)
+		// Handle failed obstacle placement (not the active player, space already occupied, using wrong removal)
 		if (serv.lobbyActivePlayer[lobbyName] != con ||
 			(serv.lobbyGrid[lobbyName][x,y] != ItemType.NONE &&
-				(serv.lobbyCurrentItem[lobbyName] == ItemType.MINE || serv.lobbyCurrentItem[lobbyName] == ItemType.WALL)))
+				(serv.lobbyCurrentItem[lobbyName] == ItemType.MINE || serv.lobbyCurrentItem[lobbyName] == ItemType.WALL)) ||
+			(serv.lobbyGrid[lobbyName][x, y] == ItemType.WALL && serv.lobbyCurrentItem[lobbyName] == ItemType.MINESWEEPER) ||
+			(serv.lobbyGrid[lobbyName][x, y] == ItemType.MINE && serv.lobbyCurrentItem[lobbyName] == ItemType.WRECKINGBALL))
 		{
 			PlaceObstacleFailMessage placeObstacleFailMessage = new();
 			serv.SendUnicast(con, placeObstacleFailMessage);
@@ -536,6 +538,8 @@ public class ServerBehaviour : MonoBehaviour
 		{
 			serv.lobbyGrid[lobbyName][x, y] = ItemType.NONE;
 			removal = true;
+
+			Debug.Log(removal);
 		}
 
 		// Handle placement of mines and walls
@@ -543,7 +547,6 @@ public class ServerBehaviour : MonoBehaviour
 		{
 			serv.lobbyGrid[lobbyName][x, y] = serv.lobbyCurrentItem[lobbyName];
 		}
-		else serv.lobbyGrid[lobbyName][x, y] = ItemType.NONE;
 
 		// Obstacle placed successfully
 		PlaceObstacleSuccessMessage placeObstacleSuccessMessage = new()
@@ -554,12 +557,19 @@ public class ServerBehaviour : MonoBehaviour
 		};
 		serv.SendUnicast(con, placeObstacleSuccessMessage);
 
+		// Update the other player's grid as well if an item got removed
 		int otherPlayerId = (serv.lobbyList[lobbyName][0] == con) ? 1 : 0;
 		if (removal) serv.SendUnicast(serv.lobbyList[lobbyName][otherPlayerId], placeObstacleSuccessMessage);
+
+		// The next player becomes the active player
+		serv.lobbyActivePlayer[lobbyName] = serv.lobbyList[lobbyName][otherPlayerId];
 
 		// Check whether enough obstacles have been placed and game should start
 		if (serv.RoundShouldStart(lobbyName))
 		{
+			// They will choose where the next player starts and finishes
+			// A pathfinding algorithm should check if the path is possible
+
 			Debug.Log("Placed item count exceeded " + itemLimit + ", lobby " + lobbyName + " round will now start!");
 			StartRoundMessage startRoundMessage = new();
 
@@ -567,9 +577,6 @@ public class ServerBehaviour : MonoBehaviour
 			serv.SendUnicast(serv.lobbyList[lobbyName][1], startRoundMessage);
 			return;
 		}
-
-		// The next player becomes the active player
-		serv.lobbyActivePlayer[lobbyName] = serv.lobbyList[lobbyName][otherPlayerId];
 
 		// Give the active player a random item
 		serv.lobbyCurrentItem[lobbyName] = serv.GetRandomItem(lobbyName);
@@ -582,7 +589,6 @@ public class ServerBehaviour : MonoBehaviour
 		serv.SendUnicast(serv.lobbyList[lobbyName][0], placeNewObstacleMessage);
 		serv.SendUnicast(serv.lobbyList[lobbyName][1], placeNewObstacleMessage);
 	}
-
 
 	static void HandlePlayerMove(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
 	{

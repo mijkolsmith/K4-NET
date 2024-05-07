@@ -345,20 +345,21 @@ public class ClientBehaviour : MonoBehaviour
         // Handle minesweeper and wrecking ball
 		if (removal)
         {
+            Debug.Log("removal: " + removal + "   -activePlayer:" + client.activePlayer);
+
             client.objectReferences.inputManager.SelectGridCell(x, y);
 			client.objectReferences.inputManager.RemoveItemAtSelectedGridCell();
 			if (client.CurrentItem == ItemType.MINESWEEPER)
             {
                 client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = 
                     "Mine removed! Waiting for other player...";
-                return;
             }
 			else if (client.CurrentItem == ItemType.WRECKINGBALL)
 			{
 				client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text =
 					"Wall removed! Waiting for other player...";
-                return;
 			}
+			return;
 		}
         else if (client.CurrentItem == ItemType.MINESWEEPER)
         {
@@ -383,29 +384,29 @@ public class ClientBehaviour : MonoBehaviour
 	{
         if (client.CurrentItem == ItemType.NONE)
         {
-            client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "It's not your turn!";
+            client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = 
+                "It's not your turn!";
             return;
 		}
 
-        if (client.CurrentItem == ItemType.MINE || client.CurrentItem == ItemType.WALL)
+		client.objectReferences.inputManager.PlaceItemAtSelectedGridCell(ItemType.FLAG);
+
+		if (client.CurrentItem == ItemType.MINE || client.CurrentItem == ItemType.WALL)
         {
 			client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = 
                 "There's already something here... Try somewhere else!";
-			client.objectReferences.inputManager.PlaceItemAtSelectedGridCell(ItemType.FLAG);
-            return;
 		}
-
-        // This code should never be reached but is kept as a failsafe
-        if (client.CurrentItem == ItemType.MINESWEEPER)
+        // This code is reached when using a removal item on the wrong item
+        else if (client.CurrentItem == ItemType.MINESWEEPER)
         {
 			client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text =
-				"There's no mine here to remove... Try somewhere else!";
+				"There's no mine here to remove, but something else... Try somewhere else!";
 		}
         else if (client.CurrentItem == ItemType.WRECKINGBALL)
         {
-            client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = 
-                "There's no wall here to remove... Try somewhere else!";
-        }
+            client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text =
+				"There's no wall here to remove, but something else... Try somewhere else!";
+		}
 	}
     
     private static void HandlePlaceNewObstacle(ClientBehaviour client, MessageHeader header)

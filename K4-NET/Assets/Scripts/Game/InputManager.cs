@@ -24,27 +24,35 @@ public class InputManager : MonoBehaviour
             {
                 if (client.activePlayer)
                 {
-					selectedGridCell = gridCell;
+                    selectedGridCell = gridCell;
 
-					PlaceObstacleMessage placeObstacleMessage = new()
-					{
-						name = client.LobbyName,
-						x = (uint)gridCell.GetPosition().x,
-						y = (uint)gridCell.GetPosition().y
-					};
+                    PlaceObstacleMessage placeObstacleMessage = new()
+                    {
+                        name = client.LobbyName,
+                        x = (uint)gridCell.GetPosition().x,
+                        y = (uint)gridCell.GetPosition().y
+                    };
 
-					client.SendPackedMessage(placeObstacleMessage);
-				}
-				else objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "It's not your turn!";
+                    client.SendPackedMessage(placeObstacleMessage);
+                }
+                else objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "It's not your turn!";
             }
         }
     }
 
     // Places an item at the selected grid cell if it is empty
-	public void PlaceItemAtSelectedGridCell(ItemType item)
-	{
-        if (selectedGridCell.objectInThisGridSpace != null) return;
+    public void PlaceItemAtSelectedGridCell(ItemType item)
+    {
+        // Don't place any items if there already is an item in the selected grid cell
+        if (selectedGridCell.itemType != ItemType.NONE && selectedGridCell.itemType != ItemType.FLAG)
+            return;
 
+        // Always overwrite a flag item
+        if (selectedGridCell.itemType == ItemType.FLAG)
+		    RemoveItemAtSelectedGridCell();
+
+        // Place the item at the selected grid cell
+		selectedGridCell.itemType = item;
 		selectedGridCell.objectInThisGridSpace = Instantiate(objectReferences.gamePrefabs.itemVisuals[item].itemPrefab,
             new Vector3(
 				selectedGridCell.transform.position.x + gameGrid.GridSpaceSize / 2,
@@ -63,6 +71,7 @@ public class InputManager : MonoBehaviour
     // Removes the item at the selected grid cell
     public void RemoveItemAtSelectedGridCell()
 	{
+        selectedGridCell.itemType = ItemType.NONE;
         Destroy(selectedGridCell.objectInThisGridSpace);
         selectedGridCell.objectInThisGridSpace = null;
 	}
