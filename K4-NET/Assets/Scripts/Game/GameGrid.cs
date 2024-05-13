@@ -2,14 +2,15 @@ using UnityEngine;
 
 public class GameGrid : MonoBehaviour
 {
-    public int Width { get; private set; } = 8;
-    public int Height { get; private set; } = 5;
-    public float GridSpaceSize { get; private set; } = 5f;
+    public static int Width { get; private set; } = 8;
+    public static int Height { get; private set; } = 5;
+    public static float GridSpaceSize { get; private set; } = 5f;
 
     [SerializeField] private GameObject gridCellPrefab;
     private GameObject[,] gameGrid;
+	public GridCell[] playerLocations = new GridCell[2];
 
-    void Start()
+	void Start()
     {
         gameGrid = new GameObject[Width, Height];
         CreateGrid();

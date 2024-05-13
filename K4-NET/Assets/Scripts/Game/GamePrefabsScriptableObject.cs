@@ -6,4 +6,5 @@ using UnityEngine;
 public class GamePrefabsScriptableObject : SerializedScriptableObject
 {
 	public Dictionary<ItemType, ItemVisual> itemVisuals = new();
+	public Dictionary<PlayerFlag, PlayerVisual> playerVisuals = new();
 }

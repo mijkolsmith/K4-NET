@@ -47,8 +47,7 @@ public class ClientBehaviour : MonoBehaviour
     public string otherUsername;
     public string LobbyName { get; private set; }
 	public ItemType CurrentItem { get; private set; } = ItemType.NONE;
-
-	private uint player;
+	public uint Player { get; private set; }
 	public bool ActivePlayer { get; private set; } = false;
     public bool RoundStarted { get; private set; } = false;
 
@@ -236,7 +235,7 @@ public class ClientBehaviour : MonoBehaviour
 
     private static void HandleJoinLobbyNew(ClientBehaviour client, MessageHeader header)
 	{
-        client.player = 0;
+        client.Player = 0;
 
         if (client.objectReferences == null) client.objectReferences = FindObjectOfType<SceneObjectReferences>();
 
@@ -261,7 +260,7 @@ public class ClientBehaviour : MonoBehaviour
         int score2 = Convert.ToInt32(message.score2);
         string name = Convert.ToString(message.name);
 
-        client.player = 1;
+        client.Player = 1;
 
         if (client.objectReferences == null) client.objectReferences = FindObjectOfType<SceneObjectReferences>();
 
@@ -312,7 +311,7 @@ public class ClientBehaviour : MonoBehaviour
         if (username == "")
         {
             currentLobby.startLobbyObject.SetActive(false);
-            client.player = 0;
+            client.Player = 0;
         }
         else currentLobby.startLobbyObject.SetActive(true);
     }
@@ -325,7 +324,7 @@ public class ClientBehaviour : MonoBehaviour
 
 		client.objectReferencesTimeNeeded = .2f;
 		client.CurrentItem = itemType;
-        client.ActivePlayer = activePlayer == client.player;
+        client.ActivePlayer = activePlayer == client.Player;
 
 		// Open a new scene without closing the server
 		client.StartCoroutine(LoadSceneWithoutClosingOtherOpenScenes(SceneManager.GetActiveScene().buildIndex + 1));
@@ -416,7 +415,7 @@ public class ClientBehaviour : MonoBehaviour
 		uint activePlayer = Convert.ToUInt32(message.activePlayer);
 		ItemType itemType = (ItemType)Convert.ToUInt32(message.itemId);
 
-        client.ActivePlayer = activePlayer == client.player;
+        client.ActivePlayer = activePlayer == client.Player;
 
         // Change the cursor so both players know what item is being placed
 		client.objectReferences.cursor.SetSprite(client.objectReferences.gamePrefabs.itemVisuals[itemType].cursorSprite);
@@ -435,7 +434,7 @@ public class ClientBehaviour : MonoBehaviour
         int x = Convert.ToInt32(message.x);
         int y = Convert.ToInt32(message.y);
 
-		client.ActivePlayer = activePlayer == client.player;
+		client.ActivePlayer = activePlayer == client.Player;
 
 		Debug.Log("round starting");
 
@@ -447,17 +446,21 @@ public class ClientBehaviour : MonoBehaviour
 
 		// Place players at start
 		client.objectReferences.inputManager.SelectGridCell(x, y);
-		client.objectReferences.inputManager.MovePlayerToSelectedGridCell();
+		client.objectReferences.inputManager.MovePlayerToSelectedGridCell(PlayerFlag.BOTH);
     }
     
     private static void HandlePlayerMoveSuccess(ClientBehaviour client, MessageHeader header)
 	{
         PlayerMoveSuccessMessage message = header as PlayerMoveSuccessMessage;
-        int x = Convert.ToInt32(message.x);
+		uint activePlayer = Convert.ToUInt32(message.activePlayer);
+		int x = Convert.ToInt32(message.x);
         int y = Convert.ToInt32(message.y);
 
-        client.objectReferences.inputManager.SelectGridCell(x, y);
-        client.objectReferences.inputManager.MovePlayerToSelectedGridCell();
+		client.ActivePlayer = activePlayer == client.Player;
+
+		client.objectReferences.inputManager.SelectGridCell(x, y);
+        //temp
+        client.objectReferences.inputManager.MovePlayerToSelectedGridCell(PlayerFlag.PLAYER1);
     }
     
     private static void HandlePlayerMoveFail(ClientBehaviour client, MessageHeader header)

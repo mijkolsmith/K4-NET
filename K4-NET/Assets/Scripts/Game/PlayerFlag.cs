@@ -5,5 +5,6 @@ public enum PlayerFlag
 {
 	NONE = 0,
 	PLAYER1 = 1,
-	PLAYER2 = 2
+	PLAYER2 = 2,
+	BOTH = PLAYER1 | PLAYER2
 }

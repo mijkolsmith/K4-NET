@@ -12,7 +12,7 @@ public class InputManager : MonoBehaviour
     private void Start()
     {
         client = FindObjectOfType<ClientBehaviour>();
-    }
+	}
 
     private void Update()
     {
@@ -53,12 +53,46 @@ public class InputManager : MonoBehaviour
         }
     }
 
-    public void MovePlayerToSelectedGridCell()
+    public void MovePlayerToSelectedGridCell(PlayerFlag playerFlagToMove)
     {
-        if (client.ActivePlayer)
-        {
+        if (playerFlagToMove == PlayerFlag.NONE)
+			return;
 
+        // Only true when spawning players
+        if (playerFlagToMove == PlayerFlag.BOTH)
+        {
+            // Spawn players at selected grid cell
+            selectedGridCell.SetPlayer(playerFlagToMove, objectReferences.gamePrefabs.playerVisuals[playerFlagToMove].playerPrefab);
+            gameGrid.playerLocations[0] = selectedGridCell;
+			gameGrid.playerLocations[1] = selectedGridCell;
+			return;
         }
+
+        // Move correct player to selected grid cell
+        if (playerFlagToMove == PlayerFlag.PLAYER1)
+        {
+			gameGrid.playerLocations[0].RemovePlayer(
+                playerFlagToMove, 
+                objectReferences.gamePrefabs.playerVisuals);
+
+			selectedGridCell.SetPlayer(
+                playerFlagToMove, 
+                objectReferences.gamePrefabs.playerVisuals[playerFlagToMove].playerPrefab);
+
+			gameGrid.playerLocations[0] = selectedGridCell;
+		}
+        else if (playerFlagToMove == PlayerFlag.PLAYER2)
+        {
+			gameGrid.playerLocations[1].RemovePlayer(
+                playerFlagToMove, 
+                objectReferences.gamePrefabs.playerVisuals);
+
+			selectedGridCell.SetPlayer(
+                playerFlagToMove,
+				objectReferences.gamePrefabs.playerVisuals[playerFlagToMove].playerPrefab);
+
+			gameGrid.playerLocations[1] = selectedGridCell;
+		}
     }
 
     // Places an item at the selected grid cell if it is empty
@@ -73,14 +107,7 @@ public class InputManager : MonoBehaviour
 		    RemoveItemAtSelectedGridCell();
 
         // Place the item at the selected grid cell
-		selectedGridCell.itemType = item;
-		selectedGridCell.objectInThisGridSpace = Instantiate(objectReferences.gamePrefabs.itemVisuals[item].itemPrefab,
-            new Vector3(
-				selectedGridCell.transform.position.x + gameGrid.GridSpaceSize / 2,
-				selectedGridCell.transform.position.y + gameGrid.GridSpaceSize / 2,
-				selectedGridCell.transform.position.z),
-		    Quaternion.identity,
-			null);
+        selectedGridCell.SetItem(item, objectReferences.gamePrefabs.itemVisuals[item].itemPrefab);
 	}
     
     // Selects the grid cell at the given position
@@ -92,9 +119,7 @@ public class InputManager : MonoBehaviour
     // Removes the item at the selected grid cell
     public void RemoveItemAtSelectedGridCell()
 	{
-        selectedGridCell.itemType = ItemType.NONE;
-        Destroy(selectedGridCell.objectInThisGridSpace);
-        selectedGridCell.objectInThisGridSpace = null;
+        selectedGridCell.RemoveItem();
 	}
 
 	// Returns the GridCell the mouse is currently hovering over

@@ -576,24 +576,7 @@ public class ServerBehaviour : MonoBehaviour
 		{
 			if (serv.StartFinishGotPlaced(lobbyName))
 			{
-				Debug.Log("Start & finish have been placed, lobby " + lobbyName + " round will now start!");
-
-				// Initialize player locations
-				serv.lobbyPlayerLocations.Add(lobbyName, new PlayerFlag[gridsizeX, gridsizeY]);
-				serv.lobbyPlayerLocations[lobbyName][x, y] = PlayerFlag.PLAYER1 | PlayerFlag.PLAYER2;
-
-				// Initialize player health
-				serv.lobbyHealth.Add(lobbyName, new List<int>() { GameData.defaultPlayerHealth, GameData.defaultPlayerHealth });
-
-				// Communicate the location of the start to both players so they start at the right spot
-				StartRoundMessage startRoundMessage = new()
-				{
-					x = (uint)x,
-					y = (uint)y
-				};
-
-				serv.SendUnicast(serv.lobbyList[lobbyName][0], startRoundMessage);
-				serv.SendUnicast(serv.lobbyList[lobbyName][1], startRoundMessage);
+				serv.StartRound(lobbyName, x, y, otherPlayerId);
 				return;
 			}
 
@@ -782,5 +765,29 @@ public class ServerBehaviour : MonoBehaviour
 			pongDict.Remove(playerConnection);
 			playerConnection.Disconnect(m_Driver);
 		}
+	}
+
+	private void StartRound(string lobbyName, int x, int y, int activePlayer)
+	{
+		Debug.Log("Lobby " + lobbyName + " round will now start!");
+
+		// Initialize player locations
+		lobbyPlayerLocations.Add(lobbyName, new PlayerFlag[gridsizeX, gridsizeY]);
+		lobbyPlayerLocations[lobbyName][x, y] = PlayerFlag.PLAYER1 | PlayerFlag.PLAYER2;
+
+		// Initialize player health
+		lobbyHealth.Add(lobbyName, new List<int>() { GameData.defaultPlayerHealth, GameData.defaultPlayerHealth });
+
+		// Communicate the location of the start to both players so they start at the right spot
+		StartRoundMessage startRoundMessage = new()
+		{
+			activePlayer = (uint)activePlayer,
+			x = (uint)x,
+			y = (uint)y
+		};
+
+		SendUnicast(lobbyList[lobbyName][0], startRoundMessage);
+		SendUnicast(lobbyList[lobbyName][1], startRoundMessage);
+		return;
 	}
 }
