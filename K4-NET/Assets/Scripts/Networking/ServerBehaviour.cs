@@ -625,9 +625,7 @@ public class ServerBehaviour : MonoBehaviour
 			moveFailReason = MoveFailReason.NOT_ACTIVE;
 		if (serv.lobbyGrid[lobbyName][x, y] == ItemType.WALL)
 			moveFailReason = MoveFailReason.WALL;
-
-		Debug.Log("distance of movement: " + Vector2.Distance(new Vector2(x, y), playerLocation));
-		if (Vector2.Distance(new Vector2(x,y), playerLocation) == 1)
+		if (Vector2.Distance(new Vector2(x,y), playerLocation) != 1)
 			moveFailReason = MoveFailReason.RANGE;
 
 		if (moveFailReason != MoveFailReason.NONE)
