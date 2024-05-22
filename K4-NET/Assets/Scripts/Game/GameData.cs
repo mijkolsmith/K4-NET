@@ -5,10 +5,10 @@ public class GameData : MonoBehaviour
 {
     [SerializeField] private GameObject livesObject;
 	[SerializeField] private GameObject otherLivesObject;
-	public const int defaultPlayerHealth = 3;
+	public const uint defaultPlayerHealth = 3;
 
-	private int lives;
-	public int Lives
+	private uint lives;
+	public uint Lives
 	{
 		get => lives;
 		private set
@@ -18,8 +18,8 @@ public class GameData : MonoBehaviour
 		}
 	}
 	
-	private int otherLives;
-	public int OtherLives 
+	private uint otherLives;
+	public uint OtherLives 
 	{
 		get => otherLives;
 		private set

@@ -155,6 +155,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gridCellPrefab: {fileID: 5007058739727414792, guid: 6c24954c10674b84c99c1b7cee760191,
     type: 3}
+  playerLocations:
+  - {fileID: 0}
+  - {fileID: 0}
 --- !u!4 &436986783
 Transform:
   m_ObjectHideFlags: 0
@@ -1254,5 +1257,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3d874ebdf3079364488258811b28b3c9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  livesObject: {fileID: 0}
-  otherLivesObject: {fileID: 0}
+  livesObject: {fileID: 1368121701}
+  otherLivesObject: {fileID: 1051307697}

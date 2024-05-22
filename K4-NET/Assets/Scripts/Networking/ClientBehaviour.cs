@@ -48,6 +48,7 @@ public class ClientBehaviour : MonoBehaviour
     public string LobbyName { get; private set; }
 	public ItemType CurrentItem { get; private set; } = ItemType.NONE;
 	public uint Player { get; private set; }
+	public PlayerFlag PlayerFlag { get; private set; }
 	public bool ActivePlayer { get; private set; } = false;
     public bool RoundStarted { get; private set; } = false;
 
@@ -345,8 +346,6 @@ public class ClientBehaviour : MonoBehaviour
         // Handle minesweeper and wrecking ball
 		if (removal)
         {
-            Debug.Log("removal: " + removal + "   -activePlayer:" + client.ActivePlayer);
-
             client.objectReferences.inputManager.SelectGridCell(x, y);
 			client.objectReferences.inputManager.RemoveItemAtSelectedGridCell();
 			if (client.CurrentItem == ItemType.MINESWEEPER)
@@ -374,7 +373,8 @@ public class ClientBehaviour : MonoBehaviour
             return;
 		}
 
-        // Handle placement of mines and walls
+		// Handle placement of mines and walls, and when round should start placement of start and finish
+		client.objectReferences.inputManager.SelectGridCell(x, y);
 		client.objectReferences.inputManager.PlaceItemAtSelectedGridCell(client.CurrentItem);
 		client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = 
                 "Object placed! Waiting for other player...";
@@ -391,22 +391,13 @@ public class ClientBehaviour : MonoBehaviour
 
 		client.objectReferences.inputManager.PlaceItemAtSelectedGridCell(ItemType.FLAG);
 
-		if (client.CurrentItem == ItemType.MINE || client.CurrentItem == ItemType.WALL)
-        {
-			client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = 
-                "There's already something here... Try somewhere else!";
-		}
-        // This code is reached when using a removal item on the wrong item
-        else if (client.CurrentItem == ItemType.MINESWEEPER)
-        {
-			client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text =
-				"There's no mine here to remove, but something else... Try somewhere else!";
-		}
-        else if (client.CurrentItem == ItemType.WRECKINGBALL)
-        {
-            client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text =
-				"There's no wall here to remove, but something else... Try somewhere else!";
-		}
+        client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = client.CurrentItem switch
+		{
+			ItemType.MINE or ItemType.WALL or ItemType.START or ItemType.FINISH => "There's already something here... Try somewhere else!",
+			ItemType.MINESWEEPER => "There is no mine here to remove, but something else... Try somewhere else!",
+			ItemType.WRECKINGBALL => "There is no wall here to remove, but something else... Try somewhere else!",
+			ItemType.NONE or ItemType.FLAG or _ => "Unknown obstacle placement failure reason (NONE/FLAG/_)"
+		};
 	}
     
     private static void HandlePlaceNewObstacle(ClientBehaviour client, MessageHeader header)
@@ -417,56 +408,101 @@ public class ClientBehaviour : MonoBehaviour
 
         client.ActivePlayer = activePlayer == client.Player;
 
-        // Change the cursor so both players know what item is being placed
+		// Change the cursor so both players know what item is being placed
 		client.objectReferences.cursor.SetSprite(client.objectReferences.gamePrefabs.itemVisuals[itemType].cursorSprite);
 
+        // Change the currentItem specifically so the start and finish can be placed on both sides
+		client.CurrentItem = itemType;
+
+        // Let the active player know it's their turn
 		if (client.ActivePlayer)
         {
             client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Your turn!";
-            client.CurrentItem = itemType;
         }
 	}
     
     private static void HandleStartRound(ClientBehaviour client, MessageHeader header)
 	{
-        StartRoundMessage message = header as StartRoundMessage;
+		StartRoundMessage message = header as StartRoundMessage;
+		uint activePlayer = Convert.ToUInt32(message.activePlayer);
+		int x = Convert.ToInt32(message.x);
+		int y = Convert.ToInt32(message.y);
+
+		client.ActivePlayer = activePlayer == client.Player;
+
+        // Define which player this client is
+		client.PlayerFlag = client.Player == 0 ? PlayerFlag.PLAYER1 : PlayerFlag.PLAYER2;
+
+		// Let the active player know it's their turn
+		if (client.ActivePlayer)
+		{
+			client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Your turn to move!";
+		}
+
+		// Start round with start coordinates
+		client.StartRound(x, y);
+	}
+
+	private static void HandlePlayerMoveSuccess(ClientBehaviour client, MessageHeader header)
+    {
+        PlayerMoveSuccessMessage message = header as PlayerMoveSuccessMessage;
         uint activePlayer = Convert.ToUInt32(message.activePlayer);
         int x = Convert.ToInt32(message.x);
         int y = Convert.ToInt32(message.y);
+        uint health = Convert.ToUInt32(message.health);
+        uint playerToMove = Convert.ToUInt32(message.playerToMove);
 
-		client.ActivePlayer = activePlayer == client.Player;
-
-		Debug.Log("round starting");
-
-		// Reset the cursor
-		client.objectReferences.cursor.SetSprite(null);
-
-        // Initialize game data
-		client.objectReferences.gameData.StartRound();
-
-		// Place players at start
+        client.ActivePlayer = activePlayer == client.Player;
 		client.objectReferences.inputManager.SelectGridCell(x, y);
-		client.objectReferences.inputManager.MovePlayerToSelectedGridCell(PlayerFlag.BOTH);
-    }
-    
-    private static void HandlePlayerMoveSuccess(ClientBehaviour client, MessageHeader header)
-	{
-        PlayerMoveSuccessMessage message = header as PlayerMoveSuccessMessage;
-		uint activePlayer = Convert.ToUInt32(message.activePlayer);
-		int x = Convert.ToInt32(message.x);
-        int y = Convert.ToInt32(message.y);
 
-		client.ActivePlayer = activePlayer == client.Player;
+		// Move the player
+		client.objectReferences.inputManager.MovePlayerToSelectedGridCell((PlayerFlag)playerToMove);
 
-		client.objectReferences.inputManager.SelectGridCell(x, y);
-        //temp
-        client.objectReferences.inputManager.MovePlayerToSelectedGridCell(PlayerFlag.PLAYER1);
+		// Check if the previous player hit a mine
+		if (client.ActivePlayer && client.objectReferences.gameData.OtherLives != health)
+        {
+            client.objectReferences.gameData.DecreaseOtherLives();
+            client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Other player hit a mine! Your turn.";
+
+            // Remove the mine visual
+            client.objectReferences.inputManager.RemoveItemAtSelectedGridCell();
+            return;
+        }
+        if (!client.ActivePlayer && client.objectReferences.gameData.Lives != health)
+        {
+            client.objectReferences.gameData.DecreaseLives();
+            client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "You hit a mine!";
+            return;
+        }
+
+		if (client.ActivePlayer)
+        {
+            client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Your turn to move!";
+        }
     }
     
     private static void HandlePlayerMoveFail(ClientBehaviour client, MessageHeader header)
 	{
-        PlayerMoveFailMessage message = header as PlayerMoveFailMessage;
-    }
+		PlayerMoveFailMessage message = header as PlayerMoveFailMessage;
+		int x = Convert.ToInt32(message.x);
+		int y = Convert.ToInt32(message.y);
+        MoveFailReason moveFailReason = (MoveFailReason)Convert.ToUInt32(message.moveFailReason);
+
+        client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = moveFailReason switch
+		{
+			MoveFailReason.NOT_ACTIVE => "It's not your turn to move!",
+			MoveFailReason.WALL => "There's a wall in the way!",
+			MoveFailReason.RANGE => "Can't move that far!",
+		    MoveFailReason.NONE or _ => "Unknown move fail reason (NONE/_)",
+		};
+
+        // Place a wall visual if the player tried to move into one
+        if (moveFailReason == MoveFailReason.WALL)
+        {
+			client.objectReferences.inputManager.SelectGridCell(x, y);
+            client.objectReferences.inputManager.PlaceItemAtSelectedGridCell(ItemType.WALL);
+		}
+	}
     
     private static void HandleEndRound(ClientBehaviour client, MessageHeader header)
 	{
@@ -514,5 +550,20 @@ public class ClientBehaviour : MonoBehaviour
 
         objectReferences.currentLobby.SetActive(false);
 		objectReferences.joinLobby.SetActive(true);
+	}
+
+	private void StartRound(int x, int y)
+	{
+		RoundStarted = true;
+
+		// Reset the cursor
+		objectReferences.cursor.SetSprite(null);
+
+		// Initialize game data
+		objectReferences.gameData.StartRound();
+
+		// Place players at start
+		objectReferences.inputManager.SelectGridCell(x, y);
+		objectReferences.inputManager.MovePlayerToSelectedGridCell(PlayerFlag.BOTH);
 	}
 }

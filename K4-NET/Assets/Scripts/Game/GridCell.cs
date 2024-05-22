@@ -52,7 +52,7 @@ public class GridCell : MonoBehaviour
             new Vector3(
                 transform.position.x + GameGrid.GridSpaceSize * .5f,
                 transform.position.y + GameGrid.GridSpaceSize * .75f,
-                transform.position.z),
+                transform.position.z - 1),
             Quaternion.identity,
             null);
 	}

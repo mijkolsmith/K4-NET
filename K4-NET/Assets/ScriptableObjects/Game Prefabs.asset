@@ -22,12 +22,16 @@ MonoBehaviour:
     - {fileID: 21300000, guid: 3ed18c809a4ee664bbc6f33f2576af5e, type: 3}
     - {fileID: 21300000, guid: ec89964745dce474eadc2b1e83bf94d9, type: 3}
     - {fileID: 4091815407782601781, guid: 5fd350c5164832240b345a9ecf4ffb77, type: 3}
+    - {fileID: 21300000, guid: 46e97b98f801c92409ce91444b37ccc6, type: 3}
     - {fileID: 4091815407782601781, guid: d652423538c399c4c817b058d23e5810, type: 3}
     - {fileID: 21300000, guid: 7212c89a2a47d3049b961c75024e40b9, type: 3}
     - {fileID: 21300000, guid: eb458bfc41cad1e4f83dfb478b579d16, type: 3}
     - {fileID: 4091815407782601781, guid: ed917c3d1181f5343b72ff4d954b25f7, type: 3}
     - {fileID: 21300000, guid: 5f41ad060df61c84ab10949273ad19ad, type: 3}
     - {fileID: 21300000, guid: 98d244548aa57eb49b76e284d4f59784, type: 3}
+    - {fileID: 4091815407782601781, guid: a04ed99438c50ad4baea3523d860be19, type: 3}
+    - {fileID: 21300000, guid: e95c2eaada3238d4d9e6d8300c385aa6, type: 3}
+    - {fileID: 21300000, guid: 3a972f106e47f8548a7fa7025f83f471, type: 3}
     - {fileID: 4091815407782601781, guid: 19de8f9c15e4c0144aafa2520831dd49, type: 3}
     - {fileID: 4091815407782601781, guid: b9bcb415a1ce9084bad35aa9defccd5a, type: 3}
     - {fileID: 4091815407782601781, guid: 0f3ae53dcca3ec745bc33493cb676a3d, type: 3}
@@ -55,7 +59,7 @@ MonoBehaviour:
       Data: 
     - Name: 
       Entry: 12
-      Data: 6
+      Data: 7
     - Name: 
       Entry: 7
       Data: 
@@ -141,8 +145,8 @@ MonoBehaviour:
       Entry: 10
       Data: 5
     - Name: itemSprite
-      Entry: 6
-      Data: 
+      Entry: 10
+      Data: 6
     - Name: cursorSprite
       Entry: 6
       Data: 
@@ -163,13 +167,13 @@ MonoBehaviour:
       Data: 6|ItemVisual, Assembly-CSharp
     - Name: itemPrefab
       Entry: 10
-      Data: 6
+      Data: 7
     - Name: itemSprite
       Entry: 10
-      Data: 7
+      Data: 8
     - Name: cursorSprite
       Entry: 10
-      Data: 8
+      Data: 9
     - Name: 
       Entry: 8
       Data: 
@@ -187,13 +191,37 @@ MonoBehaviour:
       Data: 7|ItemVisual, Assembly-CSharp
     - Name: itemPrefab
       Entry: 10
-      Data: 9
+      Data: 10
     - Name: itemSprite
       Entry: 10
-      Data: 10
+      Data: 11
     - Name: cursorSprite
       Entry: 10
-      Data: 11
+      Data: 12
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 
+    - Name: $k
+      Entry: 3
+      Data: 1
+    - Name: $v
+      Entry: 7
+      Data: 8|ItemVisual, Assembly-CSharp
+    - Name: itemPrefab
+      Entry: 10
+      Data: 13
+    - Name: itemSprite
+      Entry: 10
+      Data: 14
+    - Name: cursorSprite
+      Entry: 10
+      Data: 15
     - Name: 
       Entry: 8
       Data: 
@@ -208,11 +236,11 @@ MonoBehaviour:
       Data: 
     - Name: playerVisuals
       Entry: 7
-      Data: 8|System.Collections.Generic.Dictionary`2[[PlayerFlag, Assembly-CSharp],[PlayerVisual,
+      Data: 9|System.Collections.Generic.Dictionary`2[[PlayerFlag, Assembly-CSharp],[PlayerVisual,
         Assembly-CSharp]], mscorlib
     - Name: comparer
       Entry: 7
-      Data: 9|System.Collections.Generic.EnumEqualityComparer`1[[PlayerFlag, Assembly-CSharp]],
+      Data: 10|System.Collections.Generic.EnumEqualityComparer`1[[PlayerFlag, Assembly-CSharp]],
         mscorlib
     - Name: 
       Entry: 12
@@ -234,10 +262,10 @@ MonoBehaviour:
       Data: 1
     - Name: $v
       Entry: 7
-      Data: 10|PlayerVisual, Assembly-CSharp
+      Data: 11|PlayerVisual, Assembly-CSharp
     - Name: playerPrefab
       Entry: 10
-      Data: 12
+      Data: 16
     - Name: 
       Entry: 8
       Data: 
@@ -252,10 +280,10 @@ MonoBehaviour:
       Data: 3
     - Name: $v
       Entry: 7
-      Data: 11|PlayerVisual, Assembly-CSharp
+      Data: 12|PlayerVisual, Assembly-CSharp
     - Name: playerPrefab
       Entry: 10
-      Data: 13
+      Data: 17
     - Name: 
       Entry: 8
       Data: 
@@ -270,10 +298,10 @@ MonoBehaviour:
       Data: 2
     - Name: $v
       Entry: 7
-      Data: 12|PlayerVisual, Assembly-CSharp
+      Data: 13|PlayerVisual, Assembly-CSharp
     - Name: playerPrefab
       Entry: 10
-      Data: 14
+      Data: 18
     - Name: 
       Entry: 8
       Data: 

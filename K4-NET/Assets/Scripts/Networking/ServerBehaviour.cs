@@ -62,11 +62,9 @@ public class ServerBehaviour : MonoBehaviour
 	public NetworkPipeline m_Pipeline;
 	private NativeList<NetworkConnection> m_Connections;
 
-	private const int gridsizeX = 8;
-	private const int gridsizeY = 5;
-	private const int itemLimit = 20;
-
-	private int[,] dir = { { 0, 1 }, { 0, -1 }, { 1, 0 }, { -1, 0 } };
+	private const int gridsizeX = 8; //8
+	private const int gridsizeY = 5; //5
+	private const int itemLimit = 5; //20
 
 	[SerializeField] private readonly List<ItemType> startingItems = new()
 	{
@@ -91,13 +89,15 @@ public class ServerBehaviour : MonoBehaviour
 		ItemType.WRECKINGBALL
 	};
 
+	private string databaseUrl = "https://studenthome.hku.nl/~michael.smith/K4/";
+
 	private Dictionary<NetworkConnection, int> idList = new();
 	private Dictionary<int, string> nameList = new();
 	private Dictionary<NetworkConnection, PingPong> pongDict = new();
 	private Dictionary<string, List<NetworkConnection>> lobbyList = new();
 	private Dictionary<string, NetworkConnection> lobbyActivePlayer = new();
 	private Dictionary<string, List<ItemType>> lobbyItems = new();
-	private Dictionary<string, List<int>> lobbyHealth = new();
+	private Dictionary<string, List<uint>> lobbyHealth = new();
 	private Dictionary<string, ItemType[,]> lobbyGrid = new();
 	private Dictionary<string, PlayerFlag[,]> lobbyPlayerLocations = new();
 	private Dictionary<string, ItemType> lobbyCurrentItem = new();
@@ -108,10 +108,10 @@ public class ServerBehaviour : MonoBehaviour
 
 	async void Start()
 	{
-		//var x = await request<List<Id>>("https://studenthome.hku.nl/~michael.smith/K4/server_login.php?id=1&pw=");
-		//Debug.Log(x[0].id);
+		//var getJson = await GetRequest<List<Id>>(databaseUrl + "server_login.php?id=1&pw=A5FJDKeSdKI49dnR49JFRIVJWJf92JF9R8Gg98GG3");
+		//Debug.Log(getJson[0].id);
 
-		//List<User> json = await request<List<User>>("https://studenthome.hku.nl/~michael.smith/K4/user_register.php?PHPSESSID=" + x[0].id + "&un=test1&pw=test1");
+		//List<User> json = await GetRequest<List<User>>(databaseUrl + "user_register.php?PHPSESSID=" + getJson[0].id + "&un=test1&pw=test1");
 
 		//int playerId = Convert.ToInt32(json[0].id);
 		//string playerName = json[0].username;
@@ -306,7 +306,7 @@ public class ServerBehaviour : MonoBehaviour
 		}
 	}
 
-	async private UniTask<T> Request<T>(string url)
+	async private UniTask<T> GetRequest<T>(string url)
 	{
 		UnityWebRequest request = UnityWebRequest.Get(url);
 		request.SetRequestHeader("Content-Type", "application/json");
@@ -323,7 +323,7 @@ public class ServerBehaviour : MonoBehaviour
 		}
 		catch (Exception)
 		{
-			result = default(T);
+			result = default;
 		}
 		return result;
 	}
@@ -349,7 +349,7 @@ public class ServerBehaviour : MonoBehaviour
 	static async void HandleHandshake(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
 	{
 		// Connect to database
-		var json = await serv.Request<List<Id>>("https://studenthome.hku.nl/~michael.smith/K4/server_login.php?id=1&pw=A5FJDKeSdKI49dnR49JFRIVJWJf92JF9R8Gg98GG3");
+		var json = await serv.GetRequest<List<Id>>(serv.databaseUrl + "server_login.php?id=1&pw=A5FJDKeSdKI49dnR49JFRIVJWJf92JF9R8Gg98GG3");
 		serv.PhpConnectionID = json[0].id;
 
 		HandshakeResponseMessage handshakeResponseMessage = new();
@@ -359,7 +359,7 @@ public class ServerBehaviour : MonoBehaviour
 	static async void HandleRegister(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
 	{
 		RegisterMessage message = header as RegisterMessage;
-		var json = await serv.Request<List<User>>("https://studenthome.hku.nl/~michael.smith/K4/user_register.php?PHPSESSID=" + serv.PhpConnectionID + "&un=" + message.username + "&pw=" + message.password);
+		var json = await serv.GetRequest<List<User>>(serv.databaseUrl + "user_register.php?PHPSESSID=" + serv.PhpConnectionID + "&un=" + message.username + "&pw=" + message.password);
 		int playerId = Convert.ToInt32(json[0].id);
 		string playerName = json[0].username;
 
@@ -380,7 +380,7 @@ public class ServerBehaviour : MonoBehaviour
 	static async void HandleLogin(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
 	{
 		LoginMessage message = header as LoginMessage;
-		var json = await serv.Request<List<User>>("https://studenthome.hku.nl/~michael.smith/K4/user_login.php?PHPSESSID=" + serv.PhpConnectionID + "&un=" + message.username + "&pw=" + message.password);
+		var json = await serv.GetRequest<List<User>>(serv.databaseUrl + "user_login.php?PHPSESSID=" + serv.PhpConnectionID + "&un=" + message.username + "&pw=" + message.password);
 		if (json.Count == 0)
 		{
 			// Something went wrong with the query (wrong login)
@@ -425,7 +425,7 @@ public class ServerBehaviour : MonoBehaviour
 		else if (serv.lobbyList[lobbyName].Count == 1)
 		{
 			// Get the scores of the two players against each other
-			var json = await serv.Request<List<UserScore>>("https://studenthome.hku.nl/~michael.smith/K4/score_get.php?PHPSESSID=" + serv.PhpConnectionID + "&player1=" + serv.idList[serv.lobbyList[lobbyName][0]] + "&player2=" + serv.idList[con]);
+			var json = await serv.GetRequest<List<UserScore>>(serv.databaseUrl + "score_get.php?PHPSESSID=" + serv.PhpConnectionID + "&player1=" + serv.idList[serv.lobbyList[lobbyName][0]] + "&player2=" + serv.idList[con]);
 			uint score1 = 0;
 			uint score2 = 0;
 			if (json.Count > 0)
@@ -555,7 +555,7 @@ public class ServerBehaviour : MonoBehaviour
 			serv.lobbyGrid[lobbyName][x, y] = serv.lobbyCurrentItem[lobbyName];
 		}
 
-		// Obstacle placed successfully
+		// Obstacle placed successfully, send a message back to update visual
 		PlaceObstacleSuccessMessage placeObstacleSuccessMessage = new()
 		{
 			x = (uint)x,
@@ -564,7 +564,7 @@ public class ServerBehaviour : MonoBehaviour
 		};
 		serv.SendUnicast(con, placeObstacleSuccessMessage);
 
-		// Update the other player's grid as well if an item got removed
+		// Update the other player's grid if an item got removed
 		int otherPlayerId = (serv.lobbyList[lobbyName][0] == con) ? 1 : 0;
 		if (removal) serv.SendUnicast(serv.lobbyList[lobbyName][otherPlayerId], placeObstacleSuccessMessage);
 
@@ -574,6 +574,10 @@ public class ServerBehaviour : MonoBehaviour
 		// Check whether enough obstacles have been placed and game should start
 		if (serv.RoundShouldStart(lobbyName))
 		{
+			// Update the other player's grid if a start or finish item got placed
+			if (serv.lobbyCurrentItem[lobbyName] == ItemType.FINISH || serv.lobbyCurrentItem[lobbyName] == ItemType.START)
+				serv.SendUnicast(serv.lobbyList[lobbyName][otherPlayerId], placeObstacleSuccessMessage);
+
 			if (serv.StartFinishGotPlaced(lobbyName))
 			{
 				serv.StartRound(lobbyName, x, y, otherPlayerId);
@@ -581,7 +585,7 @@ public class ServerBehaviour : MonoBehaviour
 			}
 
 			// One player chooses the finish, the other player then chooses the start
-			// A pathfinding algorithm should check if the path is possible
+			// TODO: A pathfinding algorithm should check if the path is possible
 			if (serv.lobbyCurrentItem[lobbyName] == ItemType.FINISH)
 				serv.lobbyCurrentItem[lobbyName] = ItemType.START;
 			else serv.lobbyCurrentItem[lobbyName] = ItemType.FINISH;
@@ -612,14 +616,29 @@ public class ServerBehaviour : MonoBehaviour
 		PlayerFlag player = (serv.lobbyList[lobbyName][0] == con) ? PlayerFlag.PLAYER1 : PlayerFlag.PLAYER2;
 		Vector2 playerLocation = serv.GetPlayerLocation(lobbyName, player);
 
-		if (playerLocation.x == -1) return; // Player not found in grid (lobby will close)
+		if (playerLocation.x == -1) return; // Player not found in grid (lobby will close in GetPlayerLocation)
+
+		MoveFailReason moveFailReason = MoveFailReason.NONE;
 
 		// Check if move is legal (is the active player, space not already occupied by wall, move is distance 1)
-		if (serv.lobbyActivePlayer[lobbyName] != con || 
-			serv.lobbyGrid[lobbyName][x,y] == ItemType.WALL ||
-			Vector2.Distance(new Vector2(x,y), playerLocation) == 1)
+		if (serv.lobbyActivePlayer[lobbyName] != con)
+			moveFailReason = MoveFailReason.NOT_ACTIVE;
+		if (serv.lobbyGrid[lobbyName][x, y] == ItemType.WALL)
+			moveFailReason = MoveFailReason.WALL;
+
+		Debug.Log("distance of movement: " + Vector2.Distance(new Vector2(x, y), playerLocation));
+		if (Vector2.Distance(new Vector2(x,y), playerLocation) == 1)
+			moveFailReason = MoveFailReason.RANGE;
+
+		if (moveFailReason != MoveFailReason.NONE)
 		{
-			PlayerMoveFailMessage playerMoveFailMessage = new();
+			PlayerMoveFailMessage playerMoveFailMessage = new()
+			{
+				x = (uint)x,
+				y = (uint)y,
+				moveFailReason = (uint)moveFailReason
+			};
+
 			serv.SendUnicast(con, playerMoveFailMessage);
 			return;
 		}
@@ -658,7 +677,9 @@ public class ServerBehaviour : MonoBehaviour
 		{
 			activePlayer = (uint)otherPlayerId,
 			x = (uint)x,
-			y = (uint)y
+			y = (uint)y,
+			health = serv.lobbyHealth[lobbyName][(int)player],
+			playerToMove = (uint)player
 		};
 		serv.SendUnicast(serv.lobbyList[lobbyName][0], playerMoveSuccessMessage);
 		serv.SendUnicast(serv.lobbyList[lobbyName][1], playerMoveSuccessMessage);
@@ -776,7 +797,7 @@ public class ServerBehaviour : MonoBehaviour
 		lobbyPlayerLocations[lobbyName][x, y] = PlayerFlag.PLAYER1 | PlayerFlag.PLAYER2;
 
 		// Initialize player health
-		lobbyHealth.Add(lobbyName, new List<int>() { GameData.defaultPlayerHealth, GameData.defaultPlayerHealth });
+		lobbyHealth.Add(lobbyName, new List<uint>() { GameData.defaultPlayerHealth, GameData.defaultPlayerHealth });
 
 		// Communicate the location of the start to both players so they start at the right spot
 		StartRoundMessage startRoundMessage = new()
