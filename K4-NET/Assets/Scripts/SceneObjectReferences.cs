@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 public class SceneObjectReferences : MonoBehaviour
@@ -7,6 +6,7 @@ public class SceneObjectReferences : MonoBehaviour
     public GameObject errorMessage;
     public GameObject joinLobby;
     public GameObject currentLobby;
+    public GameObject endGame;
     public MouseFollow cursor;
     public InputManager inputManager;
     public GamePrefabsScriptableObject gamePrefabs;

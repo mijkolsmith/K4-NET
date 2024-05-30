@@ -98,10 +98,11 @@ public class ServerBehaviour : MonoBehaviour
 	private Dictionary<string, List<NetworkConnection>> lobbyList = new();
 	private Dictionary<string, NetworkConnection> lobbyActivePlayer = new();
 	private Dictionary<string, List<ItemType>> lobbyItems = new();
-	private Dictionary<string, List<uint>> lobbyHealth = new();
+	private Dictionary<string, uint[]> lobbyHealth = new();
 	private Dictionary<string, ItemType[,]> lobbyGrid = new();
 	private Dictionary<string, PlayerFlag[,]> lobbyPlayerLocations = new();
 	private Dictionary<string, ItemType> lobbyCurrentItem = new();
+	private Dictionary<string, bool[]> lobbyRematch = new();
 
 	public ChatCanvas chat;
 
@@ -685,6 +686,7 @@ public class ServerBehaviour : MonoBehaviour
 			return;
 		}
 
+		// Inform players of successful move attempt
 		PlayerMoveSuccessMessage playerMoveSuccessMessage = new()
 		{
 			activePlayer = (uint)otherPlayerId,
@@ -700,6 +702,34 @@ public class ServerBehaviour : MonoBehaviour
 	static void HandleContinueChoice(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
 	{
 		ContinueChoiceMessage message = header as ContinueChoiceMessage;
+		string lobbyName = Convert.ToString(message.name);
+
+		int otherPlayerId = (serv.lobbyList[lobbyName][0] == con) ? 1 : 0;
+
+		// Initialize rematch choice array
+		serv.lobbyRematch[lobbyName] = new bool[2];
+
+		if (message.choice)
+		{
+			serv.lobbyRematch[lobbyName][serv.idList[con]] = true;
+
+			if (serv.lobbyRematch[lobbyName][0] && serv.lobbyRematch[lobbyName][1])
+			{
+				// Rematch accepted by both players
+
+			}
+
+			// Inform the other player of rematch choice
+			ContinueChoiceResponseMessage continueChoiceSuccessMessage = new();
+
+			serv.SendUnicast(serv.lobbyList[lobbyName][otherPlayerId], continueChoiceSuccessMessage);
+		}
+		else
+		{
+			// End game and inform the other player
+			EndGameMessage endGameMessage = new();
+			serv.SendLobbyBroadcast(lobbyName, endGameMessage);
+		}
 	}
 
 	static void HandleChatMessage(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
@@ -809,7 +839,7 @@ public class ServerBehaviour : MonoBehaviour
 		lobbyPlayerLocations[lobbyName][x, y] = PlayerFlag.PLAYER1 | PlayerFlag.PLAYER2;
 
 		// Initialize player health
-		lobbyHealth.Add(lobbyName, new List<uint>() { GameData.defaultPlayerHealth, GameData.defaultPlayerHealth });
+		lobbyHealth.Add(lobbyName, new uint[2] { GameData.defaultPlayerHealth, GameData.defaultPlayerHealth });
 
 		// Communicate the location of the start to both players so they start at the right spot
 		StartRoundMessage startRoundMessage = new()
@@ -825,12 +855,12 @@ public class ServerBehaviour : MonoBehaviour
 
 	private async Task EndGame(NetworkConnection con, string lobbyName, int winnerId)
 	{
-		EndGameMessage endGameMessage = new()
+		EndRoundMessage endRoundMessage = new()
 		{
 			winnerId = (uint)winnerId
 		};
 
-		SendLobbyBroadcast(lobbyName, endGameMessage);
+		SendLobbyBroadcast(lobbyName, endRoundMessage);
 
 		var json = await GetRequest<List<Error>>(databaseUrl + "score_insert.php?PHPSESSID=" + PhpConnectionID + "&winner_id=" + idList[lobbyList[lobbyName][winnerId]] + "&loser_id=" + idList[con]);
 		Debug.Log(lobbyName + (Convert.ToUInt32(json[0].result) == 1 ? ": successfully submitted score" : ": error submitting score"));

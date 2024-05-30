@@ -3,7 +3,8 @@ using UnityEngine;
 
 public class GameData : MonoBehaviour
 {
-    [SerializeField] private GameObject livesObject;
+	public ClientBehaviour client;
+	[SerializeField] private GameObject livesObject;
 	[SerializeField] private GameObject otherLivesObject;
 	public const uint defaultPlayerHealth = 3;
 
@@ -29,7 +30,12 @@ public class GameData : MonoBehaviour
 		}
 	}
 
-    public void DecreaseLives()
+	private void Start()
+	{
+		client = FindObjectOfType<ClientBehaviour>();
+	}
+
+	public void DecreaseLives()
     {
 		Lives--;
 	}
@@ -44,4 +50,15 @@ public class GameData : MonoBehaviour
 		Lives = defaultPlayerHealth;
 		OtherLives = defaultPlayerHealth;
     }
+
+	public void Rematch(bool choice)
+	{
+		ContinueChoiceMessage continueChoiceMessage = new()
+		{
+			name = client.LobbyName,
+			choice = choice
+		};
+
+		client.SendPackedMessage(continueChoiceMessage);
+	}
 }

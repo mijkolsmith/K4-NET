@@ -506,15 +506,22 @@ public class ClientBehaviour : MonoBehaviour
     
     private static void HandleEndRound(ClientBehaviour client, MessageHeader header)
 	{
-		//Enable continue buttons
-		//client.objectReferences
+        EndRoundMessage message = header as EndRoundMessage;
+        uint winnerId = Convert.ToUInt32(message.winnerId);
 
-	}
+		client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = client.Player == winnerId ? "You won!" : "You lost.";
+
+		//Enable continue buttons
+		client.objectReferences.endGame.SetActive(true);
+    }
     
     private static void HandleContinueChoiceResponse(ClientBehaviour client, MessageHeader header)
 	{
         ContinueChoiceResponseMessage message = header as ContinueChoiceResponseMessage;
-    }
+
+        // Update visual
+        client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Other player wants a rematch!";
+	}
 
 	private static void HandleEndGame(ClientBehaviour client, MessageHeader header)
 	{
