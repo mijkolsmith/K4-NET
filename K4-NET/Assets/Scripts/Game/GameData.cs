@@ -14,7 +14,7 @@ public class GameData : MonoBehaviour
 		private set
 		{
 			lives = value;
-			livesObject.GetComponent<TextMeshProUGUI>().text = "Enemy HP: " + value;
+			livesObject.GetComponent<TextMeshProUGUI>().text = "HP: " + value;
 		}
 	}
 	

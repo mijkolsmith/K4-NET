@@ -9,6 +9,7 @@ using System;
 using Cysharp.Threading.Tasks;
 using System.Linq;
 using Newtonsoft.Json.Linq;
+using System.Threading.Tasks;
 
 public delegate void ServerMessageHandler(ServerBehaviour server, NetworkConnection con, MessageHeader header);
 
@@ -278,10 +279,10 @@ public class ServerBehaviour : MonoBehaviour
 		}
 	}
 
-	public void SendUnicast(NetworkConnection connection, MessageHeader header, bool realiable = true)
+	public void SendUnicast(NetworkConnection connection, MessageHeader header, bool reliable = true)
 	{
 		DataStreamWriter writer;
-		int result = m_Driver.BeginSend(realiable ? m_Pipeline : NetworkPipeline.Null, connection, out writer);
+		int result = m_Driver.BeginSend(reliable ? m_Pipeline : NetworkPipeline.Null, connection, out writer);
 		if (result == 0)
 		{
 			header.SerializeObject(ref writer);
@@ -289,7 +290,21 @@ public class ServerBehaviour : MonoBehaviour
 		}
 	}
 
-	public void SendBroadcast(MessageHeader header, NetworkConnection toExclude = default, bool realiable = true)
+	public void SendLobbyBroadcast(string lobbyName, MessageHeader header, bool reliable = true)
+	{
+		DataStreamWriter writer;
+		foreach (NetworkConnection connection in lobbyList[lobbyName])
+		{
+			int result = m_Driver.BeginSend(reliable ? m_Pipeline : NetworkPipeline.Null, connection, out writer);
+			if (result == 0)
+			{
+				header.SerializeObject(ref writer);
+				m_Driver.EndSend(writer);
+			}
+		}
+	}
+
+	public void SendBroadcast(MessageHeader header, NetworkConnection toExclude = default, bool reliable = true)
 	{
 		for (int i = 0; i < m_Connections.Length; i++)
 		{
@@ -297,7 +312,7 @@ public class ServerBehaviour : MonoBehaviour
 				continue;
 
 			DataStreamWriter writer;
-			int result = m_Driver.BeginSend(realiable ? m_Pipeline : NetworkPipeline.Null, m_Connections[i], out writer);
+			int result = m_Driver.BeginSend(reliable ? m_Pipeline : NetworkPipeline.Null, m_Connections[i], out writer);
 			if (result == 0)
 			{
 				header.SerializeObject(ref writer);
@@ -338,7 +353,7 @@ public class ServerBehaviour : MonoBehaviour
 	//      - Leave lobby                   (DONE)
 	//      - Start game                    (DONE)
 	//      - Place obstacle                (DONE)
-	//      - Player move                   (WIP)
+	//      - Player move                   (DONE)
 	//      - Continue choice               (WIP)
 
 	static void HandlePong(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
@@ -504,14 +519,12 @@ public class ServerBehaviour : MonoBehaviour
 
 			// We're sending the information to both players so we can
 			// inform the other player what item the active player is placing
-			serv.SendUnicast(serv.lobbyList[lobbyName][0], startGameResponseMessage);
-			serv.SendUnicast(serv.lobbyList[lobbyName][1], startGameResponseMessage);
+			serv.SendLobbyBroadcast(lobbyName, startGameResponseMessage);
 		}
 		else
 		{
 			StartGameFailMessage startGameFailMessage = new();
-			serv.SendUnicast(serv.lobbyList[lobbyName][0], startGameFailMessage);
-			serv.SendUnicast(serv.lobbyList[lobbyName][1], startGameFailMessage);
+			serv.SendLobbyBroadcast(lobbyName, startGameFailMessage);
 		}
 	}
 
@@ -602,11 +615,10 @@ public class ServerBehaviour : MonoBehaviour
 			itemId = (uint)serv.lobbyCurrentItem[lobbyName]
 		};
 
-		serv.SendUnicast(serv.lobbyList[lobbyName][0], placeNewObstacleMessage);
-		serv.SendUnicast(serv.lobbyList[lobbyName][1], placeNewObstacleMessage);
+		serv.SendLobbyBroadcast(lobbyName, placeObstacleSuccessMessage);
 	}
 
-	static void HandlePlayerMove(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
+	static async void HandlePlayerMove(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
 	{
 		PlayerMoveMessage message = header as PlayerMoveMessage;
 		string lobbyName = Convert.ToString(message.name);
@@ -616,11 +628,12 @@ public class ServerBehaviour : MonoBehaviour
 		PlayerFlag player = (serv.lobbyList[lobbyName][0] == con) ? PlayerFlag.PLAYER1 : PlayerFlag.PLAYER2;
 		Vector2 playerLocation = serv.GetPlayerLocation(lobbyName, player);
 
-		if (playerLocation.x == -1) return; // Player not found in grid (lobby will close in GetPlayerLocation)
-
-		MoveFailReason moveFailReason = MoveFailReason.NONE;
+		// Player not found in grid (lobby will close in GetPlayerLocation function)
+		if (playerLocation.x == -1) return;
 
 		// Check if move is legal (is the active player, space not already occupied by wall, move is distance 1)
+		MoveFailReason moveFailReason = MoveFailReason.NONE;
+
 		if (serv.lobbyActivePlayer[lobbyName] != con)
 			moveFailReason = MoveFailReason.NOT_ACTIVE;
 		if (serv.lobbyGrid[lobbyName][x, y] == ItemType.WALL)
@@ -628,6 +641,7 @@ public class ServerBehaviour : MonoBehaviour
 		if (Vector2.Distance(new Vector2(x,y), playerLocation) != 1)
 			moveFailReason = MoveFailReason.RANGE;
 
+		// Inform player of failed move attempt
 		if (moveFailReason != MoveFailReason.NONE)
 		{
 			PlayerMoveFailMessage playerMoveFailMessage = new()
@@ -658,17 +672,17 @@ public class ServerBehaviour : MonoBehaviour
 			// Check if player is dead
 			if (serv.lobbyHealth[lobbyName][(int)player] == 0)
 			{
-				// Player is dead, game is over
-				EndGameMessage endGameMessage = new()
-				{
-					// OTHER player wins
-					winnerId = (uint)otherPlayerId
-				};
-
-				serv.SendUnicast(serv.lobbyList[lobbyName][0], endGameMessage);
-				serv.SendUnicast(serv.lobbyList[lobbyName][1], endGameMessage);
+				// OTHER player wins
+				serv.EndGame(con, lobbyName, otherPlayerId);
 				return;
 			}
+		}
+
+		// Player wins if they reach the finish first
+		if (serv.lobbyGrid[lobbyName][x, y] == ItemType.FINISH)
+		{
+			serv.EndGame(con, lobbyName, serv.idList[con]);
+			return;
 		}
 
 		PlayerMoveSuccessMessage playerMoveSuccessMessage = new()
@@ -679,8 +693,8 @@ public class ServerBehaviour : MonoBehaviour
 			health = serv.lobbyHealth[lobbyName][(int)player],
 			playerToMove = (uint)player
 		};
-		serv.SendUnicast(serv.lobbyList[lobbyName][0], playerMoveSuccessMessage);
-		serv.SendUnicast(serv.lobbyList[lobbyName][1], playerMoveSuccessMessage);
+
+		serv.SendLobbyBroadcast(lobbyName, playerMoveSuccessMessage);
 	}
 
 	static void HandleContinueChoice(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
@@ -805,8 +819,22 @@ public class ServerBehaviour : MonoBehaviour
 			y = (uint)y
 		};
 
-		SendUnicast(lobbyList[lobbyName][0], startRoundMessage);
-		SendUnicast(lobbyList[lobbyName][1], startRoundMessage);
+		SendLobbyBroadcast(lobbyName, startRoundMessage);
 		return;
 	}
+
+	private async Task EndGame(NetworkConnection con, string lobbyName, int winnerId)
+	{
+		EndGameMessage endGameMessage = new()
+		{
+			winnerId = (uint)winnerId
+		};
+
+		SendLobbyBroadcast(lobbyName, endGameMessage);
+
+		var json = await GetRequest<List<Error>>(databaseUrl + "score_insert.php?PHPSESSID=" + PhpConnectionID + "&winner_id=" + idList[lobbyList[lobbyName][winnerId]] + "&loser_id=" + idList[con]);
+		Debug.Log(lobbyName + (Convert.ToUInt32(json[0].result) == 1 ? ": successfully submitted score" : ": error submitting score"));
+		return;
+	}
+
 }

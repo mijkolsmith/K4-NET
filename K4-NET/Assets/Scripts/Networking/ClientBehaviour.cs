@@ -163,7 +163,7 @@ public class ClientBehaviour : MonoBehaviour
         m_Driver.EndSend(writer);
     }
 
-    #region Static message handler functions
+	#region Static message handler functions
 	// TODO: Client functions
 	//      - Pong                      (DONE)
 	//      - Server handshake response (DONE)
@@ -180,12 +180,12 @@ public class ClientBehaviour : MonoBehaviour
 	//      - Place obstacle success    (DONE)
 	//      - Place obstacle fail       (DONE)
 	//      - Place new obstacle        (DONE)
-	//      - Start round               (WIP)
-	//      - Player move success       (WIP)
-	//      - Player move fail          (WIP)
+	//      - Start round               (DONE)
+	//      - Player move success       (DONE)
+	//      - Player move fail          (DONE)
 	//      - End round                 (WIP)
-	//      - End game                  (WIP)
 	//      - Continue choice response  (WIP)
+	//      - End game                  (WIP)
 
 	private static void HandlePing(ClientBehaviour client, MessageHeader header)
     {
@@ -506,19 +506,21 @@ public class ClientBehaviour : MonoBehaviour
     
     private static void HandleEndRound(ClientBehaviour client, MessageHeader header)
 	{
-        EndRoundMessage message = header as EndRoundMessage;
-    }
-    
-    private static void HandleEndGame(ClientBehaviour client, MessageHeader header)
-	{
-        EndGameMessage message = header as EndGameMessage;
-    }
+		//Enable continue buttons
+		//client.objectReferences
+
+	}
     
     private static void HandleContinueChoiceResponse(ClientBehaviour client, MessageHeader header)
 	{
         ContinueChoiceResponseMessage message = header as ContinueChoiceResponseMessage;
     }
-    #endregion
+
+	private static void HandleEndGame(ClientBehaviour client, MessageHeader header)
+	{
+		EndGameMessage message = header as EndGameMessage;
+	}
+	#endregion
 
 	private static IEnumerator LoadSceneWithoutClosingOtherOpenScenes(int sceneBuildIndex)
 	{
