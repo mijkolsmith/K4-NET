@@ -525,7 +525,9 @@ public class ClientBehaviour : MonoBehaviour
 
 	private static void HandleEndGame(ClientBehaviour client, MessageHeader header)
 	{
-		EndGameMessage message = header as EndGameMessage;
+		// Go back to lobby screen
+		client.StartCoroutine(LoadSceneWithoutClosingOtherOpenScenes(SceneManager.GetActiveScene().buildIndex - 1));
+        client.LeaveLobby();
 	}
 	#endregion
 

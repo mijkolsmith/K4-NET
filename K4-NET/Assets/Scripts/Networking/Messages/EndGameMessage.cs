@@ -11,14 +11,14 @@ public class EndGameMessage : MessageHeader
 	}
 
 	public NetworkMessageType messageType;
-	public uint winnerId;
+	public bool rematch;
 
 	public override void SerializeObject(ref DataStreamWriter writer)
 	{
 		// Write message type & object ID
 		base.SerializeObject(ref writer);
 
-		writer.WriteUInt(winnerId);
+		writer.WriteByte((byte)(rematch ? 0 : 1));
 	}
 
 	public override void DeserializeObject(ref DataStreamReader reader)
@@ -26,6 +26,6 @@ public class EndGameMessage : MessageHeader
 		// Read message type & object ID
 		base.DeserializeObject(ref reader);
 
-		winnerId = reader.ReadUInt();
+		rematch = reader.ReadByte() == 1;
 	}
 }

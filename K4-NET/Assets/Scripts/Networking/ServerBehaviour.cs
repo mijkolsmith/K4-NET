@@ -48,7 +48,6 @@ public class ServerBehaviour : MonoBehaviour
 	{
 		{ NetworkMessageType.PONG, HandlePong },
 		{ NetworkMessageType.HANDSHAKE, HandleHandshake },
-		{ NetworkMessageType.CHAT_MESSAGE, HandleChatMessage },
 		{ NetworkMessageType.REGISTER, HandleRegister },
 		{ NetworkMessageType.LOGIN, HandleLogin },
 		{ NetworkMessageType.JOIN_LOBBY, HandleJoinLobby },
@@ -674,7 +673,7 @@ public class ServerBehaviour : MonoBehaviour
 			if (serv.lobbyHealth[lobbyName][(int)player] == 0)
 			{
 				// OTHER player wins
-				serv.EndGame(con, lobbyName, otherPlayerId);
+				serv.EndRound(con, lobbyName, otherPlayerId);
 				return;
 			}
 		}
@@ -682,7 +681,7 @@ public class ServerBehaviour : MonoBehaviour
 		// Player wins if they reach the finish first
 		if (serv.lobbyGrid[lobbyName][x, y] == ItemType.FINISH)
 		{
-			serv.EndGame(con, lobbyName, serv.idList[con]);
+			serv.EndRound(con, lobbyName, serv.idList[con]);
 			return;
 		}
 
@@ -716,7 +715,14 @@ public class ServerBehaviour : MonoBehaviour
 			if (serv.lobbyRematch[lobbyName][0] && serv.lobbyRematch[lobbyName][1])
 			{
 				// Rematch accepted by both players
+				EndGameMessage endGameMessage = new()
+				{
+					rematch = true
+				};
+				serv.SendLobbyBroadcast(lobbyName, endGameMessage);
 
+				serv.ResetLobby(lobbyName);
+				return;
 			}
 
 			// Inform the other player of rematch choice
@@ -727,14 +733,16 @@ public class ServerBehaviour : MonoBehaviour
 		else
 		{
 			// End game and inform the other player
-			EndGameMessage endGameMessage = new();
+			EndGameMessage endGameMessage = new()
+			{
+				rematch = false
+			};
 			serv.SendLobbyBroadcast(lobbyName, endGameMessage);
-		}
-	}
 
-	static void HandleChatMessage(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
-	{
-		ChatMessage message = header as ChatMessage;
+			// Reset & close lobby
+			serv.ResetLobby(lobbyName);
+			serv.lobbyList.Remove(lobbyName);
+		}
 	}
 	#endregion
 
@@ -744,6 +752,8 @@ public class ServerBehaviour : MonoBehaviour
 
 		if (lobbyList[lobbyName].Count == 0)
 		{
+			// Reset & close lobby
+			ResetLobby(lobbyName);
 			lobbyList.Remove(lobbyName);
 		}
 		else if (lobbyList[lobbyName].Count == 1)
@@ -774,7 +784,7 @@ public class ServerBehaviour : MonoBehaviour
 		return item;
 	}
 
-	public IEnumerable<T> Flatten<T>(T[,] map)
+	public static IEnumerable<T> Flatten<T>(T[,] map)
 	{
 		for (int row = 0; row < map.GetLength(0); row++)
 		{
@@ -800,6 +810,7 @@ public class ServerBehaviour : MonoBehaviour
 		int w = lobbyPlayerLocations[lobbyName].GetLength(0);
 		int h = lobbyPlayerLocations[lobbyName].GetLength(1);
 
+		// Loop through all locations to find the player
 		for (int x = 0; x < w; ++x)
 		{
 			for (int y = 0; y < h; ++y)
@@ -811,12 +822,14 @@ public class ServerBehaviour : MonoBehaviour
 		}
 
 		Debug.Log("Player " + player + " was not found in grid of lobby " + lobbyName + ". Lobby will now close.");
-		DisconnectLobby(lobbyName);
+		DisconnectPlayersFromLobby(lobbyName);
 		return new Vector2(-1, -1);
 	}
 
-	private void DisconnectLobby(string lobbyName)
+	private void DisconnectPlayersFromLobby(string lobbyName)
 	{
+		// Disconnect all players in the lobby from the server, and close the lobby.
+		// Simplest way to resolve any error in the game.
 		foreach (NetworkConnection playerConnection in lobbyList[lobbyName])
 		{
 			if (idList.ContainsKey(playerConnection))
@@ -828,6 +841,9 @@ public class ServerBehaviour : MonoBehaviour
 			pongDict.Remove(playerConnection);
 			playerConnection.Disconnect(m_Driver);
 		}
+
+		ResetLobby(lobbyName);
+		lobbyList.Remove(lobbyName);
 	}
 
 	private void StartRound(string lobbyName, int x, int y, int activePlayer)
@@ -853,8 +869,9 @@ public class ServerBehaviour : MonoBehaviour
 		return;
 	}
 
-	private async Task EndGame(NetworkConnection con, string lobbyName, int winnerId)
+	private async Task EndRound(NetworkConnection con, string lobbyName, int winnerId)
 	{
+		// Submit the score to the database and inform the players of the winner
 		EndRoundMessage endRoundMessage = new()
 		{
 			winnerId = (uint)winnerId
@@ -867,4 +884,14 @@ public class ServerBehaviour : MonoBehaviour
 		return;
 	}
 
+	private void ResetLobby(string lobbyName)
+	{
+		lobbyActivePlayer.Remove(lobbyName);
+		lobbyItems.Remove(lobbyName);
+		lobbyHealth.Remove(lobbyName);
+		lobbyGrid.Remove(lobbyName);
+		lobbyPlayerLocations.Remove(lobbyName);
+		lobbyCurrentItem.Remove(lobbyName);
+		lobbyRematch.Remove(lobbyName);
+	}
 }

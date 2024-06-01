@@ -20,7 +20,7 @@ public class ContinueChoiceMessage : MessageHeader
 		base.SerializeObject(ref writer);
 
 		writer.WriteFixedString128(name);
-		writer.WriteByte(choice ? (byte) 1 : (byte) 0);
+		writer.WriteByte((byte)(choice ?  1 : 0));
 	}
 
 	public override void DeserializeObject(ref DataStreamReader reader)

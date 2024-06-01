@@ -18,7 +18,7 @@ public class ContinueChoiceResponseMessage : MessageHeader
 		// Write message type & object ID
 		base.SerializeObject(ref writer);
 
-		writer.WriteByte(choice ? (byte)1 : (byte)0);
+		writer.WriteByte((byte)(choice ? 1 : 0));
 	}
 
 	public override void DeserializeObject(ref DataStreamReader reader)
@@ -26,6 +26,6 @@ public class ContinueChoiceResponseMessage : MessageHeader
 		// Read message type & object ID
 		base.DeserializeObject(ref reader);
 
-		choice = reader.ReadByte() == 1 ? true : false;
+		choice = reader.ReadByte() == 1;
 	}
 }
