@@ -1,7 +1,7 @@
 using UnityEngine;
 using TMPro;
 
-public class ClientCsurrentLobby : MonoBehaviour
+public class ClientCurrentLobby : MonoBehaviour
 {
 	public ClientBehaviour client;
 	[SerializeField] private SceneObjectReferences objectReferences;

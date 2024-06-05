@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Unity.Networking.Transport;
 
@@ -22,7 +21,7 @@ public class ServerLobby
 
 	public void InitializeItemGrid()
 	{
-		ItemGrid = new ItemType[ServerBehaviour.gridsizeX, ServerBehaviour.gridsizeY]);
+		ItemGrid = new ItemType[ServerBehaviour.gridsizeX, ServerBehaviour.gridsizeY];
 	}
 
 	public void InitializeItems()

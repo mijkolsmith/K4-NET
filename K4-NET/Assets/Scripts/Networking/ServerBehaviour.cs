@@ -8,7 +8,6 @@ using Newtonsoft.Json;
 using System;
 using Cysharp.Threading.Tasks;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Collections.Immutable;
 
 public delegate void ServerMessageHandler(ServerBehaviour server, NetworkConnection con, MessageHeader header);
@@ -90,7 +89,7 @@ public class ServerBehaviour : MonoBehaviour
 		ItemType.WRECKINGBALL
 	};
 
-	private string databaseUrl = "https://studenthome.hku.nl/~michael.smith/K4/";
+	private string phpBaseUrl = "https://studenthome.hku.nl/~michael.smith/K4/";
 
 	private Dictionary<NetworkConnection, int> idList = new();
 	private Dictionary<int, string> nameList = new();
@@ -358,7 +357,7 @@ public class ServerBehaviour : MonoBehaviour
 	static async void HandleHandshake(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
 	{
 		// Connect to database
-		var json = await serv.GetRequest<List<Id>>(serv.databaseUrl + "server_login.php?id=1&pw=A5FJDKeSdKI49dnR49JFRIVJWJf92JF9R8Gg98GG3");
+		var json = await serv.GetRequest<List<Id>>(serv.phpBaseUrl + "server_login.php?id=1&pw=A5FJDKeSdKI49dnR49JFRIVJWJf92JF9R8Gg98GG3");
 		serv.PhpConnectionID = json[0].id;
 
 		HandshakeResponseMessage handshakeResponseMessage = new();
@@ -368,7 +367,7 @@ public class ServerBehaviour : MonoBehaviour
 	static async void HandleRegister(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
 	{
 		RegisterMessage message = header as RegisterMessage;
-		var json = await serv.GetRequest<List<User>>(serv.databaseUrl + "user_register.php?PHPSESSID=" + serv.PhpConnectionID + "&un=" + message.username + "&pw=" + message.password);
+		var json = await serv.GetRequest<List<User>>(serv.phpBaseUrl + "user_register.php?PHPSESSID=" + serv.PhpConnectionID + "&un=" + message.username + "&pw=" + message.password);
 		int playerId = Convert.ToInt32(json[0].id);
 		string playerName = json[0].username;
 
@@ -389,7 +388,7 @@ public class ServerBehaviour : MonoBehaviour
 	static async void HandleLogin(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
 	{
 		LoginMessage message = header as LoginMessage;
-		var json = await serv.GetRequest<List<User>>(serv.databaseUrl + "user_login.php?PHPSESSID=" + serv.PhpConnectionID + "&un=" + message.username + "&pw=" + message.password);
+		var json = await serv.GetRequest<List<User>>(serv.phpBaseUrl + "user_login.php?PHPSESSID=" + serv.PhpConnectionID + "&un=" + message.username + "&pw=" + message.password);
 		if (json.Count == 0)
 		{
 			// Something went wrong with the query (wrong login)
@@ -429,7 +428,7 @@ public class ServerBehaviour : MonoBehaviour
 			if (lobby.Connections.Count == 1)
 			{
 				// Get the scores of the two players against each other
-				var json = await serv.GetRequest<List<UserScore>>(serv.databaseUrl + "score_get.php?PHPSESSID=" + serv.PhpConnectionID + "&player1=" + serv.idList[lobby.Connections[0]] + "&player2=" + serv.idList[con]);
+				var json = await serv.GetRequest<List<UserScore>>(serv.phpBaseUrl + "score_get.php?PHPSESSID=" + serv.PhpConnectionID + "&player1=" + serv.idList[lobby.Connections[0]] + "&player2=" + serv.idList[con]);
 				uint score1 = 0;
 				uint score2 = 0;
 				if (json.Count > 0)
@@ -871,7 +870,7 @@ public class ServerBehaviour : MonoBehaviour
 		return;
 	}
 
-	private async Task EndRound(ServerLobby lobby, int winnerId, int loserId)
+	private async UniTask EndRound(ServerLobby lobby, int winnerId, int loserId)
 	{
 		// Submit the score to the database and inform the players of the winner
 		EndRoundMessage endRoundMessage = new()
@@ -882,7 +881,7 @@ public class ServerBehaviour : MonoBehaviour
 		SendLobbyBroadcast(lobby, endRoundMessage);
 
 
-		var json = await GetRequest<List<Error>>(databaseUrl + "score_insert.php?PHPSESSID=" + PhpConnectionID + "&winner_id=" + idList[lobby.Connections[winnerId]] + "&loser_id=" + idList[lobby.Connections[loserId]]);
+		var json = await GetRequest<List<Error>>(phpBaseUrl + "score_insert.php?PHPSESSID=" + PhpConnectionID + "&winner_id=" + idList[lobby.Connections[winnerId]] + "&loser_id=" + idList[lobby.Connections[loserId]]);
 		//Debug.Log(lobbyName + (Convert.ToUInt32(json[0].result) == 1 ? ": successfully submitted score" : ": error submitting score"));
 		return;
 	}
