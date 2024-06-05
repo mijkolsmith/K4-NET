@@ -657,10 +657,10 @@ public class ServerBehaviour : MonoBehaviour
 		if (serv.lobbyGrid[lobbyName][x, y] == ItemType.MINE)
 		{
 			// Decrease player health
-			serv.lobbyHealth[lobbyName][(int)player] -= 1;
+			serv.lobbyHealth[lobbyName][(int)player - 1] -= 1;
 
 			// Check if player is dead
-			if (serv.lobbyHealth[lobbyName][(int)player] == 0)
+			if (serv.lobbyHealth[lobbyName][(int)player - 1] == 0)
 			{
 				// OTHER player wins
 				serv.EndRound(con, lobbyName, otherPlayerId);
@@ -681,7 +681,7 @@ public class ServerBehaviour : MonoBehaviour
 			activePlayer = (uint)otherPlayerId,
 			x = (uint)x,
 			y = (uint)y,
-			health = serv.lobbyHealth[lobbyName][(int)player],
+			health = serv.lobbyHealth[lobbyName][(int)player - 1],
 			playerToMove = (uint)player
 		};
 
