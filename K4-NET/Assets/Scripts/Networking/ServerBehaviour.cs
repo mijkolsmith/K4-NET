@@ -587,9 +587,9 @@ public class ServerBehaviour : MonoBehaviour
 		{
 			// Update the other player's grid if a start or finish item got placed
 			if (lobby.currentItem == ItemType.FINISH || lobby.currentItem == ItemType.START)
-				serv.SendUnicast(lobby.Connections[otherPlayerId], placeObstacleSuccessMessage);
+				serv.SendUnicast(lobby.Connections[(int)lobby.activePlayerId], placeObstacleSuccessMessage);
 
-			serv.PreStartRound(lobby, x, y, otherPlayerId);
+			serv.PreStartRound(lobby, x, y);
 		}
 		else
 		{
@@ -670,14 +670,16 @@ public class ServerBehaviour : MonoBehaviour
 		// Player wins if they reach the finish first
 		if (lobby.ItemGrid[x, y] == ItemType.FINISH)
 		{
-			serv.EndRound(lobby, otherPlayerId, (int)lobby.activePlayerId);
+			serv.EndRound(lobby, (int)lobby.activePlayerId, otherPlayerId);
 			return;
 		}
+
+		lobby.activePlayerId = (uint)otherPlayerId;
 
 		// Inform players of successful move attempt
 		PlayerMoveSuccessMessage playerMoveSuccessMessage = new()
 		{
-			activePlayer = (uint)otherPlayerId,
+			activePlayer = lobby.activePlayerId,
 			x = (uint)x,
 			y = (uint)y,
 			health = lobby.playerHealth[(int)player - 1],
@@ -794,11 +796,11 @@ public class ServerBehaviour : MonoBehaviour
 		return Flatten(lobby.ItemGrid).Where(x => !x.Equals(ItemType.NONE)).Count() >= itemLimit;
 	}
 
-	private void PreStartRound(ServerLobby lobby, int x, int y, int otherPlayerId)
+	private void PreStartRound(ServerLobby lobby, int x, int y)
 	{
 		if (StartFinishGotPlaced(lobby))
 		{
-			StartRound(lobby, x, y, otherPlayerId);
+			StartRound(lobby, x, y);
 			return;
 		}
 
@@ -807,6 +809,27 @@ public class ServerBehaviour : MonoBehaviour
 		if (lobby.currentItem == ItemType.FINISH)
 			lobby.currentItem = ItemType.START;
 		else lobby.currentItem = ItemType.FINISH;
+	}
+
+	private void StartRound(ServerLobby lobby, int x, int y)
+	{
+		// Initialize player locations
+		lobby.InitializePlayerGrid();
+		lobby.playerGrid[x, y] = PlayerFlag.PLAYER1 | PlayerFlag.PLAYER2;
+
+		// Initialize player health
+		lobby.InitializePlayerHealth();
+
+		// Communicate the location of the start to both players so they start at the right spot
+		StartRoundMessage startRoundMessage = new()
+		{
+			activePlayer = lobby.activePlayerId,
+			x = (uint)x,
+			y = (uint)y
+		};
+
+		SendLobbyBroadcast(lobby, startRoundMessage);
+		return;
 	}
 
 	private Vector2 GetPlayerLocation(string lobbyName, PlayerFlag player)
@@ -848,27 +871,6 @@ public class ServerBehaviour : MonoBehaviour
 		}
 
 		lobbyList.Remove(lobbyName);
-	}
-
-	private void StartRound(ServerLobby lobby, int x, int y, int activePlayer)
-	{
-		// Initialize player locations
-		lobby.InitializePlayerGrid();
-		lobby.playerGrid[x, y] = PlayerFlag.PLAYER1 | PlayerFlag.PLAYER2;
-
-		// Initialize player health
-		lobby.InitializePlayerHealth();
-
-		// Communicate the location of the start to both players so they start at the right spot
-		StartRoundMessage startRoundMessage = new()
-		{
-			activePlayer = (uint)activePlayer,
-			x = (uint)x,
-			y = (uint)y
-		};
-
-		SendLobbyBroadcast(lobby, startRoundMessage);
-		return;
 	}
 
 	private async UniTask EndRound(ServerLobby lobby, int winnerId, int loserId)

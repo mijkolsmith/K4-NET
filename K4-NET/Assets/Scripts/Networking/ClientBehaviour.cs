@@ -6,6 +6,7 @@ using System;
 using Unity.Networking.Transport.Utilities;
 using TMPro;
 using UnityEngine.SceneManagement;
+using static Unity.Collections.Unicode;
 
 public delegate void ClientMessageHandler(ClientBehaviour client, MessageHeader header);
 
@@ -426,10 +427,11 @@ public class ClientBehaviour : MonoBehaviour
         // Define which player this client is
 		client.PlayerFlag = client.Player == 0 ? PlayerFlag.PLAYER1 : PlayerFlag.PLAYER2;
 
-		// Let the active player know it's their turn
+		// Inform the players that the round has started and inform the active player it's their turn
+		client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Round started!";
 		if (client.ActivePlayer)
 		{
-			client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Your turn to move!";
+			client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text += " Your turn to move!";
 		}
 
 		// Start round with start coordinates
@@ -465,7 +467,10 @@ public class ClientBehaviour : MonoBehaviour
         {
             client.objectReferences.gameData.DecreaseLives();
             client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "You hit a mine!";
-            return;
+
+			// Remove the mine visual
+			client.objectReferences.inputManager.RemoveItemAtSelectedGridCell();
+			return;
         }
 
 		if (client.ActivePlayer)
@@ -485,7 +490,7 @@ public class ClientBehaviour : MonoBehaviour
 		{
 			MoveFailReason.NOT_ACTIVE => "It's not your turn to move!",
 			MoveFailReason.WALL => "There's a wall in the way!",
-			MoveFailReason.RANGE => "Can't move that far!",
+			MoveFailReason.RANGE => "Can't move there!",
 		    MoveFailReason.NONE or _ => "Unknown move fail reason (NONE/_)",
 		};
 
@@ -504,7 +509,7 @@ public class ClientBehaviour : MonoBehaviour
 
 		client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = client.Player == winnerId ? "You won!" : "You lost.";
 
-		//Enable continue buttons
+		// Enable rematch/leave buttons
 		client.objectReferences.endGame.SetActive(true);
     }
     
