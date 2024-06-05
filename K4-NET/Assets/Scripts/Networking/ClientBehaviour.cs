@@ -144,7 +144,8 @@ public class ClientBehaviour : MonoBehaviour
 			objectReferences.cursor.SetSprite(objectReferences.gamePrefabs.itemVisuals[CurrentItem].cursorSprite);
             objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = 
 				ActivePlayer ? "Your turn!" : "Waiting for other player...";
-        }
+            objectReferences.inputManager.checkInput = true;
+		}
     }
 
     public void SendPackedMessage(MessageHeader header)
@@ -184,7 +185,7 @@ public class ClientBehaviour : MonoBehaviour
 	//      - Start round               (DONE)
 	//      - Player move success       (DONE)
 	//      - Player move fail          (DONE)
-	//      - End round                 (WIP)
+	//      - End round                 (DONE)
 	//      - Continue choice response  (WIP)
 	//      - End game                  (WIP)
 
@@ -507,6 +508,10 @@ public class ClientBehaviour : MonoBehaviour
         EndRoundMessage message = header as EndRoundMessage;
         uint winnerId = Convert.ToUInt32(message.winnerId);
 
+        client.objectReferences.cursor.SetSprite(null);
+		client.CurrentItem = ItemType.NONE;
+        client.objectReferences.inputManager.checkInput = false;
+
 		client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = client.Player == winnerId ? "You won!" : "You lost.";
 
 		// Enable rematch/leave buttons
@@ -523,9 +528,14 @@ public class ClientBehaviour : MonoBehaviour
 
 	private static void HandleEndGame(ClientBehaviour client, MessageHeader header)
 	{
+        EndGameMessage message = header as EndGameMessage;
+        bool rematch = message.rematch;
+
 		// Go back to lobby screen
 		client.StartCoroutine(LoadSceneWithoutClosingOtherOpenScenes(SceneManager.GetActiveScene().buildIndex - 1));
-        client.LeaveLobby();
+
+        if (!rematch)
+            client.LeaveLobby();
 	}
 	#endregion
 

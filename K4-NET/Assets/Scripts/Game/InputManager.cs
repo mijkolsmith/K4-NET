@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class InputManager : MonoBehaviour
 {
+    public bool checkInput = false;
     [SerializeField] private GameGrid gameGrid;
     [SerializeField] private LayerMask gridLayer;
     [SerializeField] private SceneObjectReferences objectReferences;
@@ -16,6 +17,9 @@ public class InputManager : MonoBehaviour
 
     private void Update()
     {
+        if (!checkInput)
+            return;
+
         GridCell gridCell = GetMouseOverCell();
 
         if (gridCell != null)

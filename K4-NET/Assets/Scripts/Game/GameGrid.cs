@@ -8,7 +8,7 @@ public class GameGrid : MonoBehaviour
 
     [SerializeField] private GameObject gridCellPrefab;
     private GameObject[,] gameGrid;
-	public GridCell[] playerLocations = new GridCell[2];
+	public GridCell[] playerLocations = new GridCell[ServerBehaviour.lobbySize];
 
 	void Start()
     {

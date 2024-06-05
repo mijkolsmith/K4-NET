@@ -694,7 +694,6 @@ public class ServerBehaviour : MonoBehaviour
 		ContinueChoiceMessage message = header as ContinueChoiceMessage;
 		string lobbyName = Convert.ToString(message.name);
 		ServerLobby lobby = serv.lobbyList[lobbyName];
-		int otherPlayerId = (lobby.activePlayerId == 0) ? 1 : 0;
 
 		// Initialize rematch choice array
 		if (lobby.rematch == null)
@@ -702,7 +701,7 @@ public class ServerBehaviour : MonoBehaviour
 
 		if (message.choice)
 		{
-			lobby.rematch[serv.idList[con]] = true;
+			lobby.rematch[(lobby.Connections[0] == con) ? 0 : 1]  = true;
 
 			if (lobby.rematch[0] && lobby.rematch[1])
 			{
@@ -718,6 +717,8 @@ public class ServerBehaviour : MonoBehaviour
 			}
 
 			// Inform the other player of rematch choice
+			int otherPlayerId = (lobby.activePlayerId == 0) ? 1 : 0;
+
 			ContinueChoiceResponseMessage continueChoiceSuccessMessage = new();
 
 			serv.SendUnicast(lobby.Connections[otherPlayerId], continueChoiceSuccessMessage);
