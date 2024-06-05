@@ -96,14 +96,6 @@ public class ServerBehaviour : MonoBehaviour
 	private Dictionary<int, string> nameList = new();
 	private Dictionary<NetworkConnection, PingPong> pongDict = new();
 	private Dictionary<string, ServerLobby> lobbyList = new();
-	private Dictionary<string, List<NetworkConnection>> lobbyConnectionList = new();
-	private Dictionary<string, NetworkConnection> lobbyActivePlayer = new();
-	private Dictionary<string, List<ItemType>> lobbyItems = new();
-	private Dictionary<string, ItemType> lobbyCurrentItem = new();
-	private Dictionary<string, uint[]> lobbyHealth = new();
-	private Dictionary<string, ItemType[,]> lobbyGrid = new();
-	private Dictionary<string, PlayerFlag[,]> lobbyPlayerLocations = new();
-	private Dictionary<string, bool[]> lobbyRematch = new();
 
 	public ChatCanvas chat;
 
@@ -268,9 +260,9 @@ public class ServerBehaviour : MonoBehaviour
 
 	private void RemoveDisconnectedPlayerFromAnyLobby(NetworkConnection disconnectedPlayer)
 	{
-		foreach (string lobbyName in lobbyConnectionList.Keys)
+		foreach (string lobbyName in lobbyList.Keys)
 		{
-			foreach (NetworkConnection player in lobbyConnectionList[lobbyName])
+			foreach (NetworkConnection player in lobbyList[lobbyName].Connections)
 			{
 				if (player == disconnectedPlayer)
 				{
