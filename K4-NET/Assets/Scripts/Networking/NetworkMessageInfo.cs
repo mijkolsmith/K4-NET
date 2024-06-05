@@ -33,7 +33,6 @@ public static class NetworkMessageInfo
         { NetworkMessageType.END_GAME,                          typeof(EndGameMessage) },
         { NetworkMessageType.CONTINUE_CHOICE,                   typeof(ContinueChoiceMessage) },
         { NetworkMessageType.CONTINUE_CHOICE_RESPONSE,          typeof(ContinueChoiceResponseMessage) },
-        { NetworkMessageType.CHAT_MESSAGE,                      typeof(ChatMessage) },
         { NetworkMessageType.PING,                              typeof(PingMessage) },
         { NetworkMessageType.PONG,                              typeof(PongMessage) },
     };

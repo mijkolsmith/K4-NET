@@ -591,17 +591,7 @@ public class ServerBehaviour : MonoBehaviour
 			if (serv.lobbyCurrentItem[lobbyName] == ItemType.FINISH || serv.lobbyCurrentItem[lobbyName] == ItemType.START)
 				serv.SendUnicast(serv.lobbyList[lobbyName][otherPlayerId], placeObstacleSuccessMessage);
 
-			if (serv.StartFinishGotPlaced(lobbyName))
-			{
-				serv.StartRound(lobbyName, x, y, otherPlayerId);
-				return;
-			}
-
-			// One player chooses the finish, the other player then chooses the start
-			// TODO: A pathfinding algorithm should check if the path is possible
-			if (serv.lobbyCurrentItem[lobbyName] == ItemType.FINISH)
-				serv.lobbyCurrentItem[lobbyName] = ItemType.START;
-			else serv.lobbyCurrentItem[lobbyName] = ItemType.FINISH;
+			serv.PreStartRound(lobbyName, x, y, otherPlayerId);
 		}
 		else
 		{
@@ -615,7 +605,7 @@ public class ServerBehaviour : MonoBehaviour
 			itemId = (uint)serv.lobbyCurrentItem[lobbyName]
 		};
 
-		serv.SendLobbyBroadcast(lobbyName, placeObstacleSuccessMessage);
+		serv.SendLobbyBroadcast(lobbyName, placeNewObstacleMessage);
 	}
 
 	static async void HandlePlayerMove(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
@@ -803,6 +793,21 @@ public class ServerBehaviour : MonoBehaviour
 	private bool RoundShouldStart(string lobbyName)
 	{
 		return Flatten(lobbyGrid[lobbyName]).Where(x => !x.Equals(ItemType.NONE)).Count() >= itemLimit;
+	}
+
+	private void PreStartRound(string lobbyName, int x, int y, int otherPlayerId)
+	{
+		if (StartFinishGotPlaced(lobbyName))
+		{
+			StartRound(lobbyName, x, y, otherPlayerId);
+			return;
+		}
+
+		// One player chooses the finish, the other player then chooses the start
+		// TODO: A pathfinding algorithm should check if the path is possible
+		if (lobbyCurrentItem[lobbyName] == ItemType.FINISH)
+			lobbyCurrentItem[lobbyName] = ItemType.START;
+		else lobbyCurrentItem[lobbyName] = ItemType.FINISH;
 	}
 
 	private Vector2 GetPlayerLocation(string lobbyName, PlayerFlag player)

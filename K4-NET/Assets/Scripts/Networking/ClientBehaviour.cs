@@ -382,13 +382,6 @@ public class ClientBehaviour : MonoBehaviour
     
     private static void HandlePlaceObstacleFail(ClientBehaviour client, MessageHeader header)
 	{
-        if (client.CurrentItem == ItemType.NONE)
-        {
-            client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = 
-                "It's not your turn!";
-            return;
-		}
-
 		client.objectReferences.inputManager.PlaceItemAtSelectedGridCell(ItemType.FLAG);
 
         client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = client.CurrentItem switch
