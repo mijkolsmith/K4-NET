@@ -49,7 +49,7 @@ public class GridCell : MonoBehaviour
 		this.playerFlag |= playerFlag;
 
 		Destroy(playerInThisGridSpace);
-		UpdatePlayerVisual(playerVisuals[playerFlag].playerPrefab);
+		UpdatePlayerVisual(playerVisuals[this.playerFlag].playerPrefab);
 	}
 
 	private void UpdatePlayerVisual(GameObject playerPrefab)
