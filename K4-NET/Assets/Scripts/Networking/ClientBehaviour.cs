@@ -6,8 +6,7 @@ using System;
 using Unity.Networking.Transport.Utilities;
 using TMPro;
 using UnityEngine.SceneManagement;
-using static Unity.Collections.Unicode;
-using Unity.Burst.CompilerServices;
+using Cysharp.Threading.Tasks;
 
 public delegate void ClientMessageHandler(ClientBehaviour client, MessageHeader header);
 
@@ -226,7 +225,7 @@ public class ClientBehaviour : MonoBehaviour
         Debug.Log("login success");
 
         // Open a new scene without closing the server
-		client.StartCoroutine(LoadSceneWithoutClosingServer(SceneManager.GetActiveScene().buildIndex + 1));
+		LoadSceneWithoutClosingServer(SceneManager.GetActiveScene().buildIndex + 1);
 	}
 
     private static void HandleLoginFail(ClientBehaviour client, MessageHeader header)
@@ -331,7 +330,7 @@ public class ClientBehaviour : MonoBehaviour
         client.ActivePlayer = activePlayer == client.Player;
 
 		// Open a new scene without closing the server
-		client.StartCoroutine(LoadSceneWithoutClosingServer(SceneManager.GetActiveScene().buildIndex + 1));
+        LoadSceneWithoutClosingServer(SceneManager.GetActiveScene().buildIndex + 1);
 	}
 
     private static void HandleStartGameFail(ClientBehaviour client, MessageHeader header)
@@ -526,7 +525,7 @@ public class ClientBehaviour : MonoBehaviour
         client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Other player wants a rematch!";
 	}
 
-	private static void HandleEndGame(ClientBehaviour client, MessageHeader header)
+	private async static void HandleEndGame(ClientBehaviour client, MessageHeader header)
 	{
         EndGameMessage message = header as EndGameMessage;
         bool rematch = message.rematch;
@@ -534,28 +533,32 @@ public class ClientBehaviour : MonoBehaviour
         // Reset the game
         client.RoundStarted = false;
 
-		// Go back to lobby screen
-		client.StartCoroutine(LoadSceneWithoutClosingServer(SceneManager.GetActiveScene().buildIndex - 1));
+        // Go back to lobby screen
+		await LoadSceneWithoutClosingServer(SceneManager.GetActiveScene().buildIndex - 1);
 
-        if (!rematch)
-            client.LeaveLobby();
+        if (rematch)
+        {
+            JoinLobbyMessage joinLobbyMessage = new()
+            {
+                name = client.LobbyName,
+            };
+
+            client.SendPackedMessage(joinLobbyMessage);
+        }
+        else client.LobbyName = null;
 	}
 	#endregion
 
-	private static IEnumerator LoadSceneWithoutClosingServer(int sceneBuildIndex)
+	private async static UniTask LoadSceneWithoutClosingServer(int sceneBuildIndex)
 	{
         Scene sceneToUnload = SceneManager.GetActiveScene();
 		AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneBuildIndex, LoadSceneMode.Additive);
 
-		// Wait until the asynchronous scene fully loads
-		while (!asyncLoad.isDone)
-		{
-			yield return null;
-		}
+        await asyncLoad;
 
 		SceneManager.SetActiveScene(SceneManager.GetSceneByBuildIndex(sceneBuildIndex));
 		SceneManager.UnloadSceneAsync(sceneToUnload);
-	}
+    }
 
 	public void LeaveLobby()
 	{
@@ -564,12 +567,14 @@ public class ClientBehaviour : MonoBehaviour
 		// Reset the lobby visuals
 		objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "";
 
-		ClientCurrentLobby currentLobby = objectReferences.currentLobby.GetComponent<ClientCurrentLobby>();
-		currentLobby.player1Name.GetComponent<TextMeshProUGUI>().text = "";
-		currentLobby.player1Score.GetComponent<TextMeshProUGUI>().text = "";
-		currentLobby.player2Name.GetComponent<TextMeshProUGUI>().text = "";
-		currentLobby.player2Score.GetComponent<TextMeshProUGUI>().text = "";
-		currentLobby.startLobbyObject.SetActive(false);
+        if (objectReferences.currentLobby.TryGetComponent(out ClientCurrentLobby currentLobby))
+        {
+            currentLobby.player1Name.GetComponent<TextMeshProUGUI>().text = "";
+            currentLobby.player1Score.GetComponent<TextMeshProUGUI>().text = "";
+            currentLobby.player2Name.GetComponent<TextMeshProUGUI>().text = "";
+            currentLobby.player2Score.GetComponent<TextMeshProUGUI>().text = "";
+            currentLobby.startLobbyObject.SetActive(false);
+        }
 
         objectReferences.currentLobby.SetActive(false);
 		objectReferences.joinLobby.SetActive(true);

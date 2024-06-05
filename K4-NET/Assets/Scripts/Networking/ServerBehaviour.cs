@@ -711,9 +711,11 @@ public class ServerBehaviour : MonoBehaviour
 				{
 					rematch = true
 				};
+
+				// Close lobby and send last message
+				serv.lobbyList.Remove(lobbyName);
 				serv.SendLobbyBroadcast(lobby, endGameMessage);
 
-				lobby.ResetLobby();
 				return;
 			}
 
@@ -731,10 +733,10 @@ public class ServerBehaviour : MonoBehaviour
 			{
 				rematch = false
 			};
-			serv.SendLobbyBroadcast(lobby, endGameMessage);
 
-			// Close lobby
+			// Close lobby and send last message
 			serv.lobbyList.Remove(lobbyName);
+			serv.SendLobbyBroadcast(lobby, endGameMessage);
 		}
 	}
 	#endregion
