@@ -66,17 +66,18 @@ public class ServerBehaviour : MonoBehaviour
 	public const int gridsizeY = 5; // default 5
 	private const int itemLimit = 5; // default 20
 
-	[SerializeField] public static ImmutableArray<ItemType> startingItems = new()
-	{
+	public static ImmutableArray<ItemType> startingItems = ImmutableArray.Create
+	(
 		ItemType.MINE,
 		ItemType.MINE,
 		ItemType.MINE,
 		ItemType.MINE,
 		ItemType.MINE,
-		ItemType.MINE,
-	};
-	[SerializeField] public static ImmutableArray<ItemType> itemSet = new()
-	{
+		ItemType.MINE
+	);
+	
+	public static ImmutableArray<ItemType> itemSet = ImmutableArray.Create
+	(
 		ItemType.MINE,
 		ItemType.MINE,
 		ItemType.WALL,
@@ -87,7 +88,7 @@ public class ServerBehaviour : MonoBehaviour
 		ItemType.MINESWEEPER,
 		ItemType.WRECKINGBALL,
 		ItemType.WRECKINGBALL
-	};
+	);
 
 	private string phpBaseUrl = "https://studenthome.hku.nl/~michael.smith/K4/";
 
