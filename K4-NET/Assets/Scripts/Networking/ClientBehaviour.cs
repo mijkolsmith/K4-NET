@@ -240,11 +240,11 @@ public class ClientBehaviour : MonoBehaviour
 
         if (client.objectReferences == null) client.objectReferences = FindObjectOfType<SceneObjectReferences>();
 
-		client.LobbyName = client.objectReferences.joinLobby.GetComponent<Lobby>().LobbyName;
+		client.LobbyName = client.objectReferences.joinLobby.GetComponent<ClientLobby>().LobbyName;
 
 		client.objectReferences.joinLobby.SetActive(false);
         client.objectReferences.currentLobby.SetActive(true);
-        CurrentLobby currentLobby = client.objectReferences.currentLobby.GetComponent<CurrentLobby>();
+        ClientCurrentLobby currentLobby = client.objectReferences.currentLobby.GetComponent<ClientCurrentLobby>();
         currentLobby.lobbyNameObject.GetComponent<TextMeshProUGUI>().text = client.LobbyName;
         currentLobby.client = client;
         currentLobby.player1Name.GetComponent<TextMeshProUGUI>().text = client.username;
@@ -265,11 +265,11 @@ public class ClientBehaviour : MonoBehaviour
 
         if (client.objectReferences == null) client.objectReferences = FindObjectOfType<SceneObjectReferences>();
 
-		client.LobbyName = client.objectReferences.joinLobby.GetComponent<Lobby>().LobbyName;
+		client.LobbyName = client.objectReferences.joinLobby.GetComponent<ClientLobby>().LobbyName;
 
         client.objectReferences.joinLobby.SetActive(false);
         client.objectReferences.currentLobby.SetActive(true);
-        CurrentLobby currentLobby = client.objectReferences.currentLobby.GetComponent<CurrentLobby>();
+        ClientCurrentLobby currentLobby = client.objectReferences.currentLobby.GetComponent<ClientCurrentLobby>();
         currentLobby.lobbyNameObject.GetComponent<TextMeshProUGUI>().text = client.LobbyName;
 		currentLobby.client = client;
 		currentLobby.player1Name.GetComponent<TextMeshProUGUI>().text = name;
@@ -302,7 +302,7 @@ public class ClientBehaviour : MonoBehaviour
 
 		client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "";
 
-		CurrentLobby currentLobby = client.objectReferences.currentLobby.GetComponent<CurrentLobby>();
+		ClientCurrentLobby currentLobby = client.objectReferences.currentLobby.GetComponent<ClientCurrentLobby>();
         currentLobby.player1Name.GetComponent<TextMeshProUGUI>().text = client.username;
         currentLobby.player2Name.GetComponent<TextMeshProUGUI>().text = username;
         currentLobby.player1Score.GetComponent<TextMeshProUGUI>().text = score1.ToString();
@@ -545,7 +545,7 @@ public class ClientBehaviour : MonoBehaviour
 		// Reset the lobby visuals
 		objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "";
 
-		CurrentLobby currentLobby = objectReferences.currentLobby.GetComponent<CurrentLobby>();
+		ClientCurrentLobby currentLobby = objectReferences.currentLobby.GetComponent<ClientCurrentLobby>();
 		currentLobby.player1Name.GetComponent<TextMeshProUGUI>().text = "";
 		currentLobby.player1Score.GetComponent<TextMeshProUGUI>().text = "";
 		currentLobby.player2Name.GetComponent<TextMeshProUGUI>().text = "";

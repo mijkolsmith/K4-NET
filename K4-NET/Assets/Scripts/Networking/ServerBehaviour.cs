@@ -8,8 +8,8 @@ using Newtonsoft.Json;
 using System;
 using Cysharp.Threading.Tasks;
 using System.Linq;
-using Newtonsoft.Json.Linq;
 using System.Threading.Tasks;
+using System.Collections.Immutable;
 
 public delegate void ServerMessageHandler(ServerBehaviour server, NetworkConnection con, MessageHeader header);
 
@@ -62,11 +62,12 @@ public class ServerBehaviour : MonoBehaviour
 	public NetworkPipeline m_Pipeline;
 	private NativeList<NetworkConnection> m_Connections;
 
-	private const int gridsizeX = 8; //8
-	private const int gridsizeY = 5; //5
-	private const int itemLimit = 5; //20
+	public const int lobbySize = 2; // default 2
+	public const int gridsizeX = 8; // default 8
+	public const int gridsizeY = 5; // default 5
+	private const int itemLimit = 5; // default 20
 
-	[SerializeField] private readonly List<ItemType> startingItems = new()
+	[SerializeField] public static ImmutableArray<ItemType> startingItems = new()
 	{
 		ItemType.MINE,
 		ItemType.MINE,
@@ -75,7 +76,7 @@ public class ServerBehaviour : MonoBehaviour
 		ItemType.MINE,
 		ItemType.MINE,
 	};
-	[SerializeField] private readonly List<ItemType> itemSet = new()
+	[SerializeField] public static ImmutableArray<ItemType> itemSet = new()
 	{
 		ItemType.MINE,
 		ItemType.MINE,
@@ -94,13 +95,14 @@ public class ServerBehaviour : MonoBehaviour
 	private Dictionary<NetworkConnection, int> idList = new();
 	private Dictionary<int, string> nameList = new();
 	private Dictionary<NetworkConnection, PingPong> pongDict = new();
-	private Dictionary<string, List<NetworkConnection>> lobbyList = new();
+	private Dictionary<string, ServerLobby> lobbyList = new();
+	private Dictionary<string, List<NetworkConnection>> lobbyConnectionList = new();
 	private Dictionary<string, NetworkConnection> lobbyActivePlayer = new();
 	private Dictionary<string, List<ItemType>> lobbyItems = new();
+	private Dictionary<string, ItemType> lobbyCurrentItem = new();
 	private Dictionary<string, uint[]> lobbyHealth = new();
 	private Dictionary<string, ItemType[,]> lobbyGrid = new();
 	private Dictionary<string, PlayerFlag[,]> lobbyPlayerLocations = new();
-	private Dictionary<string, ItemType> lobbyCurrentItem = new();
 	private Dictionary<string, bool[]> lobbyRematch = new();
 
 	public ChatCanvas chat;
@@ -266,9 +268,9 @@ public class ServerBehaviour : MonoBehaviour
 
 	private void RemoveDisconnectedPlayerFromAnyLobby(NetworkConnection disconnectedPlayer)
 	{
-		foreach (string lobbyName in lobbyList.Keys)
+		foreach (string lobbyName in lobbyConnectionList.Keys)
 		{
-			foreach (NetworkConnection player in lobbyList[lobbyName])
+			foreach (NetworkConnection player in lobbyConnectionList[lobbyName])
 			{
 				if (player == disconnectedPlayer)
 				{
@@ -290,10 +292,10 @@ public class ServerBehaviour : MonoBehaviour
 		}
 	}
 
-	public void SendLobbyBroadcast(string lobbyName, MessageHeader header, bool reliable = true)
+	public void SendLobbyBroadcast(ServerLobby lobby, MessageHeader header, bool reliable = true)
 	{
 		DataStreamWriter writer;
-		foreach (NetworkConnection connection in lobbyList[lobbyName])
+		foreach (NetworkConnection connection in lobby.Connections)
 		{
 			int result = m_Driver.BeginSend(reliable ? m_Pipeline : NetworkPipeline.Null, connection, out writer);
 			if (result == 0)
@@ -430,56 +432,60 @@ public class ServerBehaviour : MonoBehaviour
 		string lobbyName = Convert.ToString(message.name);
 
 		// Check if lobby exists
-		if (!serv.lobbyList.ContainsKey(lobbyName))
+		if (serv.lobbyList.TryGetValue(lobbyName, out ServerLobby lobby))
 		{
+			if (lobby.Connections.Count == 1)
+			{
+				// Get the scores of the two players against each other
+				var json = await serv.GetRequest<List<UserScore>>(serv.databaseUrl + "score_get.php?PHPSESSID=" + serv.PhpConnectionID + "&player1=" + serv.idList[lobby.Connections[0]] + "&player2=" + serv.idList[con]);
+				uint score1 = 0;
+				uint score2 = 0;
+				if (json.Count > 0)
+				{
+					score1 = Convert.ToUInt32(json[0].score);
+					if (json.Count == 2) score2 = Convert.ToUInt32(json[1].score);
+
+					// Flip the scores if the joining player has the higher score
+					if (serv.nameList[serv.idList[lobby.Connections[0]]] != json[0].username)
+					{
+						(score1, score2) = (score2, score1);
+					}
+				}
+
+				// Create a JoinLobbyExistingMessage for player 2
+				JoinLobbyExistingMessage joinLobbyExistingMessage = new()
+				{
+					score1 = score1,
+					score2 = score2,
+					name = serv.nameList[serv.idList[lobby.Connections[0]]]
+				};
+
+				// Create a LobbyUpdateMessage for player 1
+				LobbyUpdateMessage lobbyUpdateMessage = new()
+				{
+					score1 = score1,
+					score2 = score2,
+					name = serv.nameList[serv.idList[con]]
+				};
+				serv.SendUnicast(con, joinLobbyExistingMessage);
+				serv.SendUnicast(lobby.Connections[0], lobbyUpdateMessage);
+
+				// Add player 2 to the players in this lobby
+				lobby.Connections.Add(con);
+			}
+			else
+			{
+				// Lobby is full
+				JoinLobbyFailMessage joinLobbyFailMessage = new();
+				serv.SendUnicast(con, joinLobbyFailMessage);
+			}
+		}
+        else
+        {
 			// It doesn't, player joins new lobby
-			serv.lobbyList.Add(lobbyName, new List<NetworkConnection>() { con });
+			serv.lobbyList.Add(lobbyName, new ServerLobby(new List<NetworkConnection>() { con }));
 			JoinLobbyNewMessage joinLobbyNewMessage = new();
 			serv.SendUnicast(con, joinLobbyNewMessage);
-		}
-		else if (serv.lobbyList[lobbyName].Count == 1)
-		{
-			// Get the scores of the two players against each other
-			var json = await serv.GetRequest<List<UserScore>>(serv.databaseUrl + "score_get.php?PHPSESSID=" + serv.PhpConnectionID + "&player1=" + serv.idList[serv.lobbyList[lobbyName][0]] + "&player2=" + serv.idList[con]);
-			uint score1 = 0;
-			uint score2 = 0;
-			if (json.Count > 0)
-			{
-				score1 = Convert.ToUInt32(json[0].score);
-				if (json.Count == 2) score2 = Convert.ToUInt32(json[1].score);
-
-				// Flip the scores if the joining player has the higher score
-				if (serv.nameList[serv.idList[serv.lobbyList[lobbyName][0]]] != json[0].username)
-				{
-					(score1, score2) = (score2, score1);
-				}
-			}
-
-			// Create a JoinLobbyExistingMessage for player 2
-			JoinLobbyExistingMessage joinLobbyExistingMessage = new()
-			{
-				score1 = score1,
-				score2 = score2,
-				name = serv.nameList[serv.idList[serv.lobbyList[lobbyName][0]]]
-			};
-
-			// Create a LobbyUpdateMessage for player 1
-			LobbyUpdateMessage lobbyUpdateMessage = new()
-			{
-				score1 = score1,
-				score2 = score2,
-				name = serv.nameList[serv.idList[con]]
-			};
-			serv.SendUnicast(con, joinLobbyExistingMessage);
-			serv.SendUnicast(serv.lobbyList[lobbyName][0], lobbyUpdateMessage);
-
-			// Add player 2 to the players in this lobby
-			serv.lobbyList[lobbyName].Add(con);
-		}
-		else
-		{
-			JoinLobbyFailMessage joinLobbyFailMessage = new();
-			serv.SendUnicast(con, joinLobbyFailMessage);
 		}
 	}
 
@@ -495,36 +501,35 @@ public class ServerBehaviour : MonoBehaviour
 	static void HandleStartGame(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
 	{
 		StartGameMessage message = header as StartGameMessage;
-		string lobbyName = Convert.ToString(message.name);
+		ServerLobby lobby = serv.lobbyList[Convert.ToString(message.name)];
 
-		if (serv.lobbyList[lobbyName].Count == 2)
+		if (lobby.Connections.Count == lobbySize)
 		{
-			// Initialize grid with empty cells
-			serv.lobbyGrid.Add(lobbyName, new ItemType[gridsizeX, gridsizeY]);
+			// Initialize item grid with empty cells
+			lobby.InitializeItemGrid();
 
 			// Initialize starting player
-			int activePlayer = UnityEngine.Random.Range(0, 2);
-			serv.lobbyActivePlayer[lobbyName] = serv.lobbyList[lobbyName][activePlayer];
+			lobby.activePlayerId = (uint)UnityEngine.Random.Range(0, 2);
 
 			// Initialize starting items
-			serv.lobbyItems.Add(lobbyName, serv.startingItems);
+			lobby.InitializeItems();
 
 			// Give the active player a random item
-			serv.lobbyCurrentItem[lobbyName] = serv.GetRandomItem(lobbyName);
+			lobby.currentItem = serv.GetRandomItem(lobby);
 			StartGameResponseMessage startGameResponseMessage = new()
 			{
-				activePlayer = (uint)activePlayer,
-				itemId = (uint)serv.lobbyCurrentItem[lobbyName]
+				activePlayer = lobby.activePlayerId,
+				itemId = (uint)lobby.currentItem
 			};
 
 			// We're sending the information to both players so we can
 			// inform the other player what item the active player is placing
-			serv.SendLobbyBroadcast(lobbyName, startGameResponseMessage);
+			serv.SendLobbyBroadcast(lobby, startGameResponseMessage);
 		}
 		else
 		{
 			StartGameFailMessage startGameFailMessage = new();
-			serv.SendLobbyBroadcast(lobbyName, startGameFailMessage);
+			serv.SendLobbyBroadcast(lobby, startGameFailMessage);
 		}
 	}
 
@@ -532,20 +537,21 @@ public class ServerBehaviour : MonoBehaviour
 	{
 		PlaceObstacleMessage message = header as PlaceObstacleMessage;
 		string lobbyName = Convert.ToString(message.name);
+		ServerLobby lobby = serv.lobbyList[lobbyName];
 		int x = Convert.ToInt32(message.x);
 		int y = Convert.ToInt32(message.y);
 
-		Debug.Log("serv: currentitem: " + serv.lobbyCurrentItem[lobbyName] + "   -gridcoords: " + x + " " + y + "   -itemthere: " + serv.lobbyGrid[lobbyName][x, y]);
+		Debug.Log("serv: currentitem: " + lobby.currentItem + "   -gridcoords: " + x + " " + y + "   -itemthere: " + lobby.ItemGrid[x, y]);
 
 		// Handle failed obstacle placement (not the active player, space already occupied, using wrong removal)
-		if (serv.lobbyActivePlayer[lobbyName] != con ||
-			(serv.lobbyGrid[lobbyName][x, y] != ItemType.NONE &&
-				(serv.lobbyCurrentItem[lobbyName] == ItemType.MINE ||
-				serv.lobbyCurrentItem[lobbyName] == ItemType.WALL ||
-				serv.lobbyCurrentItem[lobbyName] == ItemType.START ||
-				serv.lobbyCurrentItem[lobbyName] == ItemType.FINISH)) ||
-			(serv.lobbyGrid[lobbyName][x, y] == ItemType.WALL && serv.lobbyCurrentItem[lobbyName] == ItemType.MINESWEEPER) ||
-			(serv.lobbyGrid[lobbyName][x, y] == ItemType.MINE && serv.lobbyCurrentItem[lobbyName] == ItemType.WRECKINGBALL))
+		if (lobby.Connections[(int)lobby.activePlayerId] != con ||
+			(lobby.ItemGrid[x, y] != ItemType.NONE &&
+				(lobby.currentItem == ItemType.MINE ||
+				lobby.currentItem == ItemType.WALL ||
+				lobby.currentItem == ItemType.START ||
+				lobby.currentItem == ItemType.FINISH)) ||
+			(lobby.ItemGrid[x, y] == ItemType.WALL && lobby.ItemGrid[x, y] == ItemType.MINESWEEPER) ||
+			(lobby.ItemGrid[x, y] == ItemType.MINE && lobby.ItemGrid[x, y] == ItemType.WRECKINGBALL))
 		{
 			PlaceObstacleFailMessage placeObstacleFailMessage = new();
 			serv.SendUnicast(con, placeObstacleFailMessage);
@@ -554,18 +560,18 @@ public class ServerBehaviour : MonoBehaviour
 
 		// Handle minesweeper and wrecking ball use, bool is used to inform players of successful removal
 		bool removal = false;
-		if ((serv.lobbyGrid[lobbyName][x, y] == ItemType.WALL && serv.lobbyCurrentItem[lobbyName] == ItemType.WRECKINGBALL) ||
-			(serv.lobbyGrid[lobbyName][x, y] == ItemType.MINE && serv.lobbyCurrentItem[lobbyName] == ItemType.MINESWEEPER))
+		if ((lobby.ItemGrid[x, y] == ItemType.WALL && lobby.currentItem == ItemType.WRECKINGBALL) ||
+			(lobby.ItemGrid[x, y] == ItemType.MINE && lobby.currentItem == ItemType.MINESWEEPER))
 		{
-			serv.lobbyGrid[lobbyName][x, y] = ItemType.NONE;
+			lobby.ItemGrid[x, y] = ItemType.NONE;
 			removal = true;
 		}
 
 		// Handle placement of mines, walls, start and finish
-		if (serv.lobbyCurrentItem[lobbyName] == ItemType.MINE || serv.lobbyCurrentItem[lobbyName] == ItemType.WALL ||
-			serv.lobbyCurrentItem[lobbyName] == ItemType.START || serv.lobbyCurrentItem[lobbyName] == ItemType.FINISH)
+		if (lobby.currentItem == ItemType.MINE || lobby.currentItem == ItemType.WALL ||
+			lobby.currentItem == ItemType.START || lobby.currentItem == ItemType.FINISH)
 		{
-			serv.lobbyGrid[lobbyName][x, y] = serv.lobbyCurrentItem[lobbyName];
+			lobby.ItemGrid[x, y] = lobby.currentItem;
 		}
 
 		// Obstacle placed successfully, send a message back to update visual
@@ -578,44 +584,45 @@ public class ServerBehaviour : MonoBehaviour
 		serv.SendUnicast(con, placeObstacleSuccessMessage);
 
 		// Update the other player's grid if an item got removed
-		int otherPlayerId = (serv.lobbyList[lobbyName][0] == con) ? 1 : 0;
-		if (removal) serv.SendUnicast(serv.lobbyList[lobbyName][otherPlayerId], placeObstacleSuccessMessage);
+		int otherPlayerId = (lobby.activePlayerId == 0) ? 1 : 0;
+		if (removal) serv.SendUnicast(lobby.Connections[otherPlayerId], placeObstacleSuccessMessage);
 
 		// The next player becomes the active player
-		serv.lobbyActivePlayer[lobbyName] = serv.lobbyList[lobbyName][otherPlayerId];
+		lobby.activePlayerId = (uint)otherPlayerId;
 
 		// Check whether enough obstacles have been placed and game should start
-		if (serv.RoundShouldStart(lobbyName))
+		if (serv.RoundShouldStart(lobby))
 		{
 			// Update the other player's grid if a start or finish item got placed
-			if (serv.lobbyCurrentItem[lobbyName] == ItemType.FINISH || serv.lobbyCurrentItem[lobbyName] == ItemType.START)
-				serv.SendUnicast(serv.lobbyList[lobbyName][otherPlayerId], placeObstacleSuccessMessage);
+			if (lobby.currentItem == ItemType.FINISH || lobby.currentItem == ItemType.START)
+				serv.SendUnicast(lobby.Connections[otherPlayerId], placeObstacleSuccessMessage);
 
-			serv.PreStartRound(lobbyName, x, y, otherPlayerId);
+			serv.PreStartRound(lobby, x, y, otherPlayerId);
 		}
 		else
 		{
 			// Give the active player a random item
-			serv.lobbyCurrentItem[lobbyName] = serv.GetRandomItem(lobbyName);
+			lobby.currentItem = serv.GetRandomItem(lobby);
 		}
 
 		PlaceNewObstacleMessage placeNewObstacleMessage = new()
 		{
-			activePlayer = (uint)otherPlayerId,
-			itemId = (uint)serv.lobbyCurrentItem[lobbyName]
+			activePlayer = lobby.activePlayerId,
+			itemId = (uint)lobby.currentItem
 		};
 
-		serv.SendLobbyBroadcast(lobbyName, placeNewObstacleMessage);
+		serv.SendLobbyBroadcast(lobby, placeNewObstacleMessage);
 	}
 
-	static async void HandlePlayerMove(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
+	static void HandlePlayerMove(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
 	{
 		PlayerMoveMessage message = header as PlayerMoveMessage;
 		string lobbyName = Convert.ToString(message.name);
+		ServerLobby lobby = serv.lobbyList[lobbyName];
 		int x = Convert.ToInt32(message.x);
 		int y = Convert.ToInt32(message.y);
 
-		PlayerFlag player = (serv.lobbyList[lobbyName][0] == con) ? PlayerFlag.PLAYER1 : PlayerFlag.PLAYER2;
+		PlayerFlag player = (lobby.Connections[0] == con) ? PlayerFlag.PLAYER1 : PlayerFlag.PLAYER2;
 		Vector2 playerLocation = serv.GetPlayerLocation(lobbyName, player);
 
 		// Player not found in grid (lobby will close in GetPlayerLocation function)
@@ -624,9 +631,9 @@ public class ServerBehaviour : MonoBehaviour
 		// Check if move is legal (is the active player, space not already occupied by wall, move is distance 1)
 		MoveFailReason moveFailReason = MoveFailReason.NONE;
 
-		if (serv.lobbyActivePlayer[lobbyName] != con)
+		if (lobby.Connections[(int)lobby.activePlayerId] != con)
 			moveFailReason = MoveFailReason.NOT_ACTIVE;
-		if (serv.lobbyGrid[lobbyName][x, y] == ItemType.WALL)
+		if (lobby.ItemGrid[x, y] == ItemType.WALL)
 			moveFailReason = MoveFailReason.WALL;
 		if (Vector2.Distance(new Vector2(x,y), playerLocation) != 1)
 			moveFailReason = MoveFailReason.RANGE;
@@ -646,32 +653,32 @@ public class ServerBehaviour : MonoBehaviour
 		}
 
 		// Bitwise remove player from old location in lobbyPlayerLocations
-		serv.lobbyPlayerLocations[lobbyName][(int)playerLocation.x, (int)playerLocation.y] &= ~player;
+		lobby.playerGrid[(int)playerLocation.x, (int)playerLocation.y] &= ~player;
 
 		// Bitwise add player to new location in lobbyPlayerLocations
-		serv.lobbyPlayerLocations[lobbyName][x, y] |= player;
+		lobby.playerGrid[x, y] |= player;
 
-		int otherPlayerId = (serv.lobbyList[lobbyName][0] == con) ? 1 : 0;
+		int otherPlayerId = (lobby.activePlayerId == 0) ? 1 : 0;
 
 		// Check if player hit mine
-		if (serv.lobbyGrid[lobbyName][x, y] == ItemType.MINE)
+		if (lobby.ItemGrid[x, y] == ItemType.MINE)
 		{
 			// Decrease player health
-			serv.lobbyHealth[lobbyName][(int)player - 1] -= 1;
+			lobby.playerHealth[(int)player - 1] -= 1;
 
 			// Check if player is dead
-			if (serv.lobbyHealth[lobbyName][(int)player - 1] == 0)
+			if (lobby.playerHealth[(int)player - 1] == 0)
 			{
 				// OTHER player wins
-				serv.EndRound(con, lobbyName, otherPlayerId);
+				serv.EndRound(lobby, otherPlayerId, (int)lobby.activePlayerId);
 				return;
 			}
 		}
 
 		// Player wins if they reach the finish first
-		if (serv.lobbyGrid[lobbyName][x, y] == ItemType.FINISH)
+		if (lobby.ItemGrid[x, y] == ItemType.FINISH)
 		{
-			serv.EndRound(con, lobbyName, serv.idList[con]);
+			serv.EndRound(lobby, otherPlayerId, (int)lobby.activePlayerId);
 			return;
 		}
 
@@ -681,44 +688,45 @@ public class ServerBehaviour : MonoBehaviour
 			activePlayer = (uint)otherPlayerId,
 			x = (uint)x,
 			y = (uint)y,
-			health = serv.lobbyHealth[lobbyName][(int)player - 1],
+			health = lobby.playerHealth[(int)player - 1],
 			playerToMove = (uint)player
 		};
 
-		serv.SendLobbyBroadcast(lobbyName, playerMoveSuccessMessage);
+		serv.SendLobbyBroadcast(lobby, playerMoveSuccessMessage);
 	}
 
 	static void HandleContinueChoice(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
 	{
 		ContinueChoiceMessage message = header as ContinueChoiceMessage;
 		string lobbyName = Convert.ToString(message.name);
-
-		int otherPlayerId = (serv.lobbyList[lobbyName][0] == con) ? 1 : 0;
+		ServerLobby lobby = serv.lobbyList[lobbyName];
+		int otherPlayerId = (lobby.activePlayerId == 0) ? 1 : 0;
 
 		// Initialize rematch choice array
-		serv.lobbyRematch[lobbyName] = new bool[2];
+		if (lobby.rematch == null)
+			lobby.InitializeRematch();
 
 		if (message.choice)
 		{
-			serv.lobbyRematch[lobbyName][serv.idList[con]] = true;
+			lobby.rematch[serv.idList[con]] = true;
 
-			if (serv.lobbyRematch[lobbyName][0] && serv.lobbyRematch[lobbyName][1])
+			if (lobby.rematch[0] && lobby.rematch[1])
 			{
 				// Rematch accepted by both players
 				EndGameMessage endGameMessage = new()
 				{
 					rematch = true
 				};
-				serv.SendLobbyBroadcast(lobbyName, endGameMessage);
+				serv.SendLobbyBroadcast(lobby, endGameMessage);
 
-				serv.ResetLobby(lobbyName);
+				lobby.ResetLobby();
 				return;
 			}
 
 			// Inform the other player of rematch choice
 			ContinueChoiceResponseMessage continueChoiceSuccessMessage = new();
 
-			serv.SendUnicast(serv.lobbyList[lobbyName][otherPlayerId], continueChoiceSuccessMessage);
+			serv.SendUnicast(lobby.Connections[otherPlayerId], continueChoiceSuccessMessage);
 		}
 		else
 		{
@@ -727,10 +735,9 @@ public class ServerBehaviour : MonoBehaviour
 			{
 				rematch = false
 			};
-			serv.SendLobbyBroadcast(lobbyName, endGameMessage);
+			serv.SendLobbyBroadcast(lobby, endGameMessage);
 
-			// Reset & close lobby
-			serv.ResetLobby(lobbyName);
+			// Close lobby
 			serv.lobbyList.Remove(lobbyName);
 		}
 	}
@@ -738,15 +745,15 @@ public class ServerBehaviour : MonoBehaviour
 
 	private void RemovePlayerFromLobby(string lobbyName, NetworkConnection player)
 	{
-		lobbyList[lobbyName].Remove(player);
+		ServerLobby lobby = lobbyList[lobbyName];
+		lobby.Connections.Remove(player);
 
-		if (lobbyList[lobbyName].Count == 0)
+		if (lobby.Connections.Count == 0)
 		{
-			// Reset & close lobby
-			ResetLobby(lobbyName);
+			// Close lobby
 			lobbyList.Remove(lobbyName);
 		}
-		else if (lobbyList[lobbyName].Count == 1)
+		else if (lobby.Connections.Count == 1)
 		{
 			// Create an empty LobbyUpdateMessage for player left in lobby
 			LobbyUpdateMessage lobbyUpdateMessage = new()
@@ -756,21 +763,21 @@ public class ServerBehaviour : MonoBehaviour
 				name = ""
 			};
 
-			SendUnicast(lobbyList[lobbyName][0], lobbyUpdateMessage);
+			SendUnicast(lobby.Connections[0], lobbyUpdateMessage);
 		}
 	}
 
-	private ItemType GetRandomItem(string lobbyName)
+	private ItemType GetRandomItem(ServerLobby lobby)
 	{
-		if (lobbyItems[lobbyName].Count == 0)
+		if (lobby.Items.Count == 0)
 		{
 			// Get a new set of items
-			lobbyItems[lobbyName].AddRange(itemSet);
+			lobby.AddNewItemSet();
 		}
 
 		// Get an available placeable item
-		ItemType item = lobbyItems[lobbyName][UnityEngine.Random.Range(0, lobbyItems[lobbyName].Count)];
-		lobbyItems[lobbyName].Remove(item);
+		ItemType item = lobby.Items[UnityEngine.Random.Range(0, lobby.Items.Count)];
+		lobby.Items.Remove(item);
 		return item;
 	}
 
@@ -784,36 +791,37 @@ public class ServerBehaviour : MonoBehaviour
 			}
 		}
 	}
-	private bool StartFinishGotPlaced(string lobbyName)
+	private bool StartFinishGotPlaced(ServerLobby lobby)
 	{
-		var lobbyItems = Flatten(lobbyGrid[lobbyName]);
+		var lobbyItems = Flatten(lobby.ItemGrid);
 		return lobbyItems.Contains(ItemType.START) && lobbyItems.Contains(ItemType.FINISH);
 	}
 
-	private bool RoundShouldStart(string lobbyName)
+	private bool RoundShouldStart(ServerLobby lobby)
 	{
-		return Flatten(lobbyGrid[lobbyName]).Where(x => !x.Equals(ItemType.NONE)).Count() >= itemLimit;
+		return Flatten(lobby.ItemGrid).Where(x => !x.Equals(ItemType.NONE)).Count() >= itemLimit;
 	}
 
-	private void PreStartRound(string lobbyName, int x, int y, int otherPlayerId)
+	private void PreStartRound(ServerLobby lobby, int x, int y, int otherPlayerId)
 	{
-		if (StartFinishGotPlaced(lobbyName))
+		if (StartFinishGotPlaced(lobby))
 		{
-			StartRound(lobbyName, x, y, otherPlayerId);
+			StartRound(lobby, x, y, otherPlayerId);
 			return;
 		}
 
 		// One player chooses the finish, the other player then chooses the start
 		// TODO: A pathfinding algorithm should check if the path is possible
-		if (lobbyCurrentItem[lobbyName] == ItemType.FINISH)
-			lobbyCurrentItem[lobbyName] = ItemType.START;
-		else lobbyCurrentItem[lobbyName] = ItemType.FINISH;
+		if (lobby.currentItem == ItemType.FINISH)
+			lobby.currentItem = ItemType.START;
+		else lobby.currentItem = ItemType.FINISH;
 	}
 
 	private Vector2 GetPlayerLocation(string lobbyName, PlayerFlag player)
 	{
-		int w = lobbyPlayerLocations[lobbyName].GetLength(0);
-		int h = lobbyPlayerLocations[lobbyName].GetLength(1);
+		ServerLobby lobby = lobbyList[lobbyName];
+		int w = lobby.playerGrid.GetLength(0);
+		int h = lobby.playerGrid.GetLength(1);
 
 		// Loop through all locations to find the player
 		for (int x = 0; x < w; ++x)
@@ -821,7 +829,7 @@ public class ServerBehaviour : MonoBehaviour
 			for (int y = 0; y < h; ++y)
 			{
 				// Bitwise AND to check if the player is at this location
-				if ((lobbyPlayerLocations[lobbyName][x, y] & PlayerFlag.PLAYER1) == PlayerFlag.PLAYER1)
+				if ((lobby.playerGrid[x, y] & PlayerFlag.PLAYER1) == PlayerFlag.PLAYER1)
 					return new Vector2(x, y);
 			}
 		}
@@ -835,7 +843,7 @@ public class ServerBehaviour : MonoBehaviour
 	{
 		// Disconnect all players in the lobby from the server, and close the lobby.
 		// Simplest way to resolve any error in the game.
-		foreach (NetworkConnection playerConnection in lobbyList[lobbyName])
+		foreach (NetworkConnection playerConnection in lobbyList[lobbyName].Connections)
 		{
 			if (idList.ContainsKey(playerConnection))
 			{
@@ -847,20 +855,17 @@ public class ServerBehaviour : MonoBehaviour
 			playerConnection.Disconnect(m_Driver);
 		}
 
-		ResetLobby(lobbyName);
 		lobbyList.Remove(lobbyName);
 	}
 
-	private void StartRound(string lobbyName, int x, int y, int activePlayer)
+	private void StartRound(ServerLobby lobby, int x, int y, int activePlayer)
 	{
-		Debug.Log("Lobby " + lobbyName + " round will now start!");
-
 		// Initialize player locations
-		lobbyPlayerLocations.Add(lobbyName, new PlayerFlag[gridsizeX, gridsizeY]);
-		lobbyPlayerLocations[lobbyName][x, y] = PlayerFlag.PLAYER1 | PlayerFlag.PLAYER2;
+		lobby.InitializePlayerGrid();
+		lobby.playerGrid[x, y] = PlayerFlag.PLAYER1 | PlayerFlag.PLAYER2;
 
 		// Initialize player health
-		lobbyHealth.Add(lobbyName, new uint[2] { GameData.defaultPlayerHealth, GameData.defaultPlayerHealth });
+		lobby.InitializePlayerHealth();
 
 		// Communicate the location of the start to both players so they start at the right spot
 		StartRoundMessage startRoundMessage = new()
@@ -870,11 +875,11 @@ public class ServerBehaviour : MonoBehaviour
 			y = (uint)y
 		};
 
-		SendLobbyBroadcast(lobbyName, startRoundMessage);
+		SendLobbyBroadcast(lobby, startRoundMessage);
 		return;
 	}
 
-	private async Task EndRound(NetworkConnection con, string lobbyName, int winnerId)
+	private async Task EndRound(ServerLobby lobby, int winnerId, int loserId)
 	{
 		// Submit the score to the database and inform the players of the winner
 		EndRoundMessage endRoundMessage = new()
@@ -882,21 +887,11 @@ public class ServerBehaviour : MonoBehaviour
 			winnerId = (uint)winnerId
 		};
 
-		SendLobbyBroadcast(lobbyName, endRoundMessage);
+		SendLobbyBroadcast(lobby, endRoundMessage);
 
-		var json = await GetRequest<List<Error>>(databaseUrl + "score_insert.php?PHPSESSID=" + PhpConnectionID + "&winner_id=" + idList[lobbyList[lobbyName][winnerId]] + "&loser_id=" + idList[con]);
-		Debug.Log(lobbyName + (Convert.ToUInt32(json[0].result) == 1 ? ": successfully submitted score" : ": error submitting score"));
+
+		var json = await GetRequest<List<Error>>(databaseUrl + "score_insert.php?PHPSESSID=" + PhpConnectionID + "&winner_id=" + idList[lobby.Connections[winnerId]] + "&loser_id=" + idList[lobby.Connections[loserId]]);
+		//Debug.Log(lobbyName + (Convert.ToUInt32(json[0].result) == 1 ? ": successfully submitted score" : ": error submitting score"));
 		return;
-	}
-
-	private void ResetLobby(string lobbyName)
-	{
-		lobbyActivePlayer.Remove(lobbyName);
-		lobbyItems.Remove(lobbyName);
-		lobbyHealth.Remove(lobbyName);
-		lobbyGrid.Remove(lobbyName);
-		lobbyPlayerLocations.Remove(lobbyName);
-		lobbyCurrentItem.Remove(lobbyName);
-		lobbyRematch.Remove(lobbyName);
 	}
 }

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class Lobby : MonoBehaviour
+public class ClientLobby : MonoBehaviour
 {
 	public string LobbyName { get; private set; }
 	[SerializeField] private ClientBehaviour client;
