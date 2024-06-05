@@ -844,7 +844,7 @@ public class ServerBehaviour : MonoBehaviour
 			for (int y = 0; y < h; ++y)
 			{
 				// Bitwise AND to check if the player is at this location
-				if ((lobby.playerGrid[x, y] & PlayerFlag.PLAYER1) == PlayerFlag.PLAYER1)
+				if ((lobby.playerGrid[x, y] & player) == player)
 					return new Vector2(x, y);
 			}
 		}
