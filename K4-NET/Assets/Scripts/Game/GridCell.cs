@@ -44,40 +44,44 @@ public class GridCell : MonoBehaviour
             null);
 	}
 
-    public void SetPlayer(PlayerFlag playerFlag, GameObject playerPrefab)
-    {
+    public void AddPlayerFlag(PlayerFlag playerFlag, Dictionary<PlayerFlag, PlayerVisual> playerVisuals)
+	{
 		this.playerFlag |= playerFlag;
-		playerInThisGridSpace = Instantiate(
-            playerPrefab,
-            new Vector3(
-                transform.position.x + GameGrid.GridSpaceSize * .5f,
-                transform.position.y + GameGrid.GridSpaceSize * .75f,
-                transform.position.z - 1),
-            Quaternion.identity,
-            null);
+
+		Destroy(playerInThisGridSpace);
+		UpdatePlayerVisual(playerVisuals[playerFlag].playerPrefab);
 	}
 
-    public void RemoveItem()
+	private void UpdatePlayerVisual(GameObject playerPrefab)
+	{
+		playerInThisGridSpace = Instantiate(
+			playerPrefab,
+			new Vector3(
+				transform.position.x + GameGrid.GridSpaceSize * .5f,
+				transform.position.y + GameGrid.GridSpaceSize * .75f,
+				transform.position.z - 1),
+			Quaternion.identity,
+			null);
+	}
+
+	public void RemoveItem()
     {
 		itemType = ItemType.NONE;
 		Destroy(itemInThisGridSpace);
 		itemInThisGridSpace = null;
     }
 
-    public void RemovePlayer(PlayerFlag playerFlag, Dictionary<PlayerFlag, PlayerVisual> playerVisuals)
+    public void RemovePlayerFlag(PlayerFlag playerFlag, Dictionary<PlayerFlag, PlayerVisual> playerVisuals)
     {
         if (playerFlag == PlayerFlag.NONE)
 			return;
 
-        this.playerFlag &= ~playerFlag;
+        // Remove the player from this grid space
+        this.playerFlag &= ~ playerFlag;
 		Destroy(playerInThisGridSpace);
 
-		if (this.playerFlag == PlayerFlag.NONE)
-        {
-			playerInThisGridSpace = null;
-            return;
-		}
-
-        SetPlayer(playerFlag, playerVisuals[playerFlag].playerPrefab);
+		// Update the player visual if there is still a player in this grid space
+		if (this.playerFlag != PlayerFlag.NONE)
+			UpdatePlayerVisual(playerVisuals[this.playerFlag].playerPrefab);
 	}
 }

@@ -62,7 +62,7 @@ public class InputManager : MonoBehaviour
         if (playerFlagToMove == PlayerFlag.BOTH)
         {
             // Spawn players at selected grid cell
-            selectedGridCell.SetPlayer(playerFlagToMove, objectReferences.gamePrefabs.playerVisuals[playerFlagToMove].playerPrefab);
+            selectedGridCell.AddPlayerFlag(playerFlagToMove, objectReferences.gamePrefabs.playerVisuals);
             gameGrid.playerLocations[0] = selectedGridCell;
 			gameGrid.playerLocations[1] = selectedGridCell;
 			return;
@@ -71,25 +71,25 @@ public class InputManager : MonoBehaviour
         // Move correct player to selected grid cell
         if (playerFlagToMove == PlayerFlag.PLAYER1)
         {
-			gameGrid.playerLocations[0].RemovePlayer(
+			gameGrid.playerLocations[0].RemovePlayerFlag(
                 playerFlagToMove, 
                 objectReferences.gamePrefabs.playerVisuals);
 
-			selectedGridCell.SetPlayer(
+			selectedGridCell.AddPlayerFlag(
                 playerFlagToMove, 
-                objectReferences.gamePrefabs.playerVisuals[playerFlagToMove].playerPrefab);
+                objectReferences.gamePrefabs.playerVisuals);
 
 			gameGrid.playerLocations[0] = selectedGridCell;
 		}
         else if (playerFlagToMove == PlayerFlag.PLAYER2)
         {
-			gameGrid.playerLocations[1].RemovePlayer(
+			gameGrid.playerLocations[1].RemovePlayerFlag(
                 playerFlagToMove, 
                 objectReferences.gamePrefabs.playerVisuals);
 
-			selectedGridCell.SetPlayer(
+			selectedGridCell.AddPlayerFlag(
                 playerFlagToMove,
-				objectReferences.gamePrefabs.playerVisuals[playerFlagToMove].playerPrefab);
+				objectReferences.gamePrefabs.playerVisuals);
 
 			gameGrid.playerLocations[1] = selectedGridCell;
 		}
