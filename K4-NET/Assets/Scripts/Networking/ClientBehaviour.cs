@@ -7,6 +7,7 @@ using Unity.Networking.Transport.Utilities;
 using TMPro;
 using UnityEngine.SceneManagement;
 using static Unity.Collections.Unicode;
+using Unity.Burst.CompilerServices;
 
 public delegate void ClientMessageHandler(ClientBehaviour client, MessageHeader header);
 
@@ -186,7 +187,7 @@ public class ClientBehaviour : MonoBehaviour
 	//      - Player move success       (DONE)
 	//      - Player move fail          (DONE)
 	//      - End round                 (DONE)
-	//      - Continue choice response  (WIP)
+	//      - Continue choice response  (DONE)
 	//      - End game                  (WIP)
 
 	private static void HandlePing(ClientBehaviour client, MessageHeader header)
@@ -225,7 +226,7 @@ public class ClientBehaviour : MonoBehaviour
         Debug.Log("login success");
 
         // Open a new scene without closing the server
-		client.StartCoroutine(LoadSceneWithoutClosingOtherOpenScenes(SceneManager.GetActiveScene().buildIndex + 1));
+		client.StartCoroutine(LoadSceneWithoutClosingServer(SceneManager.GetActiveScene().buildIndex + 1));
 	}
 
     private static void HandleLoginFail(ClientBehaviour client, MessageHeader header)
@@ -330,7 +331,7 @@ public class ClientBehaviour : MonoBehaviour
         client.ActivePlayer = activePlayer == client.Player;
 
 		// Open a new scene without closing the server
-		client.StartCoroutine(LoadSceneWithoutClosingOtherOpenScenes(SceneManager.GetActiveScene().buildIndex + 1));
+		client.StartCoroutine(LoadSceneWithoutClosingServer(SceneManager.GetActiveScene().buildIndex + 1));
 	}
 
     private static void HandleStartGameFail(ClientBehaviour client, MessageHeader header)
@@ -508,6 +509,7 @@ public class ClientBehaviour : MonoBehaviour
         EndRoundMessage message = header as EndRoundMessage;
         uint winnerId = Convert.ToUInt32(message.winnerId);
 
+        // Display regular mouse cursor and stop checking for input on the grid
         client.objectReferences.cursor.SetSprite(null);
 		client.CurrentItem = ItemType.NONE;
         client.objectReferences.inputManager.checkInput = false;
@@ -520,8 +522,6 @@ public class ClientBehaviour : MonoBehaviour
     
     private static void HandleContinueChoiceResponse(ClientBehaviour client, MessageHeader header)
 	{
-        ContinueChoiceResponseMessage message = header as ContinueChoiceResponseMessage;
-
         // Update visual
         client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Other player wants a rematch!";
 	}
@@ -531,16 +531,20 @@ public class ClientBehaviour : MonoBehaviour
         EndGameMessage message = header as EndGameMessage;
         bool rematch = message.rematch;
 
+        // Reset the game
+        client.RoundStarted = false;
+
 		// Go back to lobby screen
-		client.StartCoroutine(LoadSceneWithoutClosingOtherOpenScenes(SceneManager.GetActiveScene().buildIndex - 1));
+		client.StartCoroutine(LoadSceneWithoutClosingServer(SceneManager.GetActiveScene().buildIndex - 1));
 
         if (!rematch)
             client.LeaveLobby();
 	}
 	#endregion
 
-	private static IEnumerator LoadSceneWithoutClosingOtherOpenScenes(int sceneBuildIndex)
+	private static IEnumerator LoadSceneWithoutClosingServer(int sceneBuildIndex)
 	{
+        Scene sceneToUnload = SceneManager.GetActiveScene();
 		AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneBuildIndex, LoadSceneMode.Additive);
 
 		// Wait until the asynchronous scene fully loads
@@ -550,7 +554,7 @@ public class ClientBehaviour : MonoBehaviour
 		}
 
 		SceneManager.SetActiveScene(SceneManager.GetSceneByBuildIndex(sceneBuildIndex));
-		SceneManager.UnloadSceneAsync(sceneBuildIndex - 1);
+		SceneManager.UnloadSceneAsync(sceneToUnload);
 	}
 
 	public void LeaveLobby()

@@ -348,7 +348,7 @@ public class ServerBehaviour : MonoBehaviour
 	//      - Start game                    (DONE)
 	//      - Place obstacle                (DONE)
 	//      - Player move                   (DONE)
-	//      - Continue choice               (WIP)
+	//      - Continue choice               (DONE)
 
 	static void HandlePong(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
 	{
@@ -655,8 +655,9 @@ public class ServerBehaviour : MonoBehaviour
 		// Check if player hit mine
 		if (lobby.ItemGrid[x, y] == ItemType.MINE)
 		{
-			// Decrease player health
+			// Decrease player health, remove mine
 			lobby.playerHealth[(int)player - 1] -= 1;
+			lobby.ItemGrid[x, y] = ItemType.NONE;
 
 			// Check if player is dead
 			if (lobby.playerHealth[(int)player - 1] == 0)
@@ -667,6 +668,18 @@ public class ServerBehaviour : MonoBehaviour
 			}
 		}
 
+		// Inform players of successful move attempt
+		PlayerMoveSuccessMessage playerMoveSuccessMessage = new()
+		{
+			activePlayer = (uint)otherPlayerId,
+			x = (uint)x,
+			y = (uint)y,
+			health = lobby.playerHealth[(int)player - 1],
+			playerToMove = (uint)player
+		};
+
+		serv.SendLobbyBroadcast(lobby, playerMoveSuccessMessage);
+
 		// Player wins if they reach the finish first
 		if (lobby.ItemGrid[x, y] == ItemType.FINISH)
 		{
@@ -675,18 +688,6 @@ public class ServerBehaviour : MonoBehaviour
 		}
 
 		lobby.activePlayerId = (uint)otherPlayerId;
-
-		// Inform players of successful move attempt
-		PlayerMoveSuccessMessage playerMoveSuccessMessage = new()
-		{
-			activePlayer = lobby.activePlayerId,
-			x = (uint)x,
-			y = (uint)y,
-			health = lobby.playerHealth[(int)player - 1],
-			playerToMove = (uint)player
-		};
-
-		serv.SendLobbyBroadcast(lobby, playerMoveSuccessMessage);
 	}
 
 	static void HandleContinueChoice(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
@@ -883,7 +884,6 @@ public class ServerBehaviour : MonoBehaviour
 		};
 
 		SendLobbyBroadcast(lobby, endRoundMessage);
-
 
 		var json = await GetRequest<List<Error>>(phpBaseUrl + "score_insert.php?PHPSESSID=" + PhpConnectionID + "&winner_id=" + idList[lobby.Connections[winnerId]] + "&loser_id=" + idList[lobby.Connections[loserId]]);
 		//Debug.Log(lobbyName + (Convert.ToUInt32(json[0].result) == 1 ? ": successfully submitted score" : ": error submitting score"));
