@@ -39,7 +39,7 @@ public class UserScore
 {
 	public string username;
 	public string score;
-}
+}	
 
 public class ServerBehaviour : MonoBehaviour
 {
@@ -330,7 +330,7 @@ public class ServerBehaviour : MonoBehaviour
 	//      - Leave lobby                   (DONE)
 	//      - Start game                    (DONE)
 	//      - Place obstacle                (DONE)
-	//      - Player move                   (DONE)
+	//      - Player move                   (WIP)
 	//      - Continue choice               (DONE)
 
 	static void HandlePong(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
@@ -647,6 +647,7 @@ public class ServerBehaviour : MonoBehaviour
 		// Check if player hit mine
 		if (lobby.ItemGrid[x, y] == ItemType.MINE)
 		{
+			// TODO: skip player turn
 			// Decrease player health, remove mine
 			lobby.playerHealth[(int)player - 1] -= 1;
 			lobby.ItemGrid[x, y] = ItemType.NONE;
