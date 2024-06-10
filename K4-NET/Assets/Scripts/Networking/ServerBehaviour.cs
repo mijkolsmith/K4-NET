@@ -101,7 +101,7 @@ public class ServerBehaviour : MonoBehaviour
 
 	private string PhpConnectionID;
 
-	async void Start()
+	private /*async*/ void Start()
 	{
 		//var getJson = await GetRequest<List<Id>>(databaseUrl + "server_login.php?id=1&pw=A5FJDKeSdKI49dnR49JFRIVJWJf92JF9R8Gg98GG3");
 		//Debug.Log(getJson[0].id);
@@ -130,14 +130,14 @@ public class ServerBehaviour : MonoBehaviour
 	}
 
 	// Write this immediately after creating the above Start calls, so you don't forget
-	//  Or else you well get lingering thread sockets, and will have trouble starting new ones!
-	void OnDestroy()
+	// Or else you well get lingering thread sockets, and will have trouble starting new ones!
+	private void OnDestroy()
 	{
 		m_Driver.Dispose();
 		m_Connections.Dispose();
 	}
 
-	void Update()
+	private void Update()
 	{
 		// This is a jobified system, so we need to tell it to handle all its outstanding tasks first
 		m_Driver.ScheduleUpdate().Complete();
@@ -662,8 +662,8 @@ public class ServerBehaviour : MonoBehaviour
 			// Check if player is dead
 			if (lobby.playerHealth[(int)player - 1] == 0)
 			{
-				// OTHER player wins
-				serv.EndRound(lobby, otherPlayerId, (int)lobby.activePlayerId);
+				// OTHER player wins (discard to hide warning about await)
+				_ = serv.EndRound(lobby, otherPlayerId, (int)lobby.activePlayerId);
 				return;
 			}
 		}
@@ -683,7 +683,8 @@ public class ServerBehaviour : MonoBehaviour
 		// Player wins if they reach the finish first
 		if (lobby.ItemGrid[x, y] == ItemType.FINISH)
 		{
-			serv.EndRound(lobby, (int)lobby.activePlayerId, otherPlayerId);
+			// Discard to hide warning about await
+			_ = serv.EndRound(lobby, (int)lobby.activePlayerId, otherPlayerId);
 			return;
 		}
 

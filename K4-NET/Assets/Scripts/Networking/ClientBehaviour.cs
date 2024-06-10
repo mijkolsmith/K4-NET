@@ -57,7 +57,7 @@ public class ClientBehaviour : MonoBehaviour
 	private float objectReferencesTimer;
     private float objectReferencesTimeNeeded;
 
-    void Start()
+    private void Start()
     {
         DontDestroyOnLoad(this);
         m_Driver = NetworkDriver.Create(new ReliableUtility.Parameters { WindowSize = 32 });
@@ -70,12 +70,12 @@ public class ClientBehaviour : MonoBehaviour
         m_Connection = m_Driver.Connect(endpoint);
     }
 
-    public void OnDestroy()
+    private void OnDestroy()
     {
         m_Driver.Dispose();
     }
 
-    void Update()
+    private void Update()
     {
         // Connection Update
         m_Driver.ScheduleUpdate().Complete();
@@ -224,8 +224,8 @@ public class ClientBehaviour : MonoBehaviour
 	{
         Debug.Log("login success");
 
-        // Open a new scene without closing the server
-		LoadSceneWithoutClosingServer(SceneManager.GetActiveScene().buildIndex + 1);
+		// Open a new scene without closing the server (discard to hide warning about await)
+		_ = LoadSceneWithoutClosingServer(SceneManager.GetActiveScene().buildIndex + 1);
 	}
 
     private static void HandleLoginFail(ClientBehaviour client, MessageHeader header)
@@ -329,8 +329,8 @@ public class ClientBehaviour : MonoBehaviour
 		client.CurrentItem = itemType;
         client.ActivePlayer = activePlayer == client.Player;
 
-		// Open a new scene without closing the server
-        LoadSceneWithoutClosingServer(SceneManager.GetActiveScene().buildIndex + 1);
+		// Open a new scene without closing the server (discard to hide warning about await)
+		_ = LoadSceneWithoutClosingServer(SceneManager.GetActiveScene().buildIndex + 1);
 	}
 
     private static void HandleStartGameFail(ClientBehaviour client, MessageHeader header)
@@ -557,7 +557,8 @@ public class ClientBehaviour : MonoBehaviour
         await asyncLoad;
 
 		SceneManager.SetActiveScene(SceneManager.GetSceneByBuildIndex(sceneBuildIndex));
-		SceneManager.UnloadSceneAsync(sceneToUnload);
+		// Discard to hide warning about await
+		_ = SceneManager.UnloadSceneAsync(sceneToUnload);
     }
 
 	public void LeaveLobby()
