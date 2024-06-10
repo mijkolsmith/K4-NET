@@ -103,7 +103,7 @@ public class ServerBehaviour : MonoBehaviour
 
 	private /*async*/ void Start()
 	{
-		//var getJson = await GetRequest<List<Id>>(databaseUrl + "server_login.php?id=1&pw=A5FJDKeSdKI49dnR49JFRIVJWJf92JF9R8Gg98GG3");
+		//var getJson = await GetRequest<List<Id>>(databaseUrl + "server_login.php?id=1&pw=");
 		//Debug.Log(getJson[0].id);
 
 		//List<User> json = await GetRequest<List<User>>(databaseUrl + "user_register.php?PHPSESSID=" + getJson[0].id + "&un=test1&pw=test1");
@@ -721,7 +721,7 @@ public class ServerBehaviour : MonoBehaviour
 			}
 
 			// Inform the other player of rematch choice
-			int otherPlayerId = (lobby.activePlayerId == 0) ? 1 : 0;
+			int otherPlayerId = (lobby.Connections[0] == con) ? 1 : 0;
 
 			ContinueChoiceResponseMessage continueChoiceSuccessMessage = new();
 
