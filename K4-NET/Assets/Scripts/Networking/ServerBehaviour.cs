@@ -97,8 +97,6 @@ public class ServerBehaviour : MonoBehaviour
 	private Dictionary<NetworkConnection, PingPong> pongDict = new();
 	private Dictionary<string, ServerLobby> lobbyList = new();
 
-	public ChatCanvas chat;
-
 	private string PhpConnectionID;
 
 	private void Start()
@@ -138,7 +136,6 @@ public class ServerBehaviour : MonoBehaviour
 			{
 				if (idList.ContainsKey(m_Connections[i]))
 				{
-					chat.NewMessage($"{ idList[m_Connections[i]]} has disconnected.", ChatCanvas.leaveColor);
 					nameList.Remove(idList[m_Connections[i]]);
 					idList.Remove(m_Connections[i]);
 				}
