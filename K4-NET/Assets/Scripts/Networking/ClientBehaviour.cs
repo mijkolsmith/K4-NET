@@ -7,6 +7,7 @@ using Unity.Networking.Transport.Utilities;
 using TMPro;
 using UnityEngine.SceneManagement;
 using Cysharp.Threading.Tasks;
+using System.Runtime.CompilerServices;
 
 public delegate void ClientMessageHandler(ClientBehaviour client, MessageHeader header);
 
@@ -477,11 +478,13 @@ public class ClientBehaviour : MonoBehaviour
 			return;
         }
 
-		if (client.ActivePlayer)
+        if (client.ActivePlayer)
         {
             client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Your turn to move!";
         }
-    }
+        else client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "";
+
+	}
     
     private static void HandlePlayerMoveFail(ClientBehaviour client, MessageHeader header)
 	{
@@ -540,7 +543,6 @@ public class ClientBehaviour : MonoBehaviour
 
         if (message.rematch)
         {
-            Debug.Log("rematch accepted for  lobby: " + client.LobbyName);
 			JoinLobbyMessage joinLobbyMessage = new()
             {
                 name = client.LobbyName,

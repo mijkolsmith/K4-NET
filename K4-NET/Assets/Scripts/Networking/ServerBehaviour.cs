@@ -392,6 +392,14 @@ public class ServerBehaviour : MonoBehaviour
 	static async void HandleLogin(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
 	{
 		LoginMessage message = header as LoginMessage;
+
+		if (message.username == "" || message.password == "")
+		{
+			LoginFailMessage loginFailMessage = new();
+			serv.SendUnicast(con, loginFailMessage);
+			return;
+		}
+
 		var json = await serv.GetRequest<List<User>>(phpBaseUrl + "user_login.php?PHPSESSID=" + serv.PhpConnectionID + "&un=" + message.username + "&pw=" + message.password);
 		if (json.Count == 0)
 		{
@@ -727,9 +735,9 @@ public class ServerBehaviour : MonoBehaviour
 			// Inform the other player of rematch choice
 			int otherPlayerId = (lobby.Connections[0] == con) ? 1 : 0;
 
-			ContinueChoiceResponseMessage continueChoiceSuccessMessage = new();
+			ContinueChoiceResponseMessage continueChoiceResponseMessage = new();
 
-			serv.SendUnicast(lobby.Connections[otherPlayerId], continueChoiceSuccessMessage);
+			serv.SendUnicast(lobby.Connections[otherPlayerId], continueChoiceResponseMessage);
 		}
 		else
 		{
@@ -758,15 +766,30 @@ public class ServerBehaviour : MonoBehaviour
 		}
 		else if (lobby.Connections.Count == 1)
 		{
-			// Create an empty LobbyUpdateMessage for player left in lobby
-			LobbyUpdateMessage lobbyUpdateMessage = new()
+			if (lobby.ItemGrid != null)
 			{
-				score1 = 0,
-				score2 = 0,
-				name = ""
-			};
+				// Create an empty LobbyUpdateMessage for player left in lobby (if lobby hasn't started already)
+				LobbyUpdateMessage lobbyUpdateMessage = new()
+				{
+					score1 = 0,
+					score2 = 0,
+					name = ""
+				};
 
-			SendUnicast(lobby.Connections[0], lobbyUpdateMessage);
+				SendUnicast(lobby.Connections[0], lobbyUpdateMessage);
+			}
+			else
+			{
+				// End game and inform the other player
+				EndGameMessage endGameMessage = new()
+				{
+					rematch = false
+				};
+
+				// Close lobby and send last message
+				lobbyList.Remove(lobbyName);
+				SendUnicast(lobby.Connections[0], endGameMessage);
+			}
 		}
 	}
 
@@ -894,6 +917,5 @@ public class ServerBehaviour : MonoBehaviour
 
 		var json = await GetRequest<List<Error>>(phpBaseUrl + "score_insert.php?PHPSESSID=" + PhpConnectionID + "&winner_id=" + idList[lobby.Connections[winnerId]] + "&loser_id=" + idList[lobby.Connections[loserId]]);
 		Debug.Log(Convert.ToUInt32(json[0].result) == 1 ? ": successfully submitted score" : ": error submitting score");
-		return;
 	}
 }
