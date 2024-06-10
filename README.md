@@ -1,6 +1,7 @@
 # K4-NET
 
-Credits
+Credits:
+
 Wall texture image by deadlyessence on itch.io
 https://deadlyessence.itch.io/free-tilesets
 
