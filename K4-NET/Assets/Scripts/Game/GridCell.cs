@@ -3,48 +3,48 @@ using UnityEngine;
 
 public class GridCell : MonoBehaviour
 {
-    private int posX = 0;
-    private int posY = 0;
+	private int posX = 0;
+	private int posY = 0;
 
-    public GameObject itemInThisGridSpace = null;
-    public GameObject playerInThisGridSpace = null;
-    public ItemType itemType = ItemType.NONE;
-    public PlayerFlag playerFlag = PlayerFlag.NONE;
+	public GameObject itemInThisGridSpace = null;
+	public GameObject playerInThisGridSpace = null;
+	public ItemType itemType = ItemType.NONE;
+	public PlayerFlag playerFlag = PlayerFlag.NONE;
 
-    private bool set = false;
-    public bool occupied = false;
+	private bool set = false;
+	public bool occupied = false;
 
 
-    public void SetPosition(int x, int y)
+	public void SetPosition(int x, int y)
 	{
-        if (!set)
-        {
-            posX = x;
-            posY = y;
-            set = true;
-        }
-        else Debug.Log("Position already set");
+		if (!set)
+		{
+			posX = x;
+			posY = y;
+			set = true;
+		}
+		else Debug.Log("Position already set");
 	}
 
-    public Vector2Int GetPosition()
+	public Vector2Int GetPosition()
 	{
-        return new Vector2Int(posX, posY);
+		return new Vector2Int(posX, posY);
 	}
 
-    public void SetItem(ItemType itemType, GameObject itemPrefab)
-    {
+	public void SetItem(ItemType itemType, GameObject itemPrefab)
+	{
 		this.itemType = itemType;
 		itemInThisGridSpace = Instantiate(
-            itemPrefab,
-            new Vector3(
-                transform.position.x + GameGrid.GridSpaceSize * .5f,
-                transform.position.y + GameGrid.GridSpaceSize * .5f,
-                transform.position.z),
-            Quaternion.identity,
-            null);
+			itemPrefab,
+			new Vector3(
+				transform.position.x + GameGrid.GridSpaceSize * .5f,
+				transform.position.y + GameGrid.GridSpaceSize * .5f,
+				transform.position.z),
+			Quaternion.identity,
+			null);
 	}
 
-    public void AddPlayerFlag(PlayerFlag playerFlag, Dictionary<PlayerFlag, PlayerVisual> playerVisuals)
+	public void AddPlayerFlag(PlayerFlag playerFlag, Dictionary<PlayerFlag, PlayerVisual> playerVisuals)
 	{
 		this.playerFlag |= playerFlag;
 
@@ -65,19 +65,19 @@ public class GridCell : MonoBehaviour
 	}
 
 	public void RemoveItem()
-    {
+	{
 		itemType = ItemType.NONE;
 		Destroy(itemInThisGridSpace);
 		itemInThisGridSpace = null;
-    }
+	}
 
-    public void RemovePlayerFlag(PlayerFlag playerFlag, Dictionary<PlayerFlag, PlayerVisual> playerVisuals)
-    {
-        if (playerFlag == PlayerFlag.NONE)
+	public void RemovePlayerFlag(PlayerFlag playerFlag, Dictionary<PlayerFlag, PlayerVisual> playerVisuals)
+	{
+		if (playerFlag == PlayerFlag.NONE)
 			return;
 
-        // Remove the player from this grid space
-        this.playerFlag &= ~ playerFlag;
+		// Remove the player from this grid space
+		this.playerFlag &= ~playerFlag;
 		Destroy(playerInThisGridSpace);
 
 		// Update the player visual if there is still a player in this grid space

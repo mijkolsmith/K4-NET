@@ -36,7 +36,7 @@ public class GameData : MonoBehaviour
 	}
 
 	public void DecreaseLives()
-    {
+	{
 		Lives--;
 	}
 
@@ -46,10 +46,10 @@ public class GameData : MonoBehaviour
 	}
 
 	public void StartRound()
-    {
+	{
 		Lives = defaultPlayerHealth;
 		OtherLives = defaultPlayerHealth;
-    }
+	}
 
 	public void Rematch(bool choice)
 	{

@@ -20,7 +20,7 @@ public class LoginRegister : MonoBehaviour
 		this.password = password;
 	}
 
-    public void RegisterUser()
+	public void RegisterUser()
 	{
 		RegisterMessage registerMessage = new()
 		{

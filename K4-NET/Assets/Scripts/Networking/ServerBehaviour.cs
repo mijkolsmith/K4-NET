@@ -466,8 +466,8 @@ public class ServerBehaviour : MonoBehaviour
 				serv.SendUnicast(con, joinLobbyFailMessage);
 			}
 		}
-        else
-        {
+		else
+		{
 			// It doesn't, player joins new lobby
 			serv.lobbyList.Add(lobbyName, new ServerLobby(new List<NetworkConnection>() { con }));
 			JoinLobbyNewMessage joinLobbyNewMessage = new();

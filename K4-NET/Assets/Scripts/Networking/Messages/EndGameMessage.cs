@@ -17,7 +17,7 @@ public class EndGameMessage : MessageHeader
 	{
 		// Write message type & object ID
 		base.SerializeObject(ref writer);
-
+		
 		writer.WriteByte((byte)(rematch ? 1 : 0));
 	}
 
