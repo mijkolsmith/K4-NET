@@ -191,6 +191,9 @@ public class ServerBehaviour : MonoBehaviour
 					{
 						try
 						{
+							if (msgType != NetworkMessageType.PONG)
+								Debug.Log($"Message successfully received on Server: {msgType}");
+
 							networkMessageHandlers[msgType].Invoke(this, m_Connections[i], header);
 						}
 						catch
@@ -589,7 +592,8 @@ public class ServerBehaviour : MonoBehaviour
 			if (lobby.currentItem == ItemType.FINISH || lobby.currentItem == ItemType.START)
 				serv.SendUnicast(lobby.Connections[(int)lobby.activePlayerId], placeObstacleSuccessMessage);
 
-			serv.PreStartRound(lobby, x, y);
+			if (serv.PreStartRound(lobby, x, y))
+				return;
 		}
 		else
 		{
@@ -801,12 +805,12 @@ public class ServerBehaviour : MonoBehaviour
 		return Flatten(lobby.ItemGrid).Where(x => !x.Equals(ItemType.NONE)).Count() >= itemLimit;
 	}
 
-	private void PreStartRound(ServerLobby lobby, int x, int y)
+	private bool PreStartRound(ServerLobby lobby, int x, int y)
 	{
 		if (StartFinishGotPlaced(lobby))
 		{
 			StartRound(lobby, x, y);
-			return;
+			return true;
 		}
 
 		// One player chooses the finish, the other player then chooses the start
@@ -814,6 +818,7 @@ public class ServerBehaviour : MonoBehaviour
 		if (lobby.currentItem == ItemType.FINISH)
 			lobby.currentItem = ItemType.START;
 		else lobby.currentItem = ItemType.FINISH;
+		return false;
 	}
 
 	private void StartRound(ServerLobby lobby, int x, int y)
@@ -834,7 +839,6 @@ public class ServerBehaviour : MonoBehaviour
 		};
 
 		SendLobbyBroadcast(lobby, startRoundMessage);
-		return;
 	}
 
 	private Vector2 GetPlayerLocation(string lobbyName, PlayerFlag player)
@@ -855,11 +859,11 @@ public class ServerBehaviour : MonoBehaviour
 		}
 
 		Debug.Log("Player " + player + " was not found in grid of lobby " + lobbyName + ". Lobby will now close.");
-		DisconnectPlayersFromLobby(lobbyName);
+		DisconnectPlayersInLobby(lobbyName);
 		return new Vector2(-1, -1);
 	}
 
-	private void DisconnectPlayersFromLobby(string lobbyName)
+	private void DisconnectPlayersInLobby(string lobbyName)
 	{
 		// Disconnect all players in the lobby from the server, and close the lobby.
 		// Simplest way to resolve any error in the game.
@@ -889,7 +893,7 @@ public class ServerBehaviour : MonoBehaviour
 		SendLobbyBroadcast(lobby, endRoundMessage);
 
 		var json = await GetRequest<List<Error>>(phpBaseUrl + "score_insert.php?PHPSESSID=" + PhpConnectionID + "&winner_id=" + idList[lobby.Connections[winnerId]] + "&loser_id=" + idList[lobby.Connections[loserId]]);
-		//Debug.Log(lobbyName + (Convert.ToUInt32(json[0].result) == 1 ? ": successfully submitted score" : ": error submitting score"));
+		Debug.Log(Convert.ToUInt32(json[0].result) == 1 ? ": successfully submitted score" : ": error submitting score");
 		return;
 	}
 }

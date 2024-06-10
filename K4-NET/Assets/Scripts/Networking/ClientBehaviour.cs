@@ -112,7 +112,10 @@ public class ClientBehaviour : MonoBehaviour
 
                 if (networkMessageHandlers.ContainsKey(msgType))
                 {
-                    networkMessageHandlers[msgType].Invoke(this, header);
+					if (msgType != NetworkMessageType.PING)
+						Debug.Log($"Message successfully received on Client: {msgType}");
+
+					networkMessageHandlers[msgType].Invoke(this, header);
                 }
                 else
                 {
@@ -225,7 +228,7 @@ public class ClientBehaviour : MonoBehaviour
         Debug.Log("login success");
 
 		// Open a new scene without closing the server (discard to hide warning about await)
-		_ = LoadSceneWithoutClosingServer(SceneManager.GetActiveScene().buildIndex + 1);
+		_ = LoadSceneWithoutClosingAdditiveScenes(SceneManager.GetActiveScene().buildIndex + 1);
 	}
 
     private static void HandleLoginFail(ClientBehaviour client, MessageHeader header)
@@ -330,7 +333,7 @@ public class ClientBehaviour : MonoBehaviour
         client.ActivePlayer = activePlayer == client.Player;
 
 		// Open a new scene without closing the server (discard to hide warning about await)
-		_ = LoadSceneWithoutClosingServer(SceneManager.GetActiveScene().buildIndex + 1);
+		_ = LoadSceneWithoutClosingAdditiveScenes(SceneManager.GetActiveScene().buildIndex + 1);
 	}
 
     private static void HandleStartGameFail(ClientBehaviour client, MessageHeader header)
@@ -528,17 +531,17 @@ public class ClientBehaviour : MonoBehaviour
 	private async static void HandleEndGame(ClientBehaviour client, MessageHeader header)
 	{
         EndGameMessage message = header as EndGameMessage;
-        bool rematch = message.rematch;
 
         // Reset the game
         client.RoundStarted = false;
 
         // Go back to lobby screen
-		await LoadSceneWithoutClosingServer(SceneManager.GetActiveScene().buildIndex - 1);
+		await LoadSceneWithoutClosingAdditiveScenes(SceneManager.GetActiveScene().buildIndex - 1);
 
-        if (rematch)
+        if (message.rematch)
         {
-            JoinLobbyMessage joinLobbyMessage = new()
+            Debug.Log("rematch accepted for  lobby: " + client.LobbyName);
+			JoinLobbyMessage joinLobbyMessage = new()
             {
                 name = client.LobbyName,
             };
@@ -549,7 +552,7 @@ public class ClientBehaviour : MonoBehaviour
 	}
 	#endregion
 
-	private async static UniTask LoadSceneWithoutClosingServer(int sceneBuildIndex)
+	private async static UniTask LoadSceneWithoutClosingAdditiveScenes(int sceneBuildIndex)
 	{
         Scene sceneToUnload = SceneManager.GetActiveScene();
 		AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneBuildIndex, LoadSceneMode.Additive);

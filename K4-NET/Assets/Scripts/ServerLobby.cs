@@ -9,6 +9,11 @@ public class ServerLobby
 		Connections = connections;
 	}
 
+	~ServerLobby()
+	{
+		Connections = null;
+	}
+
 	//public string lobbyName { get; private set; }
 	public List<NetworkConnection> Connections { get; private set; }
 	public uint activePlayerId;
