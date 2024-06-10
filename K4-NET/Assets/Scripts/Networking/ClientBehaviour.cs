@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.Networking.Transport;
@@ -7,7 +6,6 @@ using Unity.Networking.Transport.Utilities;
 using TMPro;
 using UnityEngine.SceneManagement;
 using Cysharp.Threading.Tasks;
-using System.Runtime.CompilerServices;
 
 public delegate void ClientMessageHandler(ClientBehaviour client, MessageHeader header);
 
@@ -63,7 +61,7 @@ public class ClientBehaviour : MonoBehaviour
         DontDestroyOnLoad(this);
         m_Driver = NetworkDriver.Create(new ReliableUtility.Parameters { WindowSize = 32 });
         m_Pipeline = m_Driver.CreatePipeline(typeof(ReliableSequencedPipelineStage));
-        m_Connection = default(NetworkConnection);
+        m_Connection = default;
 
         var endpoint = NetworkEndPoint.LoopbackIpv4;
         endpoint.Port = 1511;
@@ -90,9 +88,8 @@ public class ClientBehaviour : MonoBehaviour
             }
             return;
         }
-        DataStreamReader stream;
-        NetworkEvent.Type cmd;
-        while ((cmd = m_Connection.PopEvent(m_Driver, out stream)) != NetworkEvent.Type.Empty)
+		NetworkEvent.Type cmd;
+		while ((cmd = m_Connection.PopEvent(m_Driver, out DataStreamReader stream)) != NetworkEvent.Type.Empty)
         {
             if (cmd == NetworkEvent.Type.Connect)
             {
@@ -126,7 +123,7 @@ public class ClientBehaviour : MonoBehaviour
             else if (cmd == NetworkEvent.Type.Disconnect)
             {
                 Debug.Log("Client got disconnected from server");
-                m_Connection = default(NetworkConnection);
+                m_Connection = default;
             }
         }
 
@@ -154,11 +151,10 @@ public class ClientBehaviour : MonoBehaviour
 
     public void SendPackedMessage(MessageHeader header)
     {
-        DataStreamWriter writer;
-        int result = m_Driver.BeginSend(m_Pipeline, m_Connection, out writer);
+		int result = m_Driver.BeginSend(m_Pipeline, m_Connection, out DataStreamWriter writer);
 
-        // non-0 is an error code
-        if (result == 0)
+		// non-0 is an error code
+		if (result == 0)
         {
             header.SerializeObject(ref writer);
         }
@@ -191,7 +187,7 @@ public class ClientBehaviour : MonoBehaviour
 	//      - Player move fail          (DONE)
 	//      - End round                 (DONE)
 	//      - Continue choice response  (DONE)
-	//      - End game                  (WIP)
+	//      - End game                  (DONE)
 
 	private static void HandlePing(ClientBehaviour client, MessageHeader header)
     {

@@ -101,19 +101,8 @@ public class ServerBehaviour : MonoBehaviour
 
 	private string PhpConnectionID;
 
-	private /*async*/ void Start()
+	private void Start()
 	{
-		//var getJson = await GetRequest<List<Id>>(databaseUrl + "server_login.php?id=1&pw=");
-		//Debug.Log(getJson[0].id);
-
-		//List<User> json = await GetRequest<List<User>>(databaseUrl + "user_register.php?PHPSESSID=" + getJson[0].id + "&un=test1&pw=test1");
-
-		//int playerId = Convert.ToInt32(json[0].id);
-		//string playerName = json[0].username;
-
-		//Debug.Log(playerId);
-		//Debug.Log(playerName);
-
 		// Create Driver
 		m_Driver = NetworkDriver.Create(new ReliableUtility.Parameters { WindowSize = 32 });
 		m_Pipeline = m_Driver.CreatePipeline(typeof(ReliableSequencedPipelineStage));
@@ -162,13 +151,12 @@ public class ServerBehaviour : MonoBehaviour
 
 		// Accept new connections
 		NetworkConnection c;
-		while ((c = m_Driver.Accept()) != default(NetworkConnection))
+		while ((c = m_Driver.Accept()) != default)
 		{
 			m_Connections.Add(c);
 			Debug.Log("Accepted a connection");
 		}
 
-		DataStreamReader stream;
 		for (int i = 0; i < m_Connections.Length; i++)
 		{
 			if (!m_Connections[i].IsCreated)
@@ -176,7 +164,7 @@ public class ServerBehaviour : MonoBehaviour
 
 			// Loop through available events
 			NetworkEvent.Type cmd;
-			while ((cmd = m_Driver.PopEventForConnection(m_Connections[i], out stream)) != NetworkEvent.Type.Empty)
+			while ((cmd = m_Driver.PopEventForConnection(m_Connections[i], out DataStreamReader stream)) != NetworkEvent.Type.Empty)
 			{
 				if (cmd == NetworkEvent.Type.Data)
 				{
@@ -220,8 +208,6 @@ public class ServerBehaviour : MonoBehaviour
 					if (pongDict[m_Connections[i]].status == 0)
 					{
 						// Remove from all the dicts, save name / id for msg
-
-						// FIXME: for some reason, sometimes this isn't in the list?
 						if (idList.ContainsKey(m_Connections[i]))
 						{
 							nameList.Remove(idList[m_Connections[i]]);
@@ -278,8 +264,7 @@ public class ServerBehaviour : MonoBehaviour
 
 	public void SendUnicast(NetworkConnection connection, MessageHeader header, bool reliable = true)
 	{
-		DataStreamWriter writer;
-		int result = m_Driver.BeginSend(reliable ? m_Pipeline : NetworkPipeline.Null, connection, out writer);
+		int result = m_Driver.BeginSend(reliable ? m_Pipeline : NetworkPipeline.Null, connection, out DataStreamWriter writer);
 		if (result == 0)
 		{
 			header.SerializeObject(ref writer);
@@ -289,10 +274,9 @@ public class ServerBehaviour : MonoBehaviour
 
 	public void SendLobbyBroadcast(ServerLobby lobby, MessageHeader header, bool reliable = true)
 	{
-		DataStreamWriter writer;
 		foreach (NetworkConnection connection in lobby.Connections)
 		{
-			int result = m_Driver.BeginSend(reliable ? m_Pipeline : NetworkPipeline.Null, connection, out writer);
+			int result = m_Driver.BeginSend(reliable ? m_Pipeline : NetworkPipeline.Null, connection, out DataStreamWriter writer);
 			if (result == 0)
 			{
 				header.SerializeObject(ref writer);
@@ -308,8 +292,7 @@ public class ServerBehaviour : MonoBehaviour
 			if (!m_Connections[i].IsCreated || m_Connections[i] == toExclude)
 				continue;
 
-			DataStreamWriter writer;
-			int result = m_Driver.BeginSend(reliable ? m_Pipeline : NetworkPipeline.Null, m_Connections[i], out writer);
+			int result = m_Driver.BeginSend(reliable ? m_Pipeline : NetworkPipeline.Null, m_Connections[i], out DataStreamWriter writer);
 			if (result == 0)
 			{
 				header.SerializeObject(ref writer);
@@ -817,6 +800,7 @@ public class ServerBehaviour : MonoBehaviour
 			}
 		}
 	}
+	
 	private bool StartFinishGotPlaced(ServerLobby lobby)
 	{
 		var lobbyItems = Flatten(lobby.ItemGrid);
