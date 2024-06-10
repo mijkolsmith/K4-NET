@@ -246,7 +246,8 @@ public class ClientBehaviour : MonoBehaviour
 
         if (client.objectReferences == null) client.objectReferences = FindObjectOfType<SceneObjectReferences>();
 
-		client.LobbyName = client.objectReferences.joinLobby.GetComponent<ClientLobby>().LobbyName;
+        if (client.LobbyName == "")
+		    client.LobbyName = client.objectReferences.joinLobby.GetComponent<ClientLobby>().LobbyName;
 
 		client.objectReferences.joinLobby.SetActive(false);
         client.objectReferences.currentLobby.SetActive(true);
@@ -271,7 +272,8 @@ public class ClientBehaviour : MonoBehaviour
 
         if (client.objectReferences == null) client.objectReferences = FindObjectOfType<SceneObjectReferences>();
 
-		client.LobbyName = client.objectReferences.joinLobby.GetComponent<ClientLobby>().LobbyName;
+        if (client.LobbyName == "")
+		    client.LobbyName = client.objectReferences.joinLobby.GetComponent<ClientLobby>().LobbyName;
 
         client.objectReferences.joinLobby.SetActive(false);
         client.objectReferences.currentLobby.SetActive(true);
@@ -550,7 +552,7 @@ public class ClientBehaviour : MonoBehaviour
 
             client.SendPackedMessage(joinLobbyMessage);
         }
-        else client.LobbyName = null;
+        else client.LobbyName = "";
 	}
 	#endregion
 
