@@ -21,6 +21,7 @@ public class ServerLobby
 	public ItemType currentItem;
 	public ItemType[,] ItemGrid { get; private set; }
 	public uint[] playerHealth { get; private set; }
+	public bool[] playerHitMine { get; private set; }
 	public PlayerFlag[,] playerGrid { get; private set; }
 	public bool[] rematch { get; private set; }
 
@@ -47,6 +48,11 @@ public class ServerLobby
 	public void InitializePlayerHealth()
 	{
 		playerHealth = new uint[ServerBehaviour.lobbySize] { GameData.defaultPlayerHealth, GameData.defaultPlayerHealth };
+	}
+
+	public void InitializePlayerHitMine()
+	{
+		playerHitMine = new bool[ServerBehaviour.lobbySize];
 	}
 
 	public void InitializeRematch()

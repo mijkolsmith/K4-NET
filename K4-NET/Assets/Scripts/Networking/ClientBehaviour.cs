@@ -45,7 +45,7 @@ public class ClientBehaviour : MonoBehaviour
 
 	public string username;
 	public string otherUsername;
-	public string LobbyName { get; private set; }
+	public string LobbyName { get; private set; } = "";
 	public ItemType CurrentItem { get; private set; } = ItemType.NONE;
 	public uint Player { get; private set; }
 	public PlayerFlag PlayerFlag { get; private set; }
@@ -248,7 +248,6 @@ public class ClientBehaviour : MonoBehaviour
 		client.objectReferences.joinLobby.SetActive(false);
 		client.objectReferences.currentLobby.SetActive(true);
 		ClientCurrentLobby currentLobby = client.objectReferences.currentLobby.GetComponent<ClientCurrentLobby>();
-		currentLobby.lobbyNameObject.GetComponent<TextMeshProUGUI>().text = client.LobbyName;
 		currentLobby.client = client;
 		currentLobby.player1Name.GetComponent<TextMeshProUGUI>().text = client.username;
 		currentLobby.startLobbyObject.SetActive(true);
@@ -274,7 +273,6 @@ public class ClientBehaviour : MonoBehaviour
 		client.objectReferences.joinLobby.SetActive(false);
 		client.objectReferences.currentLobby.SetActive(true);
 		ClientCurrentLobby currentLobby = client.objectReferences.currentLobby.GetComponent<ClientCurrentLobby>();
-		currentLobby.lobbyNameObject.GetComponent<TextMeshProUGUI>().text = client.LobbyName;
 		currentLobby.client = client;
 		currentLobby.player1Name.GetComponent<TextMeshProUGUI>().text = name;
 		currentLobby.player2Name.GetComponent<TextMeshProUGUI>().text = client.username;
@@ -447,7 +445,8 @@ public class ClientBehaviour : MonoBehaviour
 		uint activePlayer = Convert.ToUInt32(message.activePlayer);
 		int x = Convert.ToInt32(message.x);
 		int y = Convert.ToInt32(message.y);
-		uint health = Convert.ToUInt32(message.health);
+		uint activeHealth = Convert.ToUInt32(message.activeHealth);
+		uint otherHealth = Convert.ToUInt32(message.otherHealth);
 		uint playerToMove = Convert.ToUInt32(message.playerToMove);
 
 		client.ActivePlayer = activePlayer == client.Player;
@@ -457,19 +456,19 @@ public class ClientBehaviour : MonoBehaviour
 		client.objectReferences.inputManager.MovePlayerToSelectedGridCell((PlayerFlag)playerToMove);
 
 		// Check if the previous player hit a mine
-		if (client.ActivePlayer && client.objectReferences.gameData.OtherLives != health)
+		if (client.ActivePlayer && client.objectReferences.gameData.Lives != activeHealth)
 		{
 			client.objectReferences.gameData.DecreaseOtherLives();
-			client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Other player hit a mine! Your turn.";
+			client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Other player hit a mine! You get to go twice.";
 
 			// Remove the mine visual
 			client.objectReferences.inputManager.RemoveItemAtSelectedGridCell();
 			return;
 		}
-		if (!client.ActivePlayer && client.objectReferences.gameData.Lives != health)
+		if (!client.ActivePlayer && client.objectReferences.gameData.OtherLives != otherHealth)
 		{
 			client.objectReferences.gameData.DecreaseLives();
-			client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "You hit a mine!";
+			client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "You hit a mine! Skip a turn.";
 
 			// Remove the mine visual
 			client.objectReferences.inputManager.RemoveItemAtSelectedGridCell();

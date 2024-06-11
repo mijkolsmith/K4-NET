@@ -642,34 +642,44 @@ public class ServerBehaviour : MonoBehaviour
 		// Bitwise add player to new location in lobbyPlayerLocations
 		lobby.playerGrid[x, y] |= player;
 
+		// otherPlayerId is the id of the player that is not the active player
 		int otherPlayerId = (lobby.activePlayerId == 0) ? 1 : 0;
 
 		// Check if player hit mine
 		if (lobby.ItemGrid[x, y] == ItemType.MINE)
 		{
 			// Decrease player health, remove mine
-			lobby.playerHealth[(int)player - 1] -= 1;
+			lobby.playerHealth[lobby.activePlayerId] -= 1;
 			lobby.ItemGrid[x, y] = ItemType.NONE;
 
 			// Check if player is dead
-			if (lobby.playerHealth[(int)player - 1] == 0)
+			if (lobby.playerHealth[lobby.activePlayerId] == 0)
 			{
 				// OTHER player wins (discard to hide warning about await)
 				_ = serv.EndRound(lobby, otherPlayerId, (int)lobby.activePlayerId);
 				return;
 			}
 
-			// Player hit mine and should skip a turn, same player is the next player
-			otherPlayerId = (int)lobby.activePlayerId;
+			// Player has to skip a turn
+			lobby.playerHitMine[lobby.activePlayerId] = true;
+		}
+
+		// Next active player is the same player if the other player hit a mine last turn
+		int nextActivePlayerId = otherPlayerId;
+		if (lobby.playerHitMine[otherPlayerId])
+		{
+			lobby.playerHitMine[otherPlayerId] = false;
+			nextActivePlayerId = (int)lobby.activePlayerId;
 		}
 
 		// Inform players of successful move attempt
 		PlayerMoveSuccessMessage playerMoveSuccessMessage = new()
 		{
-			activePlayer = (uint)otherPlayerId,
+			activePlayer = (uint)nextActivePlayerId,
 			x = (uint)x,
 			y = (uint)y,
-			health = lobby.playerHealth[(int)player - 1],
+			activeHealth = lobby.playerHealth[nextActivePlayerId],
+			otherHealth = lobby.playerHealth[nextActivePlayerId == 0 ? 1 : 0],
 			playerToMove = (uint)player
 		};
 
@@ -683,7 +693,11 @@ public class ServerBehaviour : MonoBehaviour
 			return;
 		}
 
-		lobby.activePlayerId = (uint)otherPlayerId;
+		// Next player becomes active player (unless they hit a mine last turn)
+		if (!lobby.playerHitMine[otherPlayerId])
+		{
+			lobby.activePlayerId = (uint)otherPlayerId;
+		}
 	}
 
 	static void HandleContinueChoice(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
@@ -836,6 +850,9 @@ public class ServerBehaviour : MonoBehaviour
 
 		// Initialize player health
 		lobby.InitializePlayerHealth();
+
+		// Initialize hit mine bools for turn skipping
+		lobby.InitializePlayerHitMine();
 
 		// Communicate the location of the start to both players so they start at the right spot
 		StartRoundMessage startRoundMessage = new()

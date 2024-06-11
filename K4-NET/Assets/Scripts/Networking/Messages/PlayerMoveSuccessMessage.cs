@@ -14,7 +14,8 @@ public class PlayerMoveSuccessMessage : MessageHeader
 	public uint activePlayer;
 	public uint x;
 	public uint y;
-	public uint health;
+	public uint activeHealth;
+	public uint otherHealth;
 	public uint playerToMove;
 
 	public override void SerializeObject(ref DataStreamWriter writer)
@@ -25,7 +26,8 @@ public class PlayerMoveSuccessMessage : MessageHeader
 		writer.WriteUInt(activePlayer);
 		writer.WriteUInt(x);
 		writer.WriteUInt(y);
-		writer.WriteUInt(health);
+		writer.WriteUInt(activeHealth);
+		writer.WriteUInt(otherHealth);
 		writer.WriteUInt(playerToMove);
 	}
 
@@ -37,7 +39,8 @@ public class PlayerMoveSuccessMessage : MessageHeader
 		activePlayer = reader.ReadUInt();
 		x = reader.ReadUInt();
 		y = reader.ReadUInt();
-		health = reader.ReadUInt();
+		activeHealth = reader.ReadUInt();
+		otherHealth = reader.ReadUInt();
 		playerToMove = reader.ReadUInt();
 	}
 }

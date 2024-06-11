@@ -1109,11 +1109,11 @@ MonoBehaviour:
   errorMessage: {fileID: 1408017298}
   joinLobby: {fileID: 1086823188}
   currentLobby: {fileID: 743421321}
+  endGame: {fileID: 0}
   cursor: {fileID: 0}
   inputManager: {fileID: 0}
-  lobbyName: 
-  currentItem: 0
   gamePrefabs: {fileID: 11400000, guid: 5b2ebba56c5af4c4798437885d66d8d5, type: 2}
+  gameData: {fileID: 0}
 --- !u!4 &450243065
 Transform:
   m_ObjectHideFlags: 0
@@ -1548,7 +1548,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1ad2017a058803047a7ed0d0a3db033d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  lobbyName: 
   client: {fileID: 0}
   objectReferences: {fileID: 450243064}
 --- !u!1 &1408017298
