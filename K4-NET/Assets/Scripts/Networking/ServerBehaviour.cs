@@ -64,7 +64,7 @@ public class ServerBehaviour : MonoBehaviour
 	public const int lobbySize = 2; // default 2
 	public const int gridsizeX = 8; // default 8
 	public const int gridsizeY = 5; // default 5
-	private const int itemLimit = 5; // default 20
+	private const int itemLimit = 15; // default 15
 
 	public static ImmutableArray<ItemType> startingItems = ImmutableArray.Create
 	(

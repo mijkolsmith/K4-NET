@@ -52,7 +52,7 @@ public class InputManager : MonoBehaviour
 						client.SendPackedMessage(placeObstacleMessage);
 					}
 				}
-				else objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "It's not your turn!";
+				else objectReferences.ErrorMessage.GetComponent<TextMeshProUGUI>().text = "It's not your turn!";
 			}
 		}
 	}
@@ -66,7 +66,7 @@ public class InputManager : MonoBehaviour
 		if (playerFlagToMove == PlayerFlag.BOTH)
 		{
 			// Spawn players at selected grid cell
-			selectedGridCell.AddPlayerFlag(playerFlagToMove, objectReferences.gamePrefabs.playerVisuals);
+			selectedGridCell.AddPlayerFlag(playerFlagToMove, objectReferences.GamePrefabs.playerVisuals);
 			gameGrid.playerLocations[0] = selectedGridCell;
 			gameGrid.playerLocations[1] = selectedGridCell;
 			return;
@@ -77,11 +77,11 @@ public class InputManager : MonoBehaviour
 		{
 			gameGrid.playerLocations[0].RemovePlayerFlag(
 				playerFlagToMove, 
-				objectReferences.gamePrefabs.playerVisuals);
+				objectReferences.GamePrefabs.playerVisuals);
 
 			selectedGridCell.AddPlayerFlag(
 				playerFlagToMove, 
-				objectReferences.gamePrefabs.playerVisuals);
+				objectReferences.GamePrefabs.playerVisuals);
 
 			gameGrid.playerLocations[0] = selectedGridCell;
 		}
@@ -89,11 +89,11 @@ public class InputManager : MonoBehaviour
 		{
 			gameGrid.playerLocations[1].RemovePlayerFlag(
 				playerFlagToMove, 
-				objectReferences.gamePrefabs.playerVisuals);
+				objectReferences.GamePrefabs.playerVisuals);
 
 			selectedGridCell.AddPlayerFlag(
 				playerFlagToMove,
-				objectReferences.gamePrefabs.playerVisuals);
+				objectReferences.GamePrefabs.playerVisuals);
 
 			gameGrid.playerLocations[1] = selectedGridCell;
 		}
@@ -111,7 +111,7 @@ public class InputManager : MonoBehaviour
 			RemoveItemAtSelectedGridCell();
 
 		// Place the item at the selected grid cell
-		selectedGridCell.SetItem(item, objectReferences.gamePrefabs.itemVisuals[item].itemPrefab);
+		selectedGridCell.SetItem(item, objectReferences.GamePrefabs.itemVisuals[item].itemPrefab);
 	}
 	
 	// Selects the grid cell at the given position

@@ -44,7 +44,6 @@ public class ClientBehaviour : MonoBehaviour
 	public SceneObjectReferences objectReferences;
 
 	public string username;
-	public string otherUsername;
 	public string LobbyName { get; private set; } = "";
 	public ItemType CurrentItem { get; private set; } = ItemType.NONE;
 	public uint Player { get; private set; }
@@ -84,7 +83,7 @@ public class ClientBehaviour : MonoBehaviour
 			if (!Done)
 			{
 				Debug.Log("Something went wrong during connect");
-				objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Lost connection to server. Reconnecting...";
+				objectReferences.ErrorMessage.GetComponent<TextMeshProUGUI>().text = "Lost connection to server. Reconnecting...";
 			}
 			return;
 		}
@@ -142,10 +141,10 @@ public class ClientBehaviour : MonoBehaviour
 			objectReferencesTimer = 0f;
 
 			// Start turn
-			objectReferences.cursor.SetSprite(objectReferences.gamePrefabs.itemVisuals[CurrentItem].cursorSprite);
-			objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = 
+			objectReferences.Cursor.SetSprite(objectReferences.GamePrefabs.itemVisuals[CurrentItem].cursorSprite);
+			objectReferences.ErrorMessage.GetComponent<TextMeshProUGUI>().text = 
 				ActivePlayer ? "Your turn!" : "Waiting for other player...";
-			objectReferences.inputManager.checkInput = true;
+			objectReferences.InputManager.checkInput = true;
 		}
 	}
 
@@ -199,25 +198,25 @@ public class ClientBehaviour : MonoBehaviour
 	private static void HandleServerHandshakeResponse(ClientBehaviour client, MessageHeader header)
 	{
 		Debug.Log("Successfully Handshaked");
-		if (client.objectReferences.loginRegister != null)
-			client.objectReferences.loginRegister.SetActive(true);
+		if (client.objectReferences.LoginRegister != null)
+			client.objectReferences.LoginRegister.SetActive(true);
 
-		if (client.objectReferences.errorMessage != null)
-			client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Please register or login";
+		if (client.objectReferences.ErrorMessage != null)
+			client.objectReferences.ErrorMessage.GetComponent<TextMeshProUGUI>().text = "Please register or login";
 	}
 
 	private static void HandleRegisterSuccess(ClientBehaviour client, MessageHeader header)
 	{
 		Debug.Log("register success");
-		if (client.objectReferences.errorMessage != null)
-			client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Register success, please login";
+		if (client.objectReferences.ErrorMessage != null)
+			client.objectReferences.ErrorMessage.GetComponent<TextMeshProUGUI>().text = "Register success, please login";
 	}
 
 	private static void HandleRegisterFail(ClientBehaviour client, MessageHeader header)
 	{
 		Debug.Log("register fail");
-		if (client.objectReferences.errorMessage != null)
-			client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Register fail, please try again";
+		if (client.objectReferences.ErrorMessage != null)
+			client.objectReferences.ErrorMessage.GetComponent<TextMeshProUGUI>().text = "Register fail, please try again";
 	}
 
 	private static void HandleLoginSuccess(ClientBehaviour client, MessageHeader header)
@@ -232,8 +231,8 @@ public class ClientBehaviour : MonoBehaviour
 	{
 		Debug.Log("login fail");
 
-		if (client.objectReferences.errorMessage != null)
-			client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Login fail, please try again";
+		if (client.objectReferences.ErrorMessage != null)
+			client.objectReferences.ErrorMessage.GetComponent<TextMeshProUGUI>().text = "Login fail, please try again";
 	}
 
 	private static void HandleJoinLobbyNew(ClientBehaviour client, MessageHeader header)
@@ -243,17 +242,17 @@ public class ClientBehaviour : MonoBehaviour
 		if (client.objectReferences == null) client.objectReferences = FindObjectOfType<SceneObjectReferences>();
 
 		if (client.LobbyName == "")
-			client.LobbyName = client.objectReferences.joinLobby.GetComponent<ClientLobby>().LobbyName;
+			client.LobbyName = client.objectReferences.JoinLobby.GetComponent<ClientLobby>().LobbyName;
 
-		client.objectReferences.joinLobby.SetActive(false);
-		client.objectReferences.currentLobby.SetActive(true);
-		ClientCurrentLobby currentLobby = client.objectReferences.currentLobby.GetComponent<ClientCurrentLobby>();
+		client.objectReferences.JoinLobby.SetActive(false);
+		client.objectReferences.CurrentLobby.SetActive(true);
+		ClientCurrentLobby currentLobby = client.objectReferences.CurrentLobby.GetComponent<ClientCurrentLobby>();
 		currentLobby.client = client;
 		currentLobby.player1Name.GetComponent<TextMeshProUGUI>().text = client.username;
 		currentLobby.startLobbyObject.SetActive(true);
 
 		// Reset error message
-		client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "";
+		client.objectReferences.ErrorMessage.GetComponent<TextMeshProUGUI>().text = "";
 	}
 
 	private static void HandleJoinLobbyExisting(ClientBehaviour client, MessageHeader header)
@@ -268,11 +267,11 @@ public class ClientBehaviour : MonoBehaviour
 		if (client.objectReferences == null) client.objectReferences = FindObjectOfType<SceneObjectReferences>();
 
 		if (client.LobbyName == "")
-			client.LobbyName = client.objectReferences.joinLobby.GetComponent<ClientLobby>().LobbyName;
+			client.LobbyName = client.objectReferences.JoinLobby.GetComponent<ClientLobby>().LobbyName;
 
-		client.objectReferences.joinLobby.SetActive(false);
-		client.objectReferences.currentLobby.SetActive(true);
-		ClientCurrentLobby currentLobby = client.objectReferences.currentLobby.GetComponent<ClientCurrentLobby>();
+		client.objectReferences.JoinLobby.SetActive(false);
+		client.objectReferences.CurrentLobby.SetActive(true);
+		ClientCurrentLobby currentLobby = client.objectReferences.CurrentLobby.GetComponent<ClientCurrentLobby>();
 		currentLobby.client = client;
 		currentLobby.player1Name.GetComponent<TextMeshProUGUI>().text = name;
 		currentLobby.player2Name.GetComponent<TextMeshProUGUI>().text = client.username;
@@ -281,14 +280,14 @@ public class ClientBehaviour : MonoBehaviour
 		currentLobby.startLobbyObject.SetActive(false);
 		
 		// Reset error message
-		client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "";
+		client.objectReferences.ErrorMessage.GetComponent<TextMeshProUGUI>().text = "";
 	}
 
 	private static void HandleJoinLobbyFail(ClientBehaviour client, MessageHeader header)
 	{
 		if (client.objectReferences == null) client.objectReferences = FindObjectOfType<SceneObjectReferences>();
 
-		client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Lobby is already full";
+		client.objectReferences.ErrorMessage.GetComponent<TextMeshProUGUI>().text = "Lobby is already full";
 
 		client.LeaveLobby();
 	}
@@ -302,9 +301,9 @@ public class ClientBehaviour : MonoBehaviour
 
 		if (client.objectReferences == null) client.objectReferences = FindObjectOfType<SceneObjectReferences>();
 
-		client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "";
+		client.objectReferences.ErrorMessage.GetComponent<TextMeshProUGUI>().text = "";
 
-		ClientCurrentLobby currentLobby = client.objectReferences.currentLobby.GetComponent<ClientCurrentLobby>();
+		ClientCurrentLobby currentLobby = client.objectReferences.CurrentLobby.GetComponent<ClientCurrentLobby>();
 		currentLobby.player1Name.GetComponent<TextMeshProUGUI>().text = client.username;
 		currentLobby.player2Name.GetComponent<TextMeshProUGUI>().text = username;
 		currentLobby.player1Score.GetComponent<TextMeshProUGUI>().text = score1.ToString();
@@ -335,7 +334,7 @@ public class ClientBehaviour : MonoBehaviour
 
 	private static void HandleStartGameFail(ClientBehaviour client, MessageHeader header)
 	{
-		client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "ERROR: Game failed to start. Lobby didn't have 2 players.";
+		client.objectReferences.ErrorMessage.GetComponent<TextMeshProUGUI>().text = "ERROR: Game failed to start. Lobby didn't have 2 players.";
 	}
 	
 	private static void HandlePlaceObstacleSuccess(ClientBehaviour client, MessageHeader header)
@@ -348,45 +347,45 @@ public class ClientBehaviour : MonoBehaviour
 		// Handle minesweeper and wrecking ball
 		if (removal)
 		{
-			client.objectReferences.inputManager.SelectGridCell(x, y);
-			client.objectReferences.inputManager.RemoveItemAtSelectedGridCell();
+			client.objectReferences.InputManager.SelectGridCell(x, y);
+			client.objectReferences.InputManager.RemoveItemAtSelectedGridCell();
 			if (client.CurrentItem == ItemType.MINESWEEPER)
 			{
-				client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = 
+				client.objectReferences.ErrorMessage.GetComponent<TextMeshProUGUI>().text = 
 					"Mine removed! Waiting for other player...";
 			}
 			else if (client.CurrentItem == ItemType.WRECKINGBALL)
 			{
-				client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text =
+				client.objectReferences.ErrorMessage.GetComponent<TextMeshProUGUI>().text =
 					"Wall removed! Waiting for other player...";
 			}
 			return;
 		}
 		else if (client.CurrentItem == ItemType.MINESWEEPER)
 		{
-			client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = 
+			client.objectReferences.ErrorMessage.GetComponent<TextMeshProUGUI>().text = 
 				"You used a minesweeper but there was no mine here! Waiting for other player...";
 			return;
 		}
 		else if (client.CurrentItem == ItemType.WRECKINGBALL)
 		{
-			client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text =
+			client.objectReferences.ErrorMessage.GetComponent<TextMeshProUGUI>().text =
 				"You used a wrecking ball but there was no wall here! Waiting for other player...";
 			return;
 		}
 		
 		// Handle placement of mines and walls, and when round should start placement of start and finish
-		client.objectReferences.inputManager.SelectGridCell(x, y);
-		client.objectReferences.inputManager.PlaceItemAtSelectedGridCell(client.CurrentItem);
-		client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = 
+		client.objectReferences.InputManager.SelectGridCell(x, y);
+		client.objectReferences.InputManager.PlaceItemAtSelectedGridCell(client.CurrentItem);
+		client.objectReferences.ErrorMessage.GetComponent<TextMeshProUGUI>().text = 
 			"Object placed! Waiting for other player...";
 	}
 	
 	private static void HandlePlaceObstacleFail(ClientBehaviour client, MessageHeader header)
 	{
-		client.objectReferences.inputManager.PlaceItemAtSelectedGridCell(ItemType.FLAG);
+		client.objectReferences.InputManager.PlaceItemAtSelectedGridCell(ItemType.FLAG);
 
-		client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = client.CurrentItem switch
+		client.objectReferences.ErrorMessage.GetComponent<TextMeshProUGUI>().text = client.CurrentItem switch
 		{
 			ItemType.MINE or ItemType.WALL or ItemType.START or ItemType.FINISH => "There's already something here... Try somewhere else!",
 			ItemType.MINESWEEPER => "There is no mine here to remove, but something else... Try somewhere else!",
@@ -404,7 +403,7 @@ public class ClientBehaviour : MonoBehaviour
 		client.ActivePlayer = activePlayer == client.Player;
 
 		// Change the cursor so both players know what item is being placed
-		client.objectReferences.cursor.SetSprite(client.objectReferences.gamePrefabs.itemVisuals[itemType].cursorSprite);
+		client.objectReferences.Cursor.SetSprite(client.objectReferences.GamePrefabs.itemVisuals[itemType].cursorSprite);
 
 		// Change the currentItem specifically so the start and finish can be placed on both sides
 		client.CurrentItem = itemType;
@@ -412,7 +411,7 @@ public class ClientBehaviour : MonoBehaviour
 		// Let the active player know it's their turn
 		if (client.ActivePlayer)
 		{
-			client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Your turn!";
+			client.objectReferences.ErrorMessage.GetComponent<TextMeshProUGUI>().text = "Your turn!";
 		}
 	}
 	
@@ -429,7 +428,7 @@ public class ClientBehaviour : MonoBehaviour
 		client.PlayerFlag = client.Player == 0 ? PlayerFlag.PLAYER1 : PlayerFlag.PLAYER2;
 
 		// Inform the players that the round has started and inform the active player it's their turn
-		client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = 
+		client.objectReferences.ErrorMessage.GetComponent<TextMeshProUGUI>().text = 
 			"Round started!" + (client.ActivePlayer ? " Your turn to move!" : " Waiting for other player...");
 
 		// Start round with start coordinates
@@ -448,35 +447,35 @@ public class ClientBehaviour : MonoBehaviour
 		client.ActivePlayer = activePlayer == client.Player;
 
 		// Move the player
-		client.objectReferences.inputManager.SelectGridCell(x, y);
-		client.objectReferences.inputManager.MovePlayerToSelectedGridCell((PlayerFlag)playerToMove);
+		client.objectReferences.InputManager.SelectGridCell(x, y);
+		client.objectReferences.InputManager.MovePlayerToSelectedGridCell((PlayerFlag)playerToMove);
 
 		// Check if the previous player hit a mine
 		if (client.ActivePlayer)
 		{
 			// If we are the active player, check the other lives
-			if (client.objectReferences.gameData.OtherLives != otherHealth)
+			if (client.objectReferences.GameData.OtherLives != otherHealth)
 			{
-				client.objectReferences.gameData.DecreaseOtherLives();
-				client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Other player hit a mine! You get to go twice.";
+				client.objectReferences.GameData.DecreaseOtherLives();
+				client.objectReferences.ErrorMessage.GetComponent<TextMeshProUGUI>().text = "Other player hit a mine! You get to go twice.";
 
 				// Remove the mine visual
-				client.objectReferences.inputManager.RemoveItemAtSelectedGridCell();
+				client.objectReferences.InputManager.RemoveItemAtSelectedGridCell();
 			}
-			else client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Your turn to move!";
+			else client.objectReferences.ErrorMessage.GetComponent<TextMeshProUGUI>().text = "Your turn to move!";
 		}
 		else
 		{
 			// If we're not the active player, check our lives
-			if (client.objectReferences.gameData.Lives != otherHealth)
+			if (client.objectReferences.GameData.Lives != otherHealth)
 			{
-				client.objectReferences.gameData.DecreaseLives();
-				client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "You hit a mine! Skip a turn.";
+				client.objectReferences.GameData.DecreaseLives();
+				client.objectReferences.ErrorMessage.GetComponent<TextMeshProUGUI>().text = "You hit a mine! Skip a turn.";
 
 				// Remove the mine visual
-				client.objectReferences.inputManager.RemoveItemAtSelectedGridCell();
+				client.objectReferences.InputManager.RemoveItemAtSelectedGridCell();
 			}
-			else client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Waiting for other player...";
+			else client.objectReferences.ErrorMessage.GetComponent<TextMeshProUGUI>().text = "Waiting for other player...";
 		}
 	}
 	
@@ -487,7 +486,7 @@ public class ClientBehaviour : MonoBehaviour
 		int y = Convert.ToInt32(message.y);
 		MoveFailReason moveFailReason = (MoveFailReason)Convert.ToUInt32(message.moveFailReason);
 
-		client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = moveFailReason switch
+		client.objectReferences.ErrorMessage.GetComponent<TextMeshProUGUI>().text = moveFailReason switch
 		{
 			MoveFailReason.NOT_ACTIVE => "It's not your turn to move!",
 			MoveFailReason.WALL => "There's a wall in the way!",
@@ -498,8 +497,8 @@ public class ClientBehaviour : MonoBehaviour
 		// Place a wall visual if the player tried to move into one
 		if (moveFailReason == MoveFailReason.WALL)
 		{
-			client.objectReferences.inputManager.SelectGridCell(x, y);
-			client.objectReferences.inputManager.PlaceItemAtSelectedGridCell(ItemType.WALL);
+			client.objectReferences.InputManager.SelectGridCell(x, y);
+			client.objectReferences.InputManager.PlaceItemAtSelectedGridCell(ItemType.WALL);
 		}
 	}
 	
@@ -509,20 +508,20 @@ public class ClientBehaviour : MonoBehaviour
 		uint winnerId = Convert.ToUInt32(message.winnerId);
 
 		// Display regular mouse cursor and stop checking for input on the grid
-		client.objectReferences.cursor.SetSprite(null);
+		client.objectReferences.Cursor.SetSprite(null);
 		client.CurrentItem = ItemType.NONE;
-		client.objectReferences.inputManager.checkInput = false;
+		client.objectReferences.InputManager.checkInput = false;
 
-		client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = client.Player == winnerId ? "You won!" : "You lost.";
+		client.objectReferences.ErrorMessage.GetComponent<TextMeshProUGUI>().text = client.Player == winnerId ? "You won!" : "You lost.";
 
 		// Enable rematch/leave buttons
-		client.objectReferences.endGame.SetActive(true);
+		client.objectReferences.EndGame.SetActive(true);
 	}
 	
 	private static void HandleContinueChoiceResponse(ClientBehaviour client, MessageHeader header)
 	{
 		// Update visual
-		client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Other player wants a rematch!";
+		client.objectReferences.ErrorMessage.GetComponent<TextMeshProUGUI>().text = "Other player wants a rematch!";
 	}
 
 	private async static void HandleEndGame(ClientBehaviour client, MessageHeader header)
@@ -565,9 +564,9 @@ public class ClientBehaviour : MonoBehaviour
 		if (objectReferences == null) objectReferences = FindObjectOfType<SceneObjectReferences>();
 
 		// Reset the lobby visuals
-		objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "";
+		objectReferences.ErrorMessage.GetComponent<TextMeshProUGUI>().text = "";
 
-		if (objectReferences.currentLobby.TryGetComponent(out ClientCurrentLobby currentLobby))
+		if (objectReferences.CurrentLobby.TryGetComponent(out ClientCurrentLobby currentLobby))
 		{
 			currentLobby.player1Name.GetComponent<TextMeshProUGUI>().text = "";
 			currentLobby.player1Score.GetComponent<TextMeshProUGUI>().text = "";
@@ -576,8 +575,8 @@ public class ClientBehaviour : MonoBehaviour
 			currentLobby.startLobbyObject.SetActive(false);
 		}
 
-		objectReferences.currentLobby.SetActive(false);
-		objectReferences.joinLobby.SetActive(true);
+		objectReferences.CurrentLobby.SetActive(false);
+		objectReferences.JoinLobby.SetActive(true);
 	}
 
 	private void StartRound(int x, int y)
@@ -585,13 +584,13 @@ public class ClientBehaviour : MonoBehaviour
 		RoundStarted = true;
 
 		// Reset the cursor
-		objectReferences.cursor.SetSprite(null);
+		objectReferences.Cursor.SetSprite(null);
 
 		// Initialize game data
-		objectReferences.gameData.StartRound();
+		objectReferences.GameData.StartRound();
 
 		// Place players at start
-		objectReferences.inputManager.SelectGridCell(x, y);
-		objectReferences.inputManager.MovePlayerToSelectedGridCell(PlayerFlag.BOTH);
+		objectReferences.InputManager.SelectGridCell(x, y);
+		objectReferences.InputManager.MovePlayerToSelectedGridCell(PlayerFlag.BOTH);
 	}
 }

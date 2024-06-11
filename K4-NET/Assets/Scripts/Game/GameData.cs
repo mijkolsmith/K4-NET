@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class GameData : MonoBehaviour
 {
-	public ClientBehaviour client;
+	private ClientBehaviour client;
 	[SerializeField] private GameObject livesObject;
 	[SerializeField] private GameObject otherLivesObject;
 	public const uint defaultPlayerHealth = 3;
