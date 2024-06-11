@@ -647,7 +647,6 @@ public class ServerBehaviour : MonoBehaviour
 		// Check if player hit mine
 		if (lobby.ItemGrid[x, y] == ItemType.MINE)
 		{
-			// TODO: skip player turn
 			// Decrease player health, remove mine
 			lobby.playerHealth[(int)player - 1] -= 1;
 			lobby.ItemGrid[x, y] = ItemType.NONE;
@@ -659,6 +658,9 @@ public class ServerBehaviour : MonoBehaviour
 				_ = serv.EndRound(lobby, otherPlayerId, (int)lobby.activePlayerId);
 				return;
 			}
+
+			// Player hit mine and should skip a turn, same player is the next player
+			otherPlayerId = (int)lobby.activePlayerId;
 		}
 
 		// Inform players of successful move attempt
