@@ -429,11 +429,8 @@ public class ClientBehaviour : MonoBehaviour
 		client.PlayerFlag = client.Player == 0 ? PlayerFlag.PLAYER1 : PlayerFlag.PLAYER2;
 
 		// Inform the players that the round has started and inform the active player it's their turn
-		client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Round started!";
-		if (client.ActivePlayer)
-		{
-			client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text += " Your turn to move!";
-		}
+		client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = 
+			"Round started!" + (client.ActivePlayer ? " Your turn to move!" : " Waiting for other player...");
 
 		// Start round with start coordinates
 		client.StartRound(x, y);
@@ -445,42 +442,42 @@ public class ClientBehaviour : MonoBehaviour
 		uint activePlayer = Convert.ToUInt32(message.activePlayer);
 		int x = Convert.ToInt32(message.x);
 		int y = Convert.ToInt32(message.y);
-		uint activeHealth = Convert.ToUInt32(message.activeHealth);
 		uint otherHealth = Convert.ToUInt32(message.otherHealth);
 		uint playerToMove = Convert.ToUInt32(message.playerToMove);
 
 		client.ActivePlayer = activePlayer == client.Player;
-		client.objectReferences.inputManager.SelectGridCell(x, y);
 
 		// Move the player
+		client.objectReferences.inputManager.SelectGridCell(x, y);
 		client.objectReferences.inputManager.MovePlayerToSelectedGridCell((PlayerFlag)playerToMove);
 
 		// Check if the previous player hit a mine
-		if (client.ActivePlayer && client.objectReferences.gameData.Lives != activeHealth)
-		{
-			client.objectReferences.gameData.DecreaseOtherLives();
-			client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Other player hit a mine! You get to go twice.";
-
-			// Remove the mine visual
-			client.objectReferences.inputManager.RemoveItemAtSelectedGridCell();
-			return;
-		}
-		if (!client.ActivePlayer && client.objectReferences.gameData.OtherLives != otherHealth)
-		{
-			client.objectReferences.gameData.DecreaseLives();
-			client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "You hit a mine! Skip a turn.";
-
-			// Remove the mine visual
-			client.objectReferences.inputManager.RemoveItemAtSelectedGridCell();
-			return;
-		}
-
 		if (client.ActivePlayer)
 		{
-			client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Your turn to move!";
-		}
-		else client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "";
+			// If we are the active player, check the other lives
+			if (client.objectReferences.gameData.OtherLives != otherHealth)
+			{
+				client.objectReferences.gameData.DecreaseOtherLives();
+				client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Other player hit a mine! You get to go twice.";
 
+				// Remove the mine visual
+				client.objectReferences.inputManager.RemoveItemAtSelectedGridCell();
+			}
+			else client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Your turn to move!";
+		}
+		else
+		{
+			// If we're not the active player, check our lives
+			if (client.objectReferences.gameData.Lives != otherHealth)
+			{
+				client.objectReferences.gameData.DecreaseLives();
+				client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "You hit a mine! Skip a turn.";
+
+				// Remove the mine visual
+				client.objectReferences.inputManager.RemoveItemAtSelectedGridCell();
+			}
+			else client.objectReferences.errorMessage.GetComponent<TextMeshProUGUI>().text = "Waiting for other player...";
+		}
 	}
 	
 	private static void HandlePlayerMoveFail(ClientBehaviour client, MessageHeader header)

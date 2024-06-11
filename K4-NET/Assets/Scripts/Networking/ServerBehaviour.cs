@@ -607,7 +607,7 @@ public class ServerBehaviour : MonoBehaviour
 		int y = Convert.ToInt32(message.y);
 
 		PlayerFlag player = (lobby.Connections[0] == con) ? PlayerFlag.PLAYER1 : PlayerFlag.PLAYER2;
-		Vector2 playerLocation = serv.GetPlayerLocation(lobbyName, player);
+		Vector2Int playerLocation = serv.GetPlayerLocation(lobbyName, player);
 
 		// Player not found in grid (lobby will close in GetPlayerLocation function)
 		if (playerLocation.x == -1) return;
@@ -619,7 +619,7 @@ public class ServerBehaviour : MonoBehaviour
 			moveFailReason = MoveFailReason.NOT_ACTIVE;
 		if (lobby.ItemGrid[x, y] == ItemType.WALL)
 			moveFailReason = MoveFailReason.WALL;
-		if (Vector2.Distance(new Vector2(x,y), playerLocation) != 1)
+		if (Vector2Int.Distance(new Vector2Int(x,y), playerLocation) != 1)
 			moveFailReason = MoveFailReason.RANGE;
 
 		// Inform player of failed move attempt
@@ -637,7 +637,7 @@ public class ServerBehaviour : MonoBehaviour
 		}
 
 		// Bitwise remove player from old location in lobbyPlayerLocations
-		lobby.playerGrid[(int)playerLocation.x, (int)playerLocation.y] &= ~player;
+		lobby.playerGrid[playerLocation.x, playerLocation.y] &= ~player;
 
 		// Bitwise add player to new location in lobbyPlayerLocations
 		lobby.playerGrid[x, y] |= player;
@@ -665,20 +665,19 @@ public class ServerBehaviour : MonoBehaviour
 		}
 
 		// Next active player is the same player if the other player hit a mine last turn
-		int nextActivePlayerId = otherPlayerId;
+		uint nextActivePlayerId = (uint)otherPlayerId;
 		if (lobby.playerHitMine[otherPlayerId])
 		{
 			lobby.playerHitMine[otherPlayerId] = false;
-			nextActivePlayerId = (int)lobby.activePlayerId;
+			nextActivePlayerId = lobby.activePlayerId;
 		}
 
 		// Inform players of successful move attempt
 		PlayerMoveSuccessMessage playerMoveSuccessMessage = new()
 		{
-			activePlayer = (uint)nextActivePlayerId,
+			activePlayer = nextActivePlayerId,
 			x = (uint)x,
 			y = (uint)y,
-			activeHealth = lobby.playerHealth[nextActivePlayerId],
 			otherHealth = lobby.playerHealth[nextActivePlayerId == 0 ? 1 : 0],
 			playerToMove = (uint)player
 		};
@@ -693,11 +692,8 @@ public class ServerBehaviour : MonoBehaviour
 			return;
 		}
 
-		// Next player becomes active player (unless they hit a mine last turn)
-		if (!lobby.playerHitMine[otherPlayerId])
-		{
-			lobby.activePlayerId = (uint)otherPlayerId;
-		}
+		// Next player becomes active player
+		lobby.activePlayerId = nextActivePlayerId;
 	}
 
 	static void HandleContinueChoice(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
@@ -865,7 +861,7 @@ public class ServerBehaviour : MonoBehaviour
 		SendLobbyBroadcast(lobby, startRoundMessage);
 	}
 
-	private Vector2 GetPlayerLocation(string lobbyName, PlayerFlag player)
+	private Vector2Int GetPlayerLocation(string lobbyName, PlayerFlag player)
 	{
 		ServerLobby lobby = lobbyList[lobbyName];
 		int w = lobby.playerGrid.GetLength(0);
@@ -878,13 +874,13 @@ public class ServerBehaviour : MonoBehaviour
 			{
 				// Bitwise AND to check if the player is at this location
 				if ((lobby.playerGrid[x, y] & player) == player)
-					return new Vector2(x, y);
+					return new Vector2Int(x, y);
 			}
 		}
 
 		Debug.Log("Player " + player + " was not found in grid of lobby " + lobbyName + ". Lobby will now close.");
 		DisconnectPlayersInLobby(lobbyName);
-		return new Vector2(-1, -1);
+		return new Vector2Int(-1, -1);
 	}
 
 	private void DisconnectPlayersInLobby(string lobbyName)
