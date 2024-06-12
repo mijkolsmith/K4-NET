@@ -355,7 +355,6 @@ public class ServerBehaviour : MonoBehaviour
 		int playerId = Convert.ToInt32(json[0].id);
 		string playerName = json[0].username;
 
-		// Add to id list & name list
 		if (playerId != 0 && playerName != null)
 		{
 			RegisterSuccessMessage registerSuccessMessage = new();
@@ -392,21 +391,20 @@ public class ServerBehaviour : MonoBehaviour
 		int playerId = Convert.ToInt32(json[0].id);
 		string playerName = json[0].username;
 
-		// Add to id list & name list
-		if (playerId != 0 && playerName != null)
+		if (playerId == 0 || playerName == null || serv.idList.Values.Contains(playerId))
 		{
-			serv.idList.Add(con, playerId);
-			serv.nameList.Add(playerId, playerName);
-
-			LoginSuccessMessage loginSuccessMessage = new();
-			serv.SendUnicast(con, loginSuccessMessage);
-		}
-		else
-		{
-			// Something went wrong with the query (wrong login)
+			// Something went wrong with the query (bad data/user already logged in)
 			LoginFailMessage loginFailMessage = new();
 			serv.SendUnicast(con, loginFailMessage);
+			return;
 		}
+
+		// Add to id list & name list
+		serv.idList.Add(con, playerId);
+		serv.nameList.Add(playerId, playerName);
+
+		LoginSuccessMessage loginSuccessMessage = new();
+		serv.SendUnicast(con, loginSuccessMessage);
 	}
 
 	static async void HandleJoinLobby(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
