@@ -330,7 +330,7 @@ public class ServerBehaviour : MonoBehaviour
 	//      - Leave lobby                   (DONE)
 	//      - Start game                    (DONE)
 	//      - Place obstacle                (DONE)
-	//      - Player move                   (WIP)
+	//      - Player move                   (DONE)
 	//      - Continue choice               (DONE)
 
 	static void HandlePong(ServerBehaviour serv, NetworkConnection con, MessageHeader header)
