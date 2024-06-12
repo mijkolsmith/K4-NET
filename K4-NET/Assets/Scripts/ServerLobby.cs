@@ -19,11 +19,11 @@ public class ServerLobby
 	public uint activePlayerId;
 	public List<ItemType> Items { get; private set; } = new();
 	public ItemType currentItem;
-	public ItemType[,] ItemGrid { get; private set; }
-	public uint[] playerHealth { get; private set; }
-	public bool[] playerHitMine { get; private set; }
-	public PlayerFlag[,] playerGrid { get; private set; }
-	public bool[] rematch { get; private set; }
+	public ItemType[,] ItemGrid { get; private set; } = null;
+	public uint[] PlayerHealth { get; private set; }
+	public bool[] PlayerHitMine { get; private set; }
+	public PlayerFlag[,] PlayerGrid { get; private set; }
+	public bool[] Rematch { get; private set; }
 
 	public void InitializeItemGrid()
 	{
@@ -42,22 +42,22 @@ public class ServerLobby
 
 	public void InitializePlayerGrid()
 	{
-		playerGrid = new PlayerFlag[ServerBehaviour.gridsizeX, ServerBehaviour.gridsizeY];
+		PlayerGrid = new PlayerFlag[ServerBehaviour.gridsizeX, ServerBehaviour.gridsizeY];
 	}
 
 	public void InitializePlayerHealth()
 	{
-		playerHealth = new uint[ServerBehaviour.lobbySize] { GameData.defaultPlayerHealth, GameData.defaultPlayerHealth };
+		PlayerHealth = new uint[ServerBehaviour.lobbySize] { GameData.defaultPlayerHealth, GameData.defaultPlayerHealth };
 	}
 
 	public void InitializePlayerHitMine()
 	{
-		playerHitMine = new bool[ServerBehaviour.lobbySize];
+		PlayerHitMine = new bool[ServerBehaviour.lobbySize];
 	}
 
 	public void InitializeRematch()
 	{
-		rematch = new bool[ServerBehaviour.lobbySize];
+		Rematch = new bool[ServerBehaviour.lobbySize];
 	}
 
 	public void ResetLobby()
@@ -65,8 +65,8 @@ public class ServerLobby
 		Items = null;
 		currentItem = ItemType.NONE;
 		ItemGrid = null;
-		playerHealth = null;
-		playerGrid = null;
-		rematch = null;
+		PlayerHealth = null;
+		PlayerGrid = null;
+		Rematch = null;
 	}
 }

@@ -635,10 +635,10 @@ public class ServerBehaviour : MonoBehaviour
 		}
 
 		// Bitwise remove player from old location in lobbyPlayerLocations
-		lobby.playerGrid[playerLocation.x, playerLocation.y] &= ~player;
+		lobby.PlayerGrid[playerLocation.x, playerLocation.y] &= ~player;
 
 		// Bitwise add player to new location in lobbyPlayerLocations
-		lobby.playerGrid[x, y] |= player;
+		lobby.PlayerGrid[x, y] |= player;
 
 		// otherPlayerId is the id of the player that is not the active player
 		int otherPlayerId = (lobby.activePlayerId == 0) ? 1 : 0;
@@ -647,11 +647,11 @@ public class ServerBehaviour : MonoBehaviour
 		if (lobby.ItemGrid[x, y] == ItemType.MINE)
 		{
 			// Decrease player health, remove mine
-			lobby.playerHealth[lobby.activePlayerId] -= 1;
+			lobby.PlayerHealth[lobby.activePlayerId] -= 1;
 			lobby.ItemGrid[x, y] = ItemType.NONE;
 
 			// Check if player is dead
-			if (lobby.playerHealth[lobby.activePlayerId] == 0)
+			if (lobby.PlayerHealth[lobby.activePlayerId] == 0)
 			{
 				// OTHER player wins (discard to hide warning about await)
 				_ = serv.EndRound(lobby, otherPlayerId, (int)lobby.activePlayerId);
@@ -659,14 +659,14 @@ public class ServerBehaviour : MonoBehaviour
 			}
 
 			// Player has to skip a turn
-			lobby.playerHitMine[lobby.activePlayerId] = true;
+			lobby.PlayerHitMine[lobby.activePlayerId] = true;
 		}
 
 		// Next active player is the same player if the other player hit a mine last turn
 		uint nextActivePlayerId = (uint)otherPlayerId;
-		if (lobby.playerHitMine[otherPlayerId])
+		if (lobby.PlayerHitMine[otherPlayerId])
 		{
-			lobby.playerHitMine[otherPlayerId] = false;
+			lobby.PlayerHitMine[otherPlayerId] = false;
 			nextActivePlayerId = lobby.activePlayerId;
 		}
 
@@ -676,7 +676,7 @@ public class ServerBehaviour : MonoBehaviour
 			activePlayer = nextActivePlayerId,
 			x = (uint)x,
 			y = (uint)y,
-			otherHealth = lobby.playerHealth[nextActivePlayerId == 0 ? 1 : 0],
+			otherHealth = lobby.PlayerHealth[nextActivePlayerId == 0 ? 1 : 0],
 			playerToMove = (uint)player
 		};
 
@@ -701,14 +701,14 @@ public class ServerBehaviour : MonoBehaviour
 		ServerLobby lobby = serv.lobbyList[lobbyName];
 
 		// Initialize rematch choice array
-		if (lobby.rematch == null)
+		if (lobby.Rematch == null)
 			lobby.InitializeRematch();
 
 		if (message.choice)
 		{
-			lobby.rematch[(lobby.Connections[0] == con) ? 0 : 1]  = true;
+			lobby.Rematch[(lobby.Connections[0] == con) ? 0 : 1]  = true;
 
-			if (lobby.rematch[0] && lobby.rematch[1])
+			if (lobby.Rematch[0] && lobby.Rematch[1])
 			{
 				// Rematch accepted by both players
 				EndGameMessage endGameMessage = new()
@@ -757,7 +757,7 @@ public class ServerBehaviour : MonoBehaviour
 		}
 		else if (lobby.Connections.Count == 1)
 		{
-			if (lobby.ItemGrid != null)
+			if (lobby.ItemGrid == null)
 			{
 				// Create an empty LobbyUpdateMessage for player left in lobby (if lobby hasn't started already)
 				LobbyUpdateMessage lobbyUpdateMessage = new()
@@ -840,7 +840,7 @@ public class ServerBehaviour : MonoBehaviour
 	{
 		// Initialize player locations
 		lobby.InitializePlayerGrid();
-		lobby.playerGrid[x, y] = PlayerFlag.PLAYER1 | PlayerFlag.PLAYER2;
+		lobby.PlayerGrid[x, y] = PlayerFlag.PLAYER1 | PlayerFlag.PLAYER2;
 
 		// Initialize player health
 		lobby.InitializePlayerHealth();
@@ -862,8 +862,8 @@ public class ServerBehaviour : MonoBehaviour
 	private Vector2Int GetPlayerLocation(string lobbyName, PlayerFlag player)
 	{
 		ServerLobby lobby = lobbyList[lobbyName];
-		int w = lobby.playerGrid.GetLength(0);
-		int h = lobby.playerGrid.GetLength(1);
+		int w = lobby.PlayerGrid.GetLength(0);
+		int h = lobby.PlayerGrid.GetLength(1);
 
 		// Loop through all locations to find the player
 		for (int x = 0; x < w; ++x)
@@ -871,7 +871,7 @@ public class ServerBehaviour : MonoBehaviour
 			for (int y = 0; y < h; ++y)
 			{
 				// Bitwise AND to check if the player is at this location
-				if ((lobby.playerGrid[x, y] & player) == player)
+				if ((lobby.PlayerGrid[x, y] & player) == player)
 					return new Vector2Int(x, y);
 			}
 		}
