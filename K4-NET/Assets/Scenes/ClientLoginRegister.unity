@@ -1157,7 +1157,6 @@ MonoBehaviour:
   Done: 0
   objectReferences: {fileID: 1773903093}
   username: 
-  otherUsername: 
 --- !u!4 &697220050
 Transform:
   m_ObjectHideFlags: 0
@@ -2043,6 +2042,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 330076180062895048}
     m_Modifications:
+    - target: {fileID: 4446889897741229872, guid: ce79e55d1c09b9d479de63fb3f18308a,
+        type: 3}
+      propertyPath: m_text
+      value: Connecting to server...
+      objectReference: {fileID: 0}
     - target: {fileID: 4446889897741229878, guid: ce79e55d1c09b9d479de63fb3f18308a,
         type: 3}
       propertyPath: m_Name
