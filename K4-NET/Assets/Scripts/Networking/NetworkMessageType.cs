@@ -29,7 +29,6 @@ public enum NetworkMessageType
 	END_GAME,
 	CONTINUE_CHOICE,
 	CONTINUE_CHOICE_RESPONSE,
-	CHAT_MESSAGE,
 	PING,
 	PONG
 }
