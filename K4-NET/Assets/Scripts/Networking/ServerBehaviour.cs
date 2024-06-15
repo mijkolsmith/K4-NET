@@ -645,6 +645,7 @@ public class ServerBehaviour : MonoBehaviour
 		// otherPlayerId is the id of the player that is not the active player
 		int otherPlayerId = (lobby.activePlayerId == 0) ? 1 : 0;
 
+		Func<UniTask> roundEndingAction = null;
 		// Check if player hit mine
 		if (lobby.ItemGrid[x, y] == ItemType.MINE)
 		{
@@ -656,20 +657,26 @@ public class ServerBehaviour : MonoBehaviour
 			if (lobby.PlayerHealth[lobby.activePlayerId] == 0)
 			{
 				// OTHER player wins (discard to hide warning about await)
-				_ = serv.EndRound(lobby, otherPlayerId, (int)lobby.activePlayerId);
-				return;
+				roundEndingAction = () => serv.EndRound(lobby, otherPlayerId, (int)lobby.activePlayerId);
 			}
 
 			// Player has to skip a turn
 			lobby.PlayerHitMine[lobby.activePlayerId] = true;
 		}
 
-		// Next active player is the same player if the other player hit a mine last turn
 		uint nextActivePlayerId = (uint)otherPlayerId;
+
+		// Next active player is the same player if the other player hit a mine last turn
 		if (lobby.PlayerHitMine[otherPlayerId])
 		{
+			// If the active player also hit a mine, the next active player is just the other player
+			if (!lobby.PlayerHitMine[lobby.activePlayerId])
+			{
+				nextActivePlayerId = lobby.activePlayerId;
+				lobby.PlayerHitMine[lobby.activePlayerId] = false;
+			}
+
 			lobby.PlayerHitMine[otherPlayerId] = false;
-			nextActivePlayerId = lobby.activePlayerId;
 		}
 
 		// Inform players of successful move attempt
@@ -683,6 +690,13 @@ public class ServerBehaviour : MonoBehaviour
 		};
 
 		serv.SendLobbyBroadcast(lobby, playerMoveSuccessMessage);
+
+		// End round if player hit mine after communicating movement and health loss
+		if (roundEndingAction != null)
+		{
+			roundEndingAction();
+			return;
+		}
 
 		// Player wins if they reach the finish first
 		if (lobby.ItemGrid[x, y] == ItemType.FINISH)
