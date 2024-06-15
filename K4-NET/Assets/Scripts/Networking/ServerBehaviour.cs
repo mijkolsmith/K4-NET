@@ -9,6 +9,7 @@ using System;
 using Cysharp.Threading.Tasks;
 using System.Linq;
 using System.Collections.Immutable;
+using Unity.Burst.Intrinsics;
 
 public delegate void ServerMessageHandler(ServerBehaviour server, NetworkConnection con, MessageHeader header);
 
@@ -78,6 +79,7 @@ public class ServerBehaviour : MonoBehaviour
 	
 	public static ImmutableArray<ItemType> itemSet = ImmutableArray.Create
 	(
+		ItemType.MINE,
 		ItemType.MINE,
 		ItemType.MINE,
 		ItemType.WALL,
@@ -792,9 +794,28 @@ public class ServerBehaviour : MonoBehaviour
 			lobby.AddNewItemSet();
 		}
 
-		// Get an available placeable item
-		ItemType item = lobby.Items[UnityEngine.Random.Range(0, lobby.Items.Count)];
+		ItemType item;
+
+		// Count the number of walls in the grid
+		int wallCount = Flatten(lobby.ItemGrid).Where(x => x == ItemType.WALL).Count();
+
+		// Get an available placeable item 
+		if (wallCount > 0)
+		{
+			// If there are more than 5 walls, remove walls from available items (unless it's the only item left)
+			if (wallCount > 5 && lobby.Items.Count > 1)
+			{
+				lobby.Items.RemoveAll(x => x == ItemType.WALL);
+			}
+
+			// Only get a wallbreaker if there are any walls
+			item = lobby.Items[UnityEngine.Random.Range(0, lobby.Items.Count)];
+		}
+		else item = lobby.Items.Where(x => x != ItemType.WRECKINGBALL).ToList()[UnityEngine.Random.Range(0, lobby.Items.Count)];
+
+		// Remove the item from the available items
 		lobby.Items.Remove(item);
+
 		return item;
 	}
 
