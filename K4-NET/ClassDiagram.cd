@@ -1,0 +1,592 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Comment CommentText="Json Classes">
+    <Position X="30.5" Y="2.75" Height="0.75" Width="1.7" />
+  </Comment>
+  <Comment CommentText="Converting Network Messages">
+    <Position X="28.25" Y="2.75" Height="0.75" Width="1.7" />
+  </Comment>
+  <Comment CommentText="Lobby Data Structure on Server">
+    <Position X="25.75" Y="2.75" Height="0.75" Width="1.7" />
+  </Comment>
+  <Comment CommentText="ClientBehaviour uses SceneObjectReferences to make visual changes to the Scene">
+    <Position X="17.5" Y="8.25" Height="0.75" Width="1.7" />
+  </Comment>
+  <Class Name="ClientCurrentLobby">
+    <Position X="19.25" Y="4" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAUAACAAACAACAAAACAEAAAACAAAMAAAAAQABAAAIAA=</HashCode>
+      <FileName>Assets\Scripts\ClientCurrentLobby.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ClientLobby">
+    <Position X="17.5" Y="4" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAACAACAAAAQAAAAAAAAABAAAAAAAABAACAAA=</HashCode>
+      <FileName>Assets\Scripts\ClientLobby.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GameData">
+    <Position X="21" Y="9.5" Width="1.75" />
+    <InheritanceLine Type="UnityEngine.MonoBehaviour" FixedToPoint="true">
+      <Path>
+        <Point X="23" Y="3.191" />
+        <Point X="23" Y="9.112" />
+        <Point X="21.812" Y="9.112" />
+        <Point X="21.812" Y="9.5" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAACAAAAAAAAAAAQIABAIECAAGRAAARAAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Game\GameData.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GameGrid">
+    <Position X="19.5" Y="16.25" Width="2" />
+    <InheritanceLine Type="UnityEngine.MonoBehaviour" ManuallyRouted="true" FixedToPoint="true">
+      <Path>
+        <Point X="23" Y="3.191" />
+        <Point X="23" Y="15.951" />
+        <Point X="20.583" Y="15.951" />
+        <Point X="20.583" Y="16.25" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAABCAAEAAAAAAAAkAAAAAAAAAEAAAAAAAIgjA=</HashCode>
+      <FileName>Assets\Scripts\Game\GameGrid.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GamePrefabsScriptableObject">
+    <Position X="16.75" Y="0.75" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAACAAAAAAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Game\GamePrefabsScriptableObject.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GridCell">
+    <Position X="17.25" Y="16.25" Width="2" />
+    <InheritanceLine Type="UnityEngine.MonoBehaviour" ManuallyRouted="true" FixedToPoint="true">
+      <Path>
+        <Point X="23" Y="3.191" />
+        <Point X="23" Y="15.962" />
+        <Point X="18.333" Y="15.962" />
+        <Point X="18.333" Y="16.25" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>EAAQAAEAACAAJAAAAAQACAAAAAAAAgAEAAACwAAAAgA=</HashCode>
+      <FileName>Assets\Scripts\Game\GridCell.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="InputManager">
+    <Position X="21.75" Y="16.25" Width="2.5" />
+    <InheritanceLine Type="UnityEngine.MonoBehaviour" ManuallyRouted="true">
+      <Path>
+        <Point X="23" Y="3.191" />
+        <Point X="23" Y="15.977" />
+        <Point X="23" Y="15.977" />
+        <Point X="23" Y="16.25" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>ACQAAAAAACAASAAAAAAIAAAAAAAAAACAAAIgRAAgAgA=</HashCode>
+      <FileName>Assets\Scripts\Game\InputManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ItemVisual">
+    <Position X="19.25" Y="0.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAABAAAAAAAAAAAAAAAAgAAACAAAAAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Game\Items\ItemVisual.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MouseFollow">
+    <Position X="21.25" Y="13.75" Width="1.5" />
+    <InheritanceLine Type="UnityEngine.MonoBehaviour" ManuallyRouted="true" FixedToPoint="true">
+      <Path>
+        <Point X="23" Y="3.191" />
+        <Point X="23" Y="13.656" />
+        <Point X="21.938" Y="13.656" />
+        <Point X="21.938" Y="13.75" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAQAAAAAACABACAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Game\MouseFollow.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PlayerVisual">
+    <Position X="21" Y="0.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Game\Players\PlayerVisual.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoginRegister">
+    <Position X="21.25" Y="4" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAAAAAAAAAAAAAAAABAAAAEAAAAAAAAAAAAAhgAAAAE=</HashCode>
+      <FileName>Assets\Scripts\LoginRegister.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ClientBehaviour">
+    <Position X="15" Y="4" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AARBAAAggDACiACAACgCBw8FCIDBEIAYQJAAIQCgAAA=</HashCode>
+      <FileName>Assets\Scripts\Networking\ClientBehaviour.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MessageHeader" Collapsed="true">
+    <Position X="3.75" Y="0.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAEAAkAAAABAAAAACAAAAAAAAAQAAAAAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Networking\MessageHeader.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ContinueChoiceMessage">
+    <Position X="0.5" Y="22.75" Width="2" />
+    <InheritanceLine Type="MessageHeader" FixedToPoint="true">
+      <Path>
+        <Point X="4.5" Y="1.312" />
+        <Point X="4.5" Y="22.656" />
+        <Point X="1.375" Y="22.656" />
+        <Point X="1.375" Y="22.75" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAEAAAAAAAAAAAAAKAAAEAAAAAQAAAAAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Networking\Messages\ContinueChoiceMessage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ContinueChoiceResponseMessage">
+    <Position X="4.75" Y="22.75" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAEAAAAAAAAAAAAAKAAAAAAAAAQAAAAAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Networking\Messages\ContinueChoiceResponseMessage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="EndGameMessage">
+    <Position X="7.5" Y="22.75" Width="1.5" />
+    <InheritanceLine Type="MessageHeader" FixedToPoint="true">
+      <Path>
+        <Point X="4.5" Y="1.312" />
+        <Point X="4.5" Y="22.656" />
+        <Point X="8.25" Y="22.656" />
+        <Point X="8.25" Y="22.75" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAEAAAAAAAAAAAAACAAAAAAAAAQAAAAAAAEA=</HashCode>
+      <FileName>Assets\Scripts\Networking\Messages\EndGameMessage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="EndRoundMessage">
+    <Position X="9.5" Y="19" Width="1.75" />
+    <InheritanceLine Type="MessageHeader" ManuallyRouted="true">
+      <Path>
+        <Point X="4.5" Y="1.312" />
+        <Point X="4.5" Y="18.65" />
+        <Point X="10.375" Y="18.65" />
+        <Point X="10.375" Y="19" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAEAAAAAAAABAAAACAAAAAAAAAQAAAAAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Networking\Messages\EndRoundMessage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HandshakeMessage">
+    <Position X="2.25" Y="2" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAEAAAAAAAAAAAAACAAAAAAAAAQAAAAAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Networking\Messages\HandshakeMessage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HandshakeResponseMessage">
+    <Position X="6.75" Y="2" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAEAAAAAAAAAAAAACAAAAAAAAAQAAAAAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Networking\Messages\HandshakeResponseMessage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="JoinLobbyExistingMessage">
+    <Position X="7.25" Y="8.25" Width="2" />
+    <InheritanceLine Type="MessageHeader" FixedToPoint="true">
+      <Path>
+        <Point X="4.5" Y="1.312" />
+        <Point X="4.5" Y="7.875" />
+        <Point X="8.25" Y="7.875" />
+        <Point X="8.25" Y="8.25" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAEAAAAAAAAAIAAACAAAEAAAAAQAAAAAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Networking\Messages\JoinLobbyExistingMessage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="JoinLobbyFailMessage">
+    <Position X="9.5" Y="8.25" Width="1.75" />
+    <InheritanceLine Type="MessageHeader" FixedToPoint="true">
+      <Path>
+        <Point X="4.5" Y="1.312" />
+        <Point X="4.5" Y="7.875" />
+        <Point X="10.375" Y="7.875" />
+        <Point X="10.375" Y="8.25" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAEAAAAAAAAAAAAACAAAAAAAAAQAAAAAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Networking\Messages\JoinLobbyFailMessage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="JoinLobbyMessage">
+    <Position X="0.5" Y="8.25" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAEAAAAAAAAAAAAACAAAEAAAAAQAAAAAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Networking\Messages\JoinLobbyMessage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="JoinLobbyNewMessage">
+    <Position X="5" Y="8.25" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAEAAAAAAAAAAAAACAAAAAAAAAQAAAAAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Networking\Messages\JoinLobbyNewMessage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LeaveLobbyMessage">
+    <Position X="2.5" Y="8.25" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAEAAAAAAAAAAAAACAAAEAAAAAQAAAAAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Networking\Messages\LeavyLobbyMessage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LobbyUpdateMessage">
+    <Position X="11.5" Y="8.25" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAEAAAAAAAAAIAAACAAAEAAAAAQAAAAAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Networking\Messages\LobbyUpdateMessage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoginFailMessage">
+    <Position X="5" Y="4.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAEAAAAAAAAAAAAACAAAAAAAAAQAAAAAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Networking\Messages\LoginFailMessage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoginMessage">
+    <Position X="2.25" Y="5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAEAAAAAAAAAAAAECAAAAAAAAAQAAAgAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Networking\Messages\LoginMessage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LoginSuccessMessage">
+    <Position X="11" Y="4.75" Width="1.75" />
+    <InheritanceLine Type="MessageHeader" ManuallyRouted="true">
+      <Path>
+        <Point X="4.5" Y="1.312" />
+        <Point X="4.5" Y="4.521" />
+        <Point X="11.875" Y="4.521" />
+        <Point X="11.875" Y="4.75" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAEAAAAAAAAAAAAACAAAAAAAAAQAAAAAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Networking\Messages\LoginSuccessMessage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PingMessage">
+    <Position X="0.5" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAEAAAAAAAAAAAAACAAAAAAAAAQAAAAAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Networking\Messages\PingMessage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PlaceNewObstacleMessage">
+    <Position X="5" Y="15.25" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAECAAAAAAAAAAAACAAAAAAAAAQAAAAAAAIA=</HashCode>
+      <FileName>Assets\Scripts\Networking\Messages\PlaceNewObstacleMessage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PlaceObstacleFailMessage">
+    <Position X="10" Y="15.25" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAEAAAAAAAAAAAAACAAAAAAAAAQAAAAAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Networking\Messages\PlaceObstacleFailMessage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PlaceObstacleMessage">
+    <Position X="0.5" Y="15.25" Width="1.75" />
+    <InheritanceLine Type="MessageHeader" FixedToPoint="true">
+      <Path>
+        <Point X="4.5" Y="1.312" />
+        <Point X="4.5" Y="14.875" />
+        <Point X="1.375" Y="14.875" />
+        <Point X="1.375" Y="15.25" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAEAAAAAAAAAAAAACAAAEAAAAAQBgAAAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Networking\Messages\PlaceObstacleMessage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PlaceObstacleSuccessMessage">
+    <Position X="7.5" Y="15.25" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAEAAAAAAAAAAQAACAAAAAAAAAQBgAAAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Networking\Messages\PlaceObstacleSuccessMessage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PlayerMoveFailMessage">
+    <Position X="7.25" Y="19" Width="2" />
+    <InheritanceLine Type="MessageHeader" ManuallyRouted="true">
+      <Path>
+        <Point X="4.5" Y="1.312" />
+        <Point X="4.5" Y="18.631" />
+        <Point X="8.25" Y="18.631" />
+        <Point X="8.25" Y="19" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAEAAAAAAAAAAAAACAAAAAAAAAQBgAAAAAAI=</HashCode>
+      <FileName>Assets\Scripts\Networking\Messages\PlayerMoveFailMessage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PlayerMoveMessage">
+    <Position X="0.5" Y="19" Width="1.75" />
+    <InheritanceLine Type="MessageHeader" ManuallyRouted="true">
+      <Path>
+        <Point X="4.5" Y="1.312" />
+        <Point X="4.5" Y="18.592" />
+        <Point X="1.375" Y="18.592" />
+        <Point X="1.375" Y="19" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAEAAAAAAAAAAAAACAAAEAAAAAQBgAAAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Networking\Messages\PlayerMoveMessage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PlayerMoveSuccessMessage">
+    <Position X="4.75" Y="19" Width="2.25" />
+    <InheritanceLine Type="MessageHeader" ManuallyRouted="true">
+      <Path>
+        <Point X="4.5" Y="1.312" />
+        <Point X="4.5" Y="18.646" />
+        <Point X="5.875" Y="18.646" />
+        <Point X="5.875" Y="19" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAUAAUAAAAAAAAAAAAACAAAAAAAAAQBgAAAAAIA=</HashCode>
+      <FileName>Assets\Scripts\Networking\Messages\PlayerMoveSuccessMessage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PongMessage">
+    <Position X="5" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAEAAAAAAAAAAAAACAAAAAAAAAQAAAAAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Networking\Messages\PongMessage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RegisterFailMessage">
+    <Position X="9" Y="4.75" Width="1.75" />
+    <InheritanceLine Type="MessageHeader" ManuallyRouted="true">
+      <Path>
+        <Point X="4.5" Y="1.312" />
+        <Point X="4.5" Y="4.506" />
+        <Point X="9.875" Y="4.506" />
+        <Point X="9.875" Y="4.75" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAEAAAAAAAAAAAAACAAAAAAAAAQAAAAAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Networking\Messages\RegisterFailMessage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RegisterMessage">
+    <Position X="0.5" Y="5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAEAAAAAAAAAAAAECAAAAAAAAAQAAAgAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Networking\Messages\RegisterMessage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RegisterSuccessMessage">
+    <Position X="6.75" Y="4.75" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAEAAAAAAAAAAAAACAAAAAAAAAQAAAAAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Networking\Messages\RegisterSuccessMessage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="StartGameFailMessage">
+    <Position X="7.5" Y="11.75" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAEAAAAAAAAAAAAACAAAAAAAAAQAAAAAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Networking\Messages\StartGameFailMessage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="StartGameMessage">
+    <Position X="0.5" Y="11.75" Width="1.75" />
+    <InheritanceLine Type="MessageHeader" FixedToPoint="true">
+      <Path>
+        <Point X="4.5" Y="1.312" />
+        <Point X="4.5" Y="11.45" />
+        <Point X="1.438" Y="11.45" />
+        <Point X="1.438" Y="11.75" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAEAAAAAAAAAAAAACAAAEAAAAAQAAAAAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Networking\Messages\StartGameMessage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="StartGameResponseMessage">
+    <Position X="5" Y="11.75" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAECAAAAAAAAAAAACAAAAAAAAAQAAAAAAAIA=</HashCode>
+      <FileName>Assets\Scripts\Networking\Messages\StartGameResponseMessage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="StartRoundMessage">
+    <Position X="12.25" Y="15.25" Width="1.75" />
+    <InheritanceLine Type="MessageHeader" ManuallyRouted="true">
+      <Path>
+        <Point X="4.5" Y="1.312" />
+        <Point X="4.5" Y="14.875" />
+        <Point X="13.125" Y="14.875" />
+        <Point X="13.125" Y="15.25" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAQAAEAAAAAAAAAAAAACAAAAAAAAAQBgAAAAAIA=</HashCode>
+      <FileName>Assets\Scripts\Networking\Messages\StartRoundMessage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="NetworkedBehaviour">
+    <Position X="28.25" Y="4" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Networking\NetworkedBehaviour.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="NetworkMessageInfo">
+    <Position X="28.25" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Networking\NetworkMessageInfo.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PingPong">
+    <Position X="15" Y="0.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAAAAAQAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Networking\ServerBehaviour.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Error">
+    <Position X="30.5" Y="6.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Networking\ServerBehaviour.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Id">
+    <Position X="30.5" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgA=</HashCode>
+      <FileName>Assets\Scripts\Networking\ServerBehaviour.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="User">
+    <Position X="30.5" Y="8" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAgA=</HashCode>
+      <FileName>Assets\Scripts\Networking\ServerBehaviour.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="UserScore">
+    <Position X="30.5" Y="4" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAIAAEAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Networking\ServerBehaviour.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ServerBehaviour">
+    <Position X="23.25" Y="4" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAQhAABgALIQAg8CIgIACAKBRgAEQIHQAACCgIIAEAg=</HashCode>
+      <FileName>Assets\Scripts\Networking\ServerBehaviour.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SceneObjectReferences">
+    <Position X="17.5" Y="9.5" Width="2" />
+    <InheritanceLine Type="UnityEngine.MonoBehaviour" ManuallyRouted="true" FixedToPoint="true">
+      <Path>
+        <Point X="23" Y="3.191" />
+        <Point X="23" Y="9.103" />
+        <Point X="18.438" Y="9.103" />
+        <Point X="18.438" Y="9.5" />
+      </Path>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AQAAAAAAAQAAAAAAAACACAAAAAEAAAAAAACAIAASAAA=</HashCode>
+      <FileName>Assets\Scripts\SceneObjectReferences.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ServerLobby">
+    <Position X="25.75" Y="4" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAEAAAAABAAACAHAgAAAQEACAFAgAgAAAAACQCAAAAA=</HashCode>
+      <FileName>Assets\Scripts\ServerLobby.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="UnityEngine.MonoBehaviour" Collapsed="true">
+    <Position X="22.25" Y="2.5" Width="1.5" />
+    <TypeIdentifier />
+  </Class>
+  <Enum Name="ItemType">
+    <Position X="14.25" Y="15.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AIAAAAAAgAAAAAAAAQAAAADAAAAAAAAAAAgAACgAAAA=</HashCode>
+      <FileName>Assets\Scripts\Game\Items\ItemType.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="MoveFailReason">
+    <Position X="13.25" Y="19" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAQgAAABAAAAAAAAAAIAAAAAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Game\MoveFailReason.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="PlayerFlag">
+    <Position X="11.5" Y="19" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAQAAAMAAAAAAAAAAAAAAAAIAAAA=</HashCode>
+      <FileName>Assets\Scripts\Game\Players\PlayerFlag.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="NetworkMessageType">
+    <Position X="13" Y="0.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>EAANAhAAAgIBFQggIGAABAQAAIAEIAAwIEQAAAIIEAA=</HashCode>
+      <FileName>Assets\Scripts\Networking\NetworkMessageType.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Delegate Name="ClientMessageHandler" Collapsed="true">
+    <Position X="0.75" Y="0.75" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAABAAAA=</HashCode>
+      <FileName>Assets\Scripts\Networking\ClientBehaviour.cs</FileName>
+    </TypeIdentifier>
+  </Delegate>
+  <Delegate Name="ServerMessageHandler" Collapsed="true">
+    <Position X="6" Y="0.75" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASAAAAABAAAA=</HashCode>
+      <FileName>Assets\Scripts\Networking\ServerBehaviour.cs</FileName>
+    </TypeIdentifier>
+  </Delegate>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>
