@@ -798,7 +798,6 @@ public class ServerBehaviour : MonoBehaviour
 
 		// Count the number of walls in the grid
 		int wallCount = Flatten(lobby.ItemGrid).Where(x => x == ItemType.WALL).Count();
-
 		// Get an available placeable item 
 		if (wallCount > 0)
 		{
@@ -811,7 +810,11 @@ public class ServerBehaviour : MonoBehaviour
 			// Only get a wallbreaker if there are any walls
 			item = lobby.Items[UnityEngine.Random.Range(0, lobby.Items.Count)];
 		}
-		else item = lobby.Items.Where(x => x != ItemType.WRECKINGBALL).ToList()[UnityEngine.Random.Range(0, lobby.Items.Count)];
+		else
+		{
+			IEnumerable<ItemType> availableItems = lobby.Items.Where(x => x != ItemType.WRECKINGBALL);
+			item = availableItems.ElementAt(UnityEngine.Random.Range(0, availableItems.Count()));
+		}
 
 		// Remove the item from the available items
 		lobby.Items.Remove(item);
