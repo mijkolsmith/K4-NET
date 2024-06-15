@@ -566,6 +566,10 @@ public class ClientBehaviour : MonoBehaviour
 		// Reset the lobby visuals
 		objectReferences.ErrorMessage.GetComponent<TextMeshProUGUI>().text = "";
 
+		// Reset lobby name
+		LobbyName = "";
+
+		// Reset current lobby visuals
 		if (objectReferences.CurrentLobby.TryGetComponent(out ClientCurrentLobby currentLobby))
 		{
 			currentLobby.player1Name.GetComponent<TextMeshProUGUI>().text = "";
@@ -575,6 +579,7 @@ public class ClientBehaviour : MonoBehaviour
 			currentLobby.startLobbyObject.SetActive(false);
 		}
 
+		// Go back to join lobby screen
 		objectReferences.CurrentLobby.SetActive(false);
 		objectReferences.JoinLobby.SetActive(true);
 	}
