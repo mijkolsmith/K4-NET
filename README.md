@@ -1,4 +1,7 @@
 # Download a copy here
+Itch.io:
+https://mijkolsmith.itch.io/build-a-minefield
+
 Server:
 https://drive.google.com/file/d/1c1rbPi2sXXgMobO7H2xw6GQ2LWutpPeg/view?usp=sharing
 
