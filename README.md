@@ -8,6 +8,9 @@ https://drive.google.com/file/d/1c1rbPi2sXXgMobO7H2xw6GQ2LWutpPeg/view?usp=shari
 Client:
 https://drive.google.com/file/d/1rXgodU1M3wx7SRy-dxXYlYbJBvi7kVhp/view?usp=sharing
 
+Documentation:
+https://docs.google.com/document/d/15FAdgF-_8v5-d_RxhwfZ_Z8Vrogo8mNI1KPEDYM_aOU/edit?usp=sharing
+
 # Credits:
 
 Wall texture image by deadlyessence on itch.io
